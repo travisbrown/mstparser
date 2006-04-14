@@ -43,8 +43,8 @@ public class DependencyDecoder {
 				       FeatureVector[][][][] nt_fvs,
 				       double[][][][] nt_probs, int K) {
 
-	String[] toks = inst.sentence;
-	String[] pos = inst.pos;
+	String[] toks = inst.get("tokens");
+	String[] pos = inst.get("pos");
 
 	int[][] static_types = null;
 	if(pipe.labeled) {
@@ -180,9 +180,10 @@ public class DependencyDecoder {
 					  FeatureVector[][][][] nt_fvs,
 					  double[][][][] nt_probs, int K) {
 
-	String[] pos = inst.pos;
+	String[] pos = inst.get("pos");
 		
-	int numWords = inst.sentence.length;
+	int numWords = inst.length();
+
 	int[][] oldI = new int[numWords][numWords];
 	int[][] oldO = new int[numWords][numWords];
 	double[][] scoreMatrix = new double[numWords][numWords];

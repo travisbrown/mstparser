@@ -1,45 +1,74 @@
 package mstparser;
 
+import gnu.trove.*;
+import java.util.*;
+
 public class DependencyInstance {
 
-    public String[] sentence;
-    public String[] pos;
-    public String[] labs;
     public FeatureVector fv;
     public String actParseTree;
     public int length;
-    
+
+    private THashMap typesToData = new THashMap();
+
     public DependencyInstance() {}
     
     public DependencyInstance(int length) { this.length = length; }
-    
-    public DependencyInstance(FeatureData data, FeatureVector fv) {
-	this.sentence = data.get("tokens");
-	this.pos = data.get("pos");
-	this.labs = data.get("labels");
-	this.fv = fv;
-	this.length = sentence.length;
-    }
 
     public DependencyInstance(String[] sentence, FeatureVector fv) {
-	this.sentence = sentence;
+	this(sentence.length);
+	put("tokens",sentence);
 	this.fv = fv;
-	this.length = sentence.length;
     }
     
     public DependencyInstance(String[] sentence, String[] pos, FeatureVector fv) {
-	this.sentence = sentence;
-	this.pos = pos;
-	this.fv = fv;
-	this.length = sentence.length;
+	this(sentence, fv);
+	put("pos",pos);
     }
     
-    public DependencyInstance(String[] sentence, String[] pos, String[] labs, FeatureVector fv) {
-	this.sentence = sentence;
-	this.pos = pos;
-	this.labs = labs;
-	this.fv = fv;
-	this.length = sentence.length;
+    public DependencyInstance(String[] sentence, String[] pos, 
+			      String[] labs, FeatureVector fv) {
+	this(sentence, pos, fv);
+	put("labels",labs);
     }
+
+    public DependencyInstance(String[] sentence, String[] pos, 
+			      String[] labs, String[] deps) {
+	put("tokens",sentence);
+	put("pos",pos);
+	put("labels",labs);
+	put("deps",deps);
+    }
+
+    public void setFeatureVector (FeatureVector fv) {
+	this.fv = fv;
+    }
+
+
+    public void put (String type, String[] data) {
+	if (length == 0)
+	    length = data.length;
+	else 
+	    if (length != data.length)
+		System.out.println(
+		   "Something wrong. Trying to add feature class \""+ type + 
+		   "\" but the number of items (" + data.length +
+		   ") is different from the number input for other feature classes ("
+		   + length + "). Will add anyway, but you should expect problems.");
+	typesToData.put(type, data);
+    }
+
+    public String[] get (String type) {
+	return (String[])typesToData.get(type);
+    }
+
+    public int numFeatureClasses () {
+	return typesToData.size();
+    }
+
+    public int length () {
+	return length;
+    }
+
     
 }

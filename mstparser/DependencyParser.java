@@ -25,6 +25,9 @@ public class DependencyParser {
     public static int trainK = 1;
     public static int testK = 1;
 
+    //public static String pipeType = "standard";
+    public static String pipeType = "extended";
+
 
     private DependencyPipe pipe;
     private DependencyDecoder decoder;
@@ -140,7 +143,7 @@ public class DependencyParser {
 	while(il != null) {
 	    cnt++;
 	    System.out.print(cnt+" ");
-	    String[] toks = il.sentence;
+	    String[] toks = il.get("tokens");
 			
 	    FeatureVector[][][] fvs = new FeatureVector[toks.length][toks.length][2];
 	    double[][][] probs = new double[toks.length][toks.length][2];
@@ -156,8 +159,8 @@ public class DependencyParser {
 		d = decoder.decodeNonProjective(il,fvs,probs,nt_fvs,nt_probs,K);
 
 	    String[] res = ((String)d[0][1]).split(" ");
-	    String[] sent = il.sentence;
-	    String[] pos = il.pos;
+	    String[] sent = il.get("tokens");
+	    String[] pos = il.get("pos");
 	    String line1 = ""; String line2 = ""; String line3 = ""; String line4 = "";
 	    for(int j = 1; j < pos.length; j++) {
 		String[] trip = res[j-1].split("[\\|:]");
@@ -191,7 +194,12 @@ public class DependencyParser {
 		
 	if(train) {
 		
-	    DependencyPipe pipe = new DependencyPipe (createForest);
+	    DependencyPipe pipe;
+	    if (pipeType.equals("standard"))
+		pipe = new DependencyPipe (createForest);
+	    else 
+		pipe = new DependencyPipe (createForest);
+	    //pipe = new ExtendedDependencyPipe (createForest);
 			
 	    pipe.setLabeled(trainfile);
 
@@ -215,7 +223,13 @@ public class DependencyParser {
 	}
 		
 	if (test) {
-	    DependencyPipe pipe = new DependencyPipe (true);
+	    DependencyPipe pipe;
+	    if (pipeType.equals("standard"))
+		pipe = new DependencyPipe (true);
+	    else 
+		pipe = new DependencyPipe (true);
+	    //pipe = new ExtendedDependencyPipe (true);
+
 	    pipe.setLabeled(testfile);
 	    DependencyParser dp = new DependencyParser(pipe);
 
@@ -276,6 +290,9 @@ public class DependencyParser {
 	    if(pair[0].equals("decode-type")) {
 		decodeType = pair[1];
 	    }			
+	    if(pair[0].equals("pipe-type")) {
+		pipeType = pair[1];
+	    }
 	}
 	trainforest = trainfile == null ? null : trainfile+".forest";
 	testforest = testfile == null ? null : testfile+".forest";

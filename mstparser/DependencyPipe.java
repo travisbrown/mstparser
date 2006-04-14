@@ -34,7 +34,7 @@ public class DependencyPipe {
 	in.close();
     }
 
-    public String[][] getLines(BufferedReader in) throws IOException {
+    public DependencyInstance getLines(BufferedReader in) throws IOException {
 	String line = in.readLine();
 	String pos_line = in.readLine();
 	String lab_line = labeled ? in.readLine() : pos_line;
@@ -62,40 +62,32 @@ public class DependencyPipe {
 	    labs_new[i+1] = labeled ? labs[i] : "<no-type>";
 	    deps_new[i+1] = deps[i];
 	}
-	toks = toks_new;
-	pos = pos_new;
-	labs = labs_new;
-	deps = deps_new;
-	
-	String[][] result = new String[4][];
-	result[0] = toks; result[1] = pos; result[2] = labs; result[3] = deps;
-	return result;
+
+	//System.out.println(Arrays.toString(toks_new));
+
+	return new DependencyInstance(toks_new, pos_new, labs_new, deps_new);
     }
 
     public DependencyInstance createInstance(BufferedReader in) throws IOException {
-	String[][] lines = getLines(in);
-	if(lines == null) return null;
+	DependencyInstance depinst = getLines(in);
+	if (depinst == null || depinst.numFeatureClasses() == 0) return null;
 
-	String[] toks = lines[0];
-	String[] pos = lines[1];
-	String[] labs = lines[2];
-	String[] deps = lines[3];
+	String[] labs = depinst.get("labels");
+	String[] deps = depinst.get("deps");
 	
 	int[] deps1 = new int[deps.length];
 	for(int i = 0; i < deps.length; i++)
 	    deps1[i] = Integer.parseInt(deps[i]);
-	
-	FeatureVector fv = createFeatureVector(toks,pos,labs,deps1);
-	
-	DependencyInstance pti = new DependencyInstance(toks,pos,labs,fv);
+
+	depinst.setFeatureVector(createFeatureVector(depinst,deps1));
 	
 	String spans = "";
 	for(int i = 1; i < deps.length; i++) {
 	    spans += deps[i]+"|"+i+":"+typeAlphabet.lookupIndex(labs[i])+" ";
 	}
-	pti.actParseTree = spans.trim();
+	depinst.actParseTree = spans.trim();
 	
-	return pti;
+	return depinst;
     }
 
     public DependencyInstance[] createInstances(String file,
@@ -107,7 +99,7 @@ public class DependencyPipe {
 
 	BufferedReader in = //new BufferedReader(new FileReader(file));
 	    new BufferedReader(new InputStreamReader(new FileInputStream(file),"8859_2"));
-	String[][] lines = getLines(in);
+	DependencyInstance depinst = getLines(in);
 		
 	LinkedList lt = new LinkedList();
 
@@ -116,43 +108,39 @@ public class DependencyPipe {
 	    : null;
 		
 	int num1 = 0;
-	while(lines != null) {
+	while(depinst != null) {
 	    System.out.println("Creating Feature Vector Instance: " + num1);
-			
-	    String[] toks = lines[0];
-	    String[] pos = lines[1];
-	    String[] labs = lines[2];
-	    String[] deps = lines[3];
-			
+	    
+	    String[] labs = depinst.get("labels");
+	    String[] deps = depinst.get("deps");
+	
 	    int[] deps1 = new int[deps.length];
 	    for(int i = 0; i < deps.length; i++)
 		deps1[i] = Integer.parseInt(deps[i]);
 
-	    FeatureVector fv = createFeatureVector(toks,pos,labs,deps1);
+	    depinst.setFeatureVector(createFeatureVector(depinst,deps1));
 			
-	    DependencyInstance pti = new DependencyInstance(toks,pos,labs,fv);
-
 	    String spans = "";
 	    for(int i = 1; i < deps.length; i++) {
 		spans += deps[i]+"|"+i+":"+typeAlphabet.lookupIndex(labs[i])+" ";
 	    }
-	    pti.actParseTree = spans.trim();
+	    depinst.actParseTree = spans.trim();
 
 	    if(createForest)
-		possibleFeatures(pti,out);
-	    pti = null;
+		possibleFeatures(depinst,out);
+	    depinst = null;
 			
-	    lt.add(new DependencyInstance(toks.length));
+	    lt.add(new DependencyInstance(labs.length));
 			
-	    lines = getLines(in);
+	    depinst = getLines(in);
 	    num1++;
 	}
 
 	closeAlphabets();
 		
-	DependencyInstance[] pti = new DependencyInstance[lt.size()];
-	for(int i = 0; i < pti.length; i++) {
-	    pti[i] = (DependencyInstance)lt.get(i);
+	DependencyInstance[] allDepinsts = new DependencyInstance[lt.size()];
+	for(int i = 0; i < allDepinsts.length; i++) {
+	    allDepinsts[i] = (DependencyInstance)lt.get(i);
 	}
 
 	if(createForest)
@@ -160,7 +148,7 @@ public class DependencyPipe {
 
 	in.close();
 
-	return pti;
+	return allDepinsts;
 		
     }
 
@@ -170,16 +158,14 @@ public class DependencyPipe {
 
 	BufferedReader in =
 	    new BufferedReader(new InputStreamReader(new FileInputStream(file),"8859_2"));
-	String[][] lines = getLines(in);
+	DependencyInstance depinst = getLines(in);
 
 	int cnt = 0;
 		
-	while(lines != null) {
-			
-	    String[] toks = lines[0];
-	    String[] pos = lines[1];
-	    String[] labs = lines[2];
-	    String[] deps = lines[3];
+	while(depinst != null) {
+	    
+	    String[] labs = depinst.get("labels");
+	    String[] deps = depinst.get("deps");
 
 	    for(int i = 0; i < labs.length; i++)
 		typeAlphabet.lookupIndex(labs[i]);
@@ -189,9 +175,9 @@ public class DependencyPipe {
 		deps1[i] = Integer.parseInt(deps[i]);
 	    }
 			
-	    createFeatureVector(toks,pos,labs,deps1);
+	    createFeatureVector(depinst,deps1);
 			
-	    lines = getLines(in);
+	    depinst = getLines(in);
 	    cnt++;
 	}
 
@@ -225,14 +211,18 @@ public class DependencyPipe {
 
     }	
 	
-    public FeatureVector createFeatureVector(String[] toks,
-					     String[] pos,
-					     String[] posA,
+
+    public FeatureVector createFeatureVector(DependencyInstance depinst,
 					     int small,
 					     int large,
 					     boolean attR,
 					     FeatureVector fv) {
-	    
+
+
+	String[] toks = depinst.get("tokens");
+	String[] pos = depinst.get("pos");
+	String[] posA = depinst.get("posA");
+
 	String att = "";
 	if(attR)
 	    att = "RA";
@@ -345,7 +335,7 @@ public class DependencyPipe {
 	String headP = attR ? pos[small] : pos[large];
 	String child = attR ? toks[large] : toks[small];
 	String childP = attR ? pos[large] : pos[small];
-		
+
 	String all = head + " " + headP + " " + child + " " + childP;
 	String hPos = headP + " " + child + " " + childP;
 	String cPos = head + " " + headP + " " + childP;
@@ -429,9 +419,7 @@ public class DependencyPipe {
 		
     }
 	
-    public FeatureVector createFeatureVector(String[] toks,
-					     String[] pos,
-					     String[] posA,
+    public FeatureVector createFeatureVector(DependencyInstance depinst,
 					     int word,
 					     String type,
 					     boolean attR,
@@ -440,6 +428,11 @@ public class DependencyPipe {
 		
 	if(!labeled) return fv;
 
+
+	String[] toks = depinst.get("tokens");
+	String[] pos = depinst.get("pos");
+	String[] posA = depinst.get("posA");
+	    
 	String att = "";
 	if(attR)
 	    att = "RA";
@@ -466,33 +459,35 @@ public class DependencyPipe {
 	    fv = add("NTIB="+wP+" "+wPp1+suff,1.0,fv);
 	    fv = add("NTIC="+wPm1+" "+wP+" "+wPp1+suff,1.0,fv);
 	    fv = add("NTJ="+w+suff,1.0,fv); //this
-			
+
 	}
 		
 	return fv;
     }
 	
-    public FeatureVector createFeatureVector(String[] toks,
-					     String[] pos,
-					     String[] labs,
-					     int[] deps) {
+    public FeatureVector createFeatureVector(DependencyInstance depinst, int[] deps) {
 
+	String[] pos = depinst.get("pos");
+	String[] labs = depinst.get("labels");
+	    
 	String[] posA = new String[pos.length];
 	for(int i = 0; i < pos.length; i++) {
 	    posA[i] = pos[i].substring(0,1);
 	}
+
+	depinst.put("posA", posA);
 		
 	FeatureVector fv = new FeatureVector(-1,-1.0,null);
-	for(int i = 0; i < toks.length; i++) {
+	for(int i = 0; i < depinst.length(); i++) {
 	    if(deps[i] == -1)
 		continue;
 	    int small = i < deps[i] ? i : deps[i];
 	    int large = i > deps[i] ? i : deps[i];
 	    boolean attR = i < deps[i] ? false : true;
-	    fv = createFeatureVector(toks,pos,posA,small,large,attR,fv);
+	    fv = createFeatureVector(depinst,small,large,attR,fv);
 	    if(labeled) {
-		fv = createFeatureVector(toks,pos,posA,i,labs[i],attR,true,fv);
-		fv = createFeatureVector(toks,pos,posA,deps[i],labs[i],attR,false,fv);
+		fv = createFeatureVector(depinst,i,labs[i],attR,true,fv);
+		fv = createFeatureVector(depinst,deps[i],labs[i],attR,false,fv);
 	    }
 	}
 	return fv;
@@ -506,15 +501,22 @@ public class DependencyPipe {
     }
 
     public void possibleFeatures(DependencyInstance inst, ObjectOutputStream out) {
-	String[] toks = inst.sentence;
-	String[] pos = inst.pos;
-	String[] labs = inst.labs;
+	String[] toks = inst.get("tokens");
+	String[] pos = inst.get("pos");
+	String[] labs = inst.get("labels");
 		
 	String[] posA = new String[pos.length];
+
 	for(int i = 0; i < pos.length; i++) {
 	    posA[i] = pos[i].substring(0,1);
 	}
 
+
+	DependencyInstance depinst = new DependencyInstance();
+	depinst.put("tokens", toks);
+	depinst.put("pos", pos);
+	depinst.put("posA", posA);
+	depinst.put("labels", labs);
 		
 	try {
 
@@ -527,7 +529,7 @@ public class DependencyPipe {
 			int childInt = attR ? w2 : w1;
 			int parInt = attR ? w1 : w2;
 						
-			FeatureVector prodFV = createFeatureVector(toks,pos,posA,w1,w2,attR,
+			FeatureVector prodFV = createFeatureVector(depinst,w1,w2,attR,
 								   new FeatureVector(-1,-1.0,null));
 								
 			for(FeatureVector curr = prodFV; curr != null; curr = curr.next) {
@@ -555,7 +557,7 @@ public class DependencyPipe {
 			    for(int ch = 0; ch < 2; ch++) {						
 				boolean child = ch == 0 ? true : false;						
 				
-				FeatureVector prodFV = createFeatureVector(toks,pos,posA,w1,
+				FeatureVector prodFV = createFeatureVector(depinst,w1,
 									   type,
 									   attR,child,
 									   new FeatureVector(-1,-1.0,null));
@@ -579,11 +581,11 @@ public class DependencyPipe {
 		out.writeInt(curr.index);
 
 	    out.writeInt(-4);
-	    out.writeObject(inst.sentence);
+	    out.writeObject(inst.get("tokens"));
 	    out.writeInt(-5);
-	    out.writeObject(inst.pos);
+	    out.writeObject(inst.get("pos"));
 	    out.writeInt(-6);
-	    out.writeObject(inst.labs);
+	    out.writeObject(inst.get("labels"));
 	    out.writeInt(-7);
 	    out.writeObject(inst.actParseTree);
 			
@@ -695,14 +697,20 @@ public class DependencyPipe {
 				 FeatureVector[][][][] nt_fvs,
 				 double[][][][] nt_probs, Parameters params) {
 
-	String[] toks = inst.sentence;
-	String[] pos = inst.pos;
-	String[] labs = inst.labs;
+	String[] toks = inst.get("tokens");
+	String[] pos = inst.get("pos");
+	String[] labs = inst.get("labels");
 		
 	String[] posA = new String[pos.length];
 	for(int i = 0; i < pos.length; i++) {
 	    posA[i] = pos[i].substring(0,1);
 	}
+
+	DependencyInstance depinst = new DependencyInstance();
+	depinst.put("tokens", toks);
+	depinst.put("pos", pos);
+	depinst.put("posA", posA);
+	depinst.put("labels", labs);
 
 	// Get production crap.		
 	for(int w1 = 0; w1 < toks.length; w1++) {
@@ -714,8 +722,8 @@ public class DependencyPipe {
 		    int childInt = attR ? w2 : w1;
 		    int parInt = attR ? w1 : w2;
 		    
-		    FeatureVector prodFV = createFeatureVector(toks,pos,posA,w1,w2,attR,
-								    new FeatureVector(-1,-1.0,null));
+		    FeatureVector prodFV = createFeatureVector(depinst,w1,w2,attR,
+							       new FeatureVector(-1,-1.0,null));
 										
 		    double prodProb = params.getScore(prodFV);
 		    fvs[w1][w2][ph] = prodFV;
@@ -735,11 +743,10 @@ public class DependencyPipe {
 			boolean attR = ph == 0 ? true : false;
 			
 			for(int ch = 0; ch < 2; ch++) {						
-			    boolean child = ch == 0 ? true : false;						
-			    
-			    FeatureVector prodFV = createFeatureVector(toks,pos,posA,w1,
-									    type,attR,child,
-									    new FeatureVector(-1,-1.0,null));
+			    boolean child = ch == 0 ? true : false;			    
+			    FeatureVector prodFV = createFeatureVector(depinst,w1,
+								       type,attR,child,
+								       new FeatureVector(-1,-1.0,null));
 			    
 			    double nt_prob = params.getScore(prodFV);
 			    nt_fvs[w1][t][ph][ch] = prodFV;

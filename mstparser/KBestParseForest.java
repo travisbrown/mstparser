@@ -14,8 +14,8 @@ public class KBestParseForest {
 	chart = new ParseForestItem[end+1][end+1][2][2][K];
 	this.start = start;
 	this.end = end;
-	this.sent = inst.sentence;
-	this.pos = inst.pos;
+	this.sent = inst.get("tokens");
+	this.pos = inst.get("pos");
     }
 	
     public boolean add(int s, int type, int dir, double score, FeatureVector fv) {
