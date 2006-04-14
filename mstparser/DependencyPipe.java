@@ -546,22 +546,18 @@ public class DependencyPipe {
 	    out.writeInt(-3);
 
 	    if(labeled) {
-		for(int w1 = 0; w1 < toks.length; w1++) {
-		    
+		for(int w1 = 0; w1 < toks.length; w1++) {		    
 		    for(int t = 0; t < types.length; t++) {
-			String type = types[t];
-			
-			for(int ph = 0; ph < 2; ph++) {						
+			String type = types[t];			
+			for(int ph = 0; ph < 2; ph++) {
 			    boolean attR = ph == 0 ? true : false;
-			    
-			    for(int ch = 0; ch < 2; ch++) {						
-				boolean child = ch == 0 ? true : false;						
-				
-				FeatureVector prodFV = createFeatureVector(depinst,w1,
-									   type,
-									   attR,child,
-									   new FeatureVector(-1,-1.0,null));
-				
+			    for(int ch = 0; ch < 2; ch++) {
+				boolean child = ch == 0 ? true : false;
+				FeatureVector prodFV = 
+				    createFeatureVector(depinst,w1,
+							type, attR,child,
+							new FeatureVector(-1,-1.0,null));
+
 				for(FeatureVector curr = prodFV; curr != null; curr = curr.next) {
 				    if(curr.index >= 0)
 					out.writeInt(curr.index);
@@ -580,15 +576,13 @@ public class DependencyPipe {
 	    for(FeatureVector curr = inst.fv; curr.next != null; curr = curr.next)
 		out.writeInt(curr.index);
 
-	    out.writeInt(-4);
-	    out.writeObject("tokens");
-	    out.writeObject(inst.get("tokens"));
-	    out.writeInt(-4);
-	    out.writeObject("pos");
-	    out.writeObject(inst.get("pos"));
-	    out.writeInt(-4);
-	    out.writeObject("labels");
-	    out.writeObject(inst.get("labels"));
+	    String[] keysToDI = inst.keys();
+	    for (int i=0; i<keysToDI.length; i++) {
+		out.writeInt(-4);
+		out.writeObject(keysToDI[i]);
+		out.writeObject(inst.get(keysToDI[i]));
+	    }
+
 	    out.writeInt(-5);
 	    out.writeObject(inst.actParseTree);
 			

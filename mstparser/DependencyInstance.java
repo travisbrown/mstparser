@@ -62,6 +62,12 @@ public class DependencyInstance {
 	return (String[])typesToData.get(type);
     }
 
+    public String[] keys () {
+	String[] keys = new String[typesToData.size()];
+	typesToData.keySet().toArray(keys);
+	return keys;
+    }
+
     public int numFeatureClasses () {
 	return typesToData.size();
     }
