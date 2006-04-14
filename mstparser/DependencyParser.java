@@ -198,8 +198,7 @@ public class DependencyParser {
 	    if (pipeType.equals("standard"))
 		pipe = new DependencyPipe (createForest);
 	    else 
-		pipe = new DependencyPipe (createForest);
-	    //pipe = new ExtendedDependencyPipe (createForest);
+		pipe = new ExtendedDependencyPipe (createForest);
 			
 	    pipe.setLabeled(trainfile);
 
@@ -227,8 +226,7 @@ public class DependencyParser {
 	    if (pipeType.equals("standard"))
 		pipe = new DependencyPipe (true);
 	    else 
-		pipe = new DependencyPipe (true);
-	    //pipe = new ExtendedDependencyPipe (true);
+		pipe = new ExtendedDependencyPipe (true);
 
 	    pipe.setLabeled(testfile);
 	    DependencyParser dp = new DependencyParser(pipe);

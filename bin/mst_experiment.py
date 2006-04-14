@@ -22,10 +22,10 @@ else:
 ###########################################################################
 
 def run_single_train_and_test(options, train_filename,
-                              test_filename, output_filename):
+                              test_filename, output_filename, args):
     # Train the parser
     print "  Training and evaluating..."
-    train_command = 'mst_parse.sh train train-file:%s model-name:%s/dep.model decode-type:%s test test-file:%s output-file:%s' % (train_filename, options.output_dir, options.decoder_type, test_filename, output_filename)
+    train_command = 'mst_parse.sh train train-file:%s model-name:%s/dep.model decode-type:%s test test-file:%s output-file:%s %s' % (train_filename, options.output_dir, options.decoder_type, test_filename, output_filename, " ".join(args[1:]))
     if options.verbose:
 	print train_command
 	os.system(train_command)
@@ -165,7 +165,7 @@ if num_folds != 0:
 
         # Run the fold.
 	output_filename = output_dir+"/output"
-        run_single_train_and_test(options, train_filename, test_filename, output_filename)
+        run_single_train_and_test(options, train_filename, test_filename, output_filename, args)
 
         # Pile this fold's output onto the accumulating result file.
         os.system('cat %s >> %s' % (output_filename, model_output_filename))

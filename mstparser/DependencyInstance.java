@@ -12,6 +12,12 @@ public class DependencyInstance {
     private THashMap typesToData = new THashMap();
 
     public DependencyInstance() {}
+
+    public DependencyInstance(DependencyInstance source) {
+	this.fv = source.fv;
+	this.actParseTree = source.actParseTree;
+	this.length = source.length;
+    }
     
     public DependencyInstance(int length) { this.length = length; }
 

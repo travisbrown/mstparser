@@ -212,6 +212,290 @@ public class DependencyPipe {
     }	
 	
 
+	
+    public FeatureVector createFeatureVector(DependencyInstance depinst, int[] deps) {
+
+	String[] pos = depinst.get("pos");
+	String[] labs = depinst.get("labels");
+	    
+	String[] posA = new String[pos.length];
+	for(int i = 0; i < pos.length; i++) {
+	    posA[i] = pos[i].substring(0,1);
+	}
+
+	depinst.put("posA", posA);
+		
+	FeatureVector fv = new FeatureVector(-1,-1.0,null);
+	for(int i = 0; i < depinst.length(); i++) {
+	    if(deps[i] == -1)
+		continue;
+	    int small = i < deps[i] ? i : deps[i];
+	    int large = i > deps[i] ? i : deps[i];
+	    boolean attR = i < deps[i] ? false : true;
+	    fv = createFeatureVector(depinst,small,large,attR,fv);
+	    if(labeled) {
+		fv = createFeatureVector(depinst,i,labs[i],attR,true,fv);
+		fv = createFeatureVector(depinst,deps[i],labs[i],attR,false,fv);
+	    }
+	}
+	return fv;
+    }
+
+    public FeatureVector add(String feat, double val, FeatureVector fv) {
+	int num = dataAlphabet.lookupIndex(feat);
+	if(num >= 0)
+	    return new FeatureVector(num,val,fv);
+	return fv;
+    }
+
+    public void possibleFeatures(DependencyInstance depinst, 
+				 ObjectOutputStream out) {
+
+	String[] pos = depinst.get("pos");
+	String[] posA = new String[pos.length];
+
+	for(int i = 0; i < pos.length; i++) {
+	    posA[i] = pos[i].substring(0,1);
+	}
+
+	depinst.put("posA", posA);
+		
+	int instanceLength = depinst.length();
+
+	try {
+
+	    for(int w1 = 0; w1 < instanceLength; w1++) {
+		for(int w2 = w1+1; w2 < instanceLength; w2++) {
+					
+		    for(int ph = 0; ph < 2; ph++) {						
+			boolean attR = ph == 0 ? true : false;
+
+			int childInt = attR ? w2 : w1;
+			int parInt = attR ? w1 : w2;
+						
+			FeatureVector prodFV = createFeatureVector(depinst,w1,w2,attR,
+								   new FeatureVector(-1,-1.0,null));
+								
+			for(FeatureVector curr = prodFV; curr != null; curr = curr.next) {
+			    if(curr.index >= 0)
+				out.writeInt(curr.index);
+			}
+			out.writeInt(-2);
+								
+		    }
+		}
+			
+	    }
+
+	    out.writeInt(-3);
+
+	    if(labeled) {
+		for(int w1 = 0; w1 < instanceLength; w1++) {		    
+		    for(int t = 0; t < types.length; t++) {
+			String type = types[t];			
+			for(int ph = 0; ph < 2; ph++) {
+			    boolean attR = ph == 0 ? true : false;
+			    for(int ch = 0; ch < 2; ch++) {
+				boolean child = ch == 0 ? true : false;
+				FeatureVector prodFV = 
+				    createFeatureVector(depinst,w1,
+							type, attR,child,
+							new FeatureVector(-1,-1.0,null));
+
+				for(FeatureVector curr = prodFV; curr != null; curr = curr.next) {
+				    if(curr.index >= 0)
+					out.writeInt(curr.index);
+				}
+				out.writeInt(-2);
+				
+			    }
+			}
+		    }
+		    
+		}
+		
+		out.writeInt(-3);
+	    }
+
+	    for(FeatureVector curr = depinst.fv; curr.next != null; curr = curr.next)
+		out.writeInt(curr.index);
+
+	    String[] keysToDI = depinst.keys();
+	    for (int i=0; i<keysToDI.length; i++) {
+		out.writeInt(-4);
+		out.writeObject(keysToDI[i]);
+		out.writeObject(depinst.get(keysToDI[i]));
+	    }
+
+	    out.writeInt(-5);
+	    out.writeObject(depinst.actParseTree);
+			
+	    out.writeInt(-1);
+	    out.reset();
+
+	} catch (IOException e) {}
+		
+    }
+	
+    public DependencyInstance getFeatureVector(ObjectInputStream in,
+					       DependencyInstance inst,
+					       FeatureVector[][][] fvs,
+					       double[][][] probs,
+					       FeatureVector[][][][] nt_fvs,
+					       double[][][][] nt_probs,
+					       Parameters params) throws IOException {
+	int length = inst.length;
+		
+	// Get production crap.		
+	for(int w1 = 0; w1 < length; w1++) {
+	    for(int w2 = w1+1; w2 < length; w2++) {
+				
+		for(int ph = 0; ph < 2; ph++) {
+
+		    FeatureVector prodFV = new FeatureVector(-1,-1.0,null);
+					
+		    int indx = in.readInt();
+		    while(indx != -2) {
+			prodFV = new FeatureVector(indx,1.0,prodFV);
+			indx = in.readInt();
+		    }
+					
+		    double prodProb = params.getScore(prodFV);
+		    fvs[w1][w2][ph] = prodFV;
+		    probs[w1][w2][ph] = prodProb;
+		}
+	    }
+			
+	}
+	int last = in.readInt();
+	if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
+
+	if(labeled) {
+	    for(int w1 = 0; w1 < length; w1++) {
+		
+		for(int t = 0; t < types.length; t++) {
+		    String type = types[t];
+		    
+		    for(int ph = 0; ph < 2; ph++) {						
+			
+			for(int ch = 0; ch < 2; ch++) {						
+			    
+			    FeatureVector prodFV = new FeatureVector(-1,-1.0,null);
+			    
+			    int indx = in.readInt();
+			    while(indx != -2) {
+				prodFV = new FeatureVector(indx,1.0,prodFV);
+				indx = in.readInt();
+			    }
+			    
+			    double nt_prob = params.getScore(prodFV);
+			    nt_fvs[w1][t][ph][ch] = prodFV;
+			    nt_probs[w1][t][ph][ch] = nt_prob;
+			    
+			}
+		    }
+		}
+		
+	    }
+	    last = in.readInt();
+	    if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
+	}
+
+	DependencyInstance marshalledDI = new DependencyInstance();
+
+	FeatureVector nfv = new FeatureVector(-1,-1.0,null);
+	int next = in.readInt();
+	while(next != -4) {
+	    nfv = new FeatureVector(next,1.0,nfv);
+	    next = in.readInt();
+	}
+
+	marshalledDI.setFeatureVector(nfv);
+	
+	try {
+	    while (next != -5) {
+		marshalledDI.put((String)in.readObject(), 
+				 (String[])in.readObject());
+		next = in.readInt();
+	    }
+
+	    marshalledDI.actParseTree = (String)in.readObject();
+	    next = in.readInt();
+
+	}
+	catch(ClassNotFoundException e) { System.out.println("Error reading file."); System.exit(0); }
+		
+	if(next != -1) { System.out.println("Error reading file."); System.exit(0); }
+
+	return marshalledDI;
+		
+    }
+		
+    public void getFeatureVector(DependencyInstance depinst,
+				 FeatureVector[][][] fvs,
+				 double[][][] probs,
+				 FeatureVector[][][][] nt_fvs,
+				 double[][][][] nt_probs, Parameters params) {
+
+	String[] pos = depinst.get("pos");
+		
+	String[] posA = new String[pos.length];
+	for(int i = 0; i < pos.length; i++) {
+	    posA[i] = pos[i].substring(0,1);
+	}
+
+	depinst.put("posA", posA);
+
+	int instanceLength = depinst.length();
+
+	// Get production crap.		
+	for(int w1 = 0; w1 < instanceLength; w1++) {
+	    for(int w2 = w1+1; w2 < instanceLength; w2++) {
+				
+		for(int ph = 0; ph < 2; ph++) {
+		    boolean attR = ph == 0 ? true : false;
+		    
+		    int childInt = attR ? w2 : w1;
+		    int parInt = attR ? w1 : w2;
+		    
+		    FeatureVector prodFV = createFeatureVector(depinst,w1,w2,attR,
+							       new FeatureVector(-1,-1.0,null));
+										
+		    double prodProb = params.getScore(prodFV);
+		    fvs[w1][w2][ph] = prodFV;
+		    probs[w1][w2][ph] = prodProb;
+		}
+	    }
+			
+	}
+
+	if(labeled) {
+	    for(int w1 = 0; w1 < instanceLength; w1++) {
+		
+		for(int t = 0; t < types.length; t++) {
+		    String type = types[t];
+		    
+		    for(int ph = 0; ph < 2; ph++) {						
+			boolean attR = ph == 0 ? true : false;
+			
+			for(int ch = 0; ch < 2; ch++) {						
+			    boolean child = ch == 0 ? true : false;			    
+			    FeatureVector prodFV = createFeatureVector(depinst,w1,
+								       type,attR,child,
+								       new FeatureVector(-1,-1.0,null));
+			    
+			    double nt_prob = params.getScore(prodFV);
+			    nt_fvs[w1][t][ph][ch] = prodFV;
+			    nt_probs[w1][t][ph][ch] = nt_prob;
+			    
+			}
+		    }
+		}
+		
+	    }
+	}		
+    }
+
     public FeatureVector createFeatureVector(DependencyInstance depinst,
 					     int small,
 					     int large,
@@ -464,298 +748,6 @@ public class DependencyPipe {
 		
 	return fv;
     }
-	
-    public FeatureVector createFeatureVector(DependencyInstance depinst, int[] deps) {
 
-	String[] pos = depinst.get("pos");
-	String[] labs = depinst.get("labels");
-	    
-	String[] posA = new String[pos.length];
-	for(int i = 0; i < pos.length; i++) {
-	    posA[i] = pos[i].substring(0,1);
-	}
-
-	depinst.put("posA", posA);
-		
-	FeatureVector fv = new FeatureVector(-1,-1.0,null);
-	for(int i = 0; i < depinst.length(); i++) {
-	    if(deps[i] == -1)
-		continue;
-	    int small = i < deps[i] ? i : deps[i];
-	    int large = i > deps[i] ? i : deps[i];
-	    boolean attR = i < deps[i] ? false : true;
-	    fv = createFeatureVector(depinst,small,large,attR,fv);
-	    if(labeled) {
-		fv = createFeatureVector(depinst,i,labs[i],attR,true,fv);
-		fv = createFeatureVector(depinst,deps[i],labs[i],attR,false,fv);
-	    }
-	}
-	return fv;
-    }
-
-    public FeatureVector add(String feat, double val, FeatureVector fv) {
-	int num = dataAlphabet.lookupIndex(feat);
-	if(num >= 0)
-	    return new FeatureVector(num,val,fv);
-	return fv;
-    }
-
-    public void possibleFeatures(DependencyInstance inst, ObjectOutputStream out) {
-	String[] toks = inst.get("tokens");
-	String[] pos = inst.get("pos");
-	String[] labs = inst.get("labels");
-		
-	String[] posA = new String[pos.length];
-
-	for(int i = 0; i < pos.length; i++) {
-	    posA[i] = pos[i].substring(0,1);
-	}
-
-
-	DependencyInstance depinst = new DependencyInstance();
-	depinst.put("tokens", toks);
-	depinst.put("pos", pos);
-	depinst.put("posA", posA);
-	depinst.put("labels", labs);
-		
-	try {
-
-	    for(int w1 = 0; w1 < toks.length; w1++) {
-		for(int w2 = w1+1; w2 < toks.length; w2++) {
-					
-		    for(int ph = 0; ph < 2; ph++) {						
-			boolean attR = ph == 0 ? true : false;
-
-			int childInt = attR ? w2 : w1;
-			int parInt = attR ? w1 : w2;
-						
-			FeatureVector prodFV = createFeatureVector(depinst,w1,w2,attR,
-								   new FeatureVector(-1,-1.0,null));
-								
-			for(FeatureVector curr = prodFV; curr != null; curr = curr.next) {
-			    if(curr.index >= 0)
-				out.writeInt(curr.index);
-			}
-			out.writeInt(-2);
-								
-		    }
-		}
-			
-	    }
-
-	    out.writeInt(-3);
-
-	    if(labeled) {
-		for(int w1 = 0; w1 < toks.length; w1++) {		    
-		    for(int t = 0; t < types.length; t++) {
-			String type = types[t];			
-			for(int ph = 0; ph < 2; ph++) {
-			    boolean attR = ph == 0 ? true : false;
-			    for(int ch = 0; ch < 2; ch++) {
-				boolean child = ch == 0 ? true : false;
-				FeatureVector prodFV = 
-				    createFeatureVector(depinst,w1,
-							type, attR,child,
-							new FeatureVector(-1,-1.0,null));
-
-				for(FeatureVector curr = prodFV; curr != null; curr = curr.next) {
-				    if(curr.index >= 0)
-					out.writeInt(curr.index);
-				}
-				out.writeInt(-2);
-				
-			    }
-			}
-		    }
-		    
-		}
-		
-		out.writeInt(-3);
-	    }
-
-	    for(FeatureVector curr = inst.fv; curr.next != null; curr = curr.next)
-		out.writeInt(curr.index);
-
-	    String[] keysToDI = inst.keys();
-	    for (int i=0; i<keysToDI.length; i++) {
-		out.writeInt(-4);
-		out.writeObject(keysToDI[i]);
-		out.writeObject(inst.get(keysToDI[i]));
-	    }
-
-	    out.writeInt(-5);
-	    out.writeObject(inst.actParseTree);
-			
-	    out.writeInt(-1);
-	    out.reset();
-
-	} catch (IOException e) {}
-		
-    }
-	
-    public DependencyInstance getFeatureVector(ObjectInputStream in,
-					       DependencyInstance inst,
-					       FeatureVector[][][] fvs,
-					       double[][][] probs,
-					       FeatureVector[][][][] nt_fvs,
-					       double[][][][] nt_probs,
-					       Parameters params) throws IOException {
-	int length = inst.length;
-		
-	// Get production crap.		
-	for(int w1 = 0; w1 < length; w1++) {
-	    for(int w2 = w1+1; w2 < length; w2++) {
-				
-		for(int ph = 0; ph < 2; ph++) {
-
-		    FeatureVector prodFV = new FeatureVector(-1,-1.0,null);
-					
-		    int indx = in.readInt();
-		    while(indx != -2) {
-			prodFV = new FeatureVector(indx,1.0,prodFV);
-			indx = in.readInt();
-		    }
-					
-		    double prodProb = params.getScore(prodFV);
-		    fvs[w1][w2][ph] = prodFV;
-		    probs[w1][w2][ph] = prodProb;
-		}
-	    }
-			
-	}
-	int last = in.readInt();
-	if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
-
-	if(labeled) {
-	    for(int w1 = 0; w1 < length; w1++) {
-		
-		for(int t = 0; t < types.length; t++) {
-		    String type = types[t];
-		    
-		    for(int ph = 0; ph < 2; ph++) {						
-			
-			for(int ch = 0; ch < 2; ch++) {						
-			    
-			    FeatureVector prodFV = new FeatureVector(-1,-1.0,null);
-			    
-			    int indx = in.readInt();
-			    while(indx != -2) {
-				prodFV = new FeatureVector(indx,1.0,prodFV);
-				indx = in.readInt();
-			    }
-			    
-			    double nt_prob = params.getScore(prodFV);
-			    nt_fvs[w1][t][ph][ch] = prodFV;
-			    nt_probs[w1][t][ph][ch] = nt_prob;
-			    
-			}
-		    }
-		}
-		
-	    }
-	    last = in.readInt();
-	    if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
-	}
-
-	DependencyInstance marshalledDI = new DependencyInstance();
-
-	FeatureVector nfv = new FeatureVector(-1,-1.0,null);
-	int next = in.readInt();
-	while(next != -4) {
-	    nfv = new FeatureVector(next,1.0,nfv);
-	    next = in.readInt();
-	}
-
-	marshalledDI.setFeatureVector(nfv);
-	
-	try {
-	    while (next != -5) {
-		marshalledDI.put((String)in.readObject(), 
-				 (String[])in.readObject());
-		next = in.readInt();
-	    }
-
-	    marshalledDI.actParseTree = (String)in.readObject();
-	    next = in.readInt();
-
-	}
-	catch(ClassNotFoundException e) { System.out.println("Error reading file."); System.exit(0); }
-		
-	if(next != -1) { System.out.println("Error reading file."); System.exit(0); }
-
-	//DependencyInstance pti = new DependencyInstance(toks,pos,labs,nfv);
-	//pti.actParseTree = actParseTree;
-	return marshalledDI;
-		
-    }
-		
-    public void getFeatureVector(DependencyInstance inst,
-				 FeatureVector[][][] fvs,
-				 double[][][] probs,
-				 FeatureVector[][][][] nt_fvs,
-				 double[][][][] nt_probs, Parameters params) {
-
-	String[] toks = inst.get("tokens");
-	String[] pos = inst.get("pos");
-	String[] labs = inst.get("labels");
-		
-	String[] posA = new String[pos.length];
-	for(int i = 0; i < pos.length; i++) {
-	    posA[i] = pos[i].substring(0,1);
-	}
-
-	DependencyInstance depinst = new DependencyInstance();
-	depinst.put("tokens", toks);
-	depinst.put("pos", pos);
-	depinst.put("posA", posA);
-	depinst.put("labels", labs);
-
-	// Get production crap.		
-	for(int w1 = 0; w1 < toks.length; w1++) {
-	    for(int w2 = w1+1; w2 < toks.length; w2++) {
-				
-		for(int ph = 0; ph < 2; ph++) {
-		    boolean attR = ph == 0 ? true : false;
-		    
-		    int childInt = attR ? w2 : w1;
-		    int parInt = attR ? w1 : w2;
-		    
-		    FeatureVector prodFV = createFeatureVector(depinst,w1,w2,attR,
-							       new FeatureVector(-1,-1.0,null));
-										
-		    double prodProb = params.getScore(prodFV);
-		    fvs[w1][w2][ph] = prodFV;
-		    probs[w1][w2][ph] = prodProb;
-		}
-	    }
-			
-	}
-
-	if(labeled) {
-	    for(int w1 = 0; w1 < toks.length; w1++) {
-		
-		for(int t = 0; t < types.length; t++) {
-		    String type = types[t];
-		    
-		    for(int ph = 0; ph < 2; ph++) {						
-			boolean attR = ph == 0 ? true : false;
-			
-			for(int ch = 0; ch < 2; ch++) {						
-			    boolean child = ch == 0 ? true : false;			    
-			    FeatureVector prodFV = createFeatureVector(depinst,w1,
-								       type,attR,child,
-								       new FeatureVector(-1,-1.0,null));
-			    
-			    double nt_prob = params.getScore(prodFV);
-			    nt_fvs[w1][t][ph][ch] = prodFV;
-			    nt_probs[w1][t][ph][ch] = nt_prob;
-			    
-			}
-		    }
-		}
-		
-	    }
-	}		
-    }
 		
 }
