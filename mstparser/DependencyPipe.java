@@ -581,12 +581,15 @@ public class DependencyPipe {
 		out.writeInt(curr.index);
 
 	    out.writeInt(-4);
+	    out.writeObject("tokens");
 	    out.writeObject(inst.get("tokens"));
-	    out.writeInt(-5);
+	    out.writeInt(-4);
+	    out.writeObject("pos");
 	    out.writeObject(inst.get("pos"));
-	    out.writeInt(-6);
+	    out.writeInt(-4);
+	    out.writeObject("labels");
 	    out.writeObject(inst.get("labels"));
-	    out.writeInt(-7);
+	    out.writeInt(-5);
 	    out.writeObject(inst.actParseTree);
 			
 	    out.writeInt(-1);
@@ -660,6 +663,8 @@ public class DependencyPipe {
 	    if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
 	}
 
+	DependencyInstance marshalledDI = new DependencyInstance();
+
 	FeatureVector nfv = new FeatureVector(-1,-1.0,null);
 	int next = in.readInt();
 	while(next != -4) {
@@ -667,27 +672,26 @@ public class DependencyPipe {
 	    next = in.readInt();
 	}
 
-	String[] toks = null;
-	String[] pos = null;
-	String[] labs = null;
-	String actParseTree = null;
+	marshalledDI.setFeatureVector(nfv);
+	
 	try {
-	    toks = (String[])in.readObject();
+	    while (next != -5) {
+		marshalledDI.put((String)in.readObject(), 
+				 (String[])in.readObject());
+		next = in.readInt();
+	    }
+
+	    marshalledDI.actParseTree = (String)in.readObject();
 	    next = in.readInt();
-	    pos = (String[])in.readObject();
-	    next = in.readInt();
-	    labs = (String[])in.readObject();
-	    next = in.readInt();
-	    actParseTree = (String)in.readObject();
-	    next = in.readInt();
+
 	}
 	catch(ClassNotFoundException e) { System.out.println("Error reading file."); System.exit(0); }
 		
 	if(next != -1) { System.out.println("Error reading file."); System.exit(0); }
 
-	DependencyInstance pti = new DependencyInstance(toks,pos,labs,nfv);
-	pti.actParseTree = actParseTree;
-	return pti;
+	//DependencyInstance pti = new DependencyInstance(toks,pos,labs,nfv);
+	//pti.actParseTree = actParseTree;
+	return marshalledDI;
 		
     }
 		
