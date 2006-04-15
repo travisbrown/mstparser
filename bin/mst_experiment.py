@@ -21,11 +21,87 @@ else:
 #
 ###########################################################################
 
+def create_tag_train_file (source_file, formatted_file):
+
+    output = file(formatted_file, "w")
+
+    input = file(source_file)
+    line = input.readline()
+    while not(line == ""):
+        words = line.strip().split("\t")
+        line = input.readline()
+        tags = line.strip().split("\t")
+
+        # the splitting takes care of word+stem representations like biliyor+bil
+        merged = [words[i].split("+")[0]+"_"+tags[i].replace("_", "+us+") \
+                  for i in range(len(words))]
+
+        output.write(" ".join(merged)+"\n")
+
+        input.readline() # eat up labels
+        input.readline() # eat up dependencies
+        input.readline() # eat blank line
+        line = input.readline() # read words of next sentence
+
+    output.close()
+
+
 def run_single_train_and_test(options, train_filename,
                               test_filename, output_filename, args):
+
+
+    realtest_filename = test_filename
+    # Tag the test sentences if requested
+    if options.tag_source == "OTK_Tagger":
+        print "  Tagging test sentences..."
+
+        tag_train_filename = train_filename+".tagged"
+        
+        create_tag_train_file(train_filename, tag_train_filename)
+
+        tagged_filename = test_filename+".tagged.tmp"
+        tag_command = "python %s/bin/pos_tag.py -o %s %s %s %s" \
+                      % (mstparser_dir,
+                         options.output_dir,
+                         tag_train_filename,
+                         test_filename,
+                         tagged_filename)
+        
+        #print >> argfile, tag_command
+        if options.verbose:
+            print tag_command
+            os.system(tag_command)
+            #os.system(tag_command+' |tee --append '+options.output_dir+'/tag.out 2>&1')
+        else:
+            os.system(tag_command+' &>/dev/null')
+            #os.system(tag_command+' >> '+options.output_dir+'/tag.out 2>&1')
+
+
+        tag_lines = []
+        counter = 0
+        for line in file(tagged_filename):
+            if counter % 2 == 1:
+                tag_lines.append(line)
+            counter += 1
+
+        realtest_filename = test_filename+".tagged"
+        output = file(realtest_filename, "w")
+        counter = 0
+        for line in file(test_filename):
+            if counter % 5 == 1:
+                output.write(tag_lines[(counter-1)/5])
+            else:
+                output.write(line)
+            counter += 1
+
+        output.close()
+
+
     # Train the parser
     print "  Training and evaluating..."
-    train_command = 'mst_parse.sh train train-file:%s model-name:%s/dep.model decode-type:%s test test-file:%s output-file:%s %s' % (train_filename, options.output_dir, options.decoder_type, test_filename, output_filename, " ".join(args[1:]))
+
+    train_command = 'mst_parse.sh train train-file:%s model-name:%s/dep.model decode-type:%s test test-file:%s output-file:%s %s' % (train_filename, options.output_dir, options.decoder_type, realtest_filename, output_filename, " ".join(args[1:]))
+
     if options.verbose:
 	print train_command
 	os.system(train_command)
