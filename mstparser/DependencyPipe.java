@@ -98,7 +98,7 @@ public class DependencyPipe {
 	System.out.println("Num Features: " + dataAlphabet.size());
 
 	BufferedReader in = //new BufferedReader(new FileReader(file));
-	    new BufferedReader(new InputStreamReader(new FileInputStream(file),"8859_2"));
+	    new BufferedReader(new InputStreamReader(new FileInputStream(file),"UTF8"));
 	DependencyInstance depinst = getLines(in);
 		
 	LinkedList lt = new LinkedList();
@@ -157,7 +157,7 @@ public class DependencyPipe {
 	System.out.print("Creating Alphabet ... ");
 
 	BufferedReader in =
-	    new BufferedReader(new InputStreamReader(new FileInputStream(file),"8859_2"));
+	    new BufferedReader(new InputStreamReader(new FileInputStream(file),"UTF8"));
 	DependencyInstance depinst = getLines(in);
 
 	int cnt = 0;
@@ -401,8 +401,6 @@ public class DependencyPipe {
 	    if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
 	}
 
-	DependencyInstance marshalledDI = new DependencyInstance();
-
 	FeatureVector nfv = new FeatureVector(-1,-1.0,null);
 	int next = in.readInt();
 	while(next != -4) {
@@ -410,6 +408,7 @@ public class DependencyPipe {
 	    next = in.readInt();
 	}
 
+	DependencyInstance marshalledDI = new DependencyInstance();
 	marshalledDI.setFeatureVector(nfv);
 	
 	try {

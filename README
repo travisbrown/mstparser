@@ -1,5 +1,5 @@
 -------------------------
-MSTParser version 0.1
+MSTParser version 0.2
 -------------------------
 
 The following package contains a java implementation of the dependency parsers
@@ -9,10 +9,13 @@ Non-Projective Dependency Parsing using Spanning Tree Algorithms
 R. McDonald, F. Pereira, K. Ribarov and J. Hajic
 HLT-EMNLP, 2005
 
-
 Online Large-Margin Training of Dependency Parsers
-Ryan McDonald, Koby Crammer and Fernando Pereira
+R. McDonald, K. Crammer and F. Pereira
 ACL, 2005
+
+Online Learning of Approximate Dependency Parsing Algorithms
+R. McDonald and F. Pereira
+EACL, 2006
 
 In addition, the parsers in this package can also learn and produce typed
 dependency trees (i.e. trees with edge labels).
@@ -192,6 +195,12 @@ create-forest:cf
 - This flag is useful if you are training many models on the same data and
   features but using different parameters (e.g. training iters, decoding type).
 
+order:ord
+- ord is either 1 or 2
+- Default is 1
+- Specifies the order/scope of features. 1 only has features over single edges
+  and 2 has features over pairs of adjacent edges in the tree.
+
 
 ------------------------------------------------
 3c. Running a trained model on new data
@@ -232,6 +241,9 @@ output-file:out.txt
 
 decode-type:type
 - See section 3b.
+
+order:ord
+- See section 3b. THIS NEEDS TO HAVE THE SAME VALUE OF THE TRAINED MODEL!!
 
 Note that if you train a labeled model, you should only run it expecting
 labeled output (e.g. the test data should have 4 lines per sentence).
@@ -280,7 +292,7 @@ Treebank on a 32-bit machine (I have done it), but I make no guarantees.
 DISK ISSUES
 
 To make training quicker we store the entire parse forest on disk, ala
-Clark and Curran 04. This can be very large, even up to 20GB!! Be aware
+Clark and Curran 04. This can be very large, up to and over 20GB!! Be aware
 of this fact.
 
 If you train using a file called train.txt, the forest will be stored in

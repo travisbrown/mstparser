@@ -14,7 +14,7 @@ public class DependencyDecoder {
 	this.pipe = pipe;
     }
 
-    private int[][] getTypes(double[][][][] nt_probs, int len) {
+    protected int[][] getTypes(double[][][][] nt_probs, int len) {
 	int[][] static_types = new int[len][len];
 	for(int i = 0; i < len; i++) {
 	    for(int j = 0; j < len; j++) {

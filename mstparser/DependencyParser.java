@@ -24,10 +24,10 @@ public class DependencyParser {
     public static String goldfile = null;
     public static int trainK = 1;
     public static int testK = 1;
+    public static boolean secondOrder = false;
 
     //public static String pipeType = "standard";
     public static String pipeType = "extended";
-
 
     private DependencyPipe pipe;
     private DependencyDecoder decoder;
@@ -37,7 +37,7 @@ public class DependencyParser {
 	this.pipe=pipe;
 	// Set up arrays
 	params = new Parameters(pipe.dataAlphabet.size());
-	decoder = new DependencyDecoder(pipe);
+	decoder = secondOrder ? new DependencyDecoder2O(pipe) : new DependencyDecoder(pipe);
     }
 
     public void train(DependencyInstance[] il, String trainfile, String train_forest) throws IOException {
@@ -85,15 +85,40 @@ public class DependencyParser {
 	    double[][][] probs = new double[length][length][2];
 	    FeatureVector[][][][] nt_fvs = new FeatureVector[length][pipe.types.length][2][2];
 	    double[][][][] nt_probs = new double[length][pipe.types.length][2][2];
-	    inst = pipe.getFeatureVector(in,inst,fvs,probs,nt_fvs,nt_probs,params);
+	    FeatureVector[][][] fvs_trips = new FeatureVector[length][length][length];
+	    double[][][] probs_trips = new double[length][length][length];
+	    FeatureVector[][][] fvs_sibs = new FeatureVector[length][length][2];
+	    double[][][] probs_sibs = new double[length][length][2];
+
+	    if(secondOrder)
+		inst = ((DependencyPipe2O)pipe).getFeatureVector(in,inst,fvs,probs,
+								 fvs_trips,probs_trips,
+								 fvs_sibs,probs_sibs,
+								 nt_fvs,nt_probs,params);
+	    else
+		inst = pipe.getFeatureVector(in,inst,fvs,probs,nt_fvs,nt_probs,params);
 
 	    double upd = (double)(numIters*il.length - (il.length*(iter-1)+(i+1)) + 1);
 	    int K=trainK;
 	    Object[][] d = null;
-	    if(decodeType.equals("proj"))
-		d = decoder.decodeProjective(inst,fvs,probs,nt_fvs,nt_probs,K); 
-	    if(decodeType.equals("non-proj"))
-		d = decoder.decodeNonProjective(inst,fvs,probs,nt_fvs,nt_probs,K);
+	    if(decodeType.equals("proj")) {
+		if(secondOrder)
+		    d = ((DependencyDecoder2O)decoder).decodeProjective(inst,fvs,probs,
+									fvs_trips,probs_trips,
+									fvs_sibs,probs_sibs,
+									nt_fvs,nt_probs,K);
+		else
+		    d = decoder.decodeProjective(inst,fvs,probs,nt_fvs,nt_probs,K);
+	    }
+	    if(decodeType.equals("non-proj")) {
+		if(secondOrder)
+		    d = ((DependencyDecoder2O)decoder).decodeNonProjective(inst,fvs,probs,
+								       fvs_trips,probs_trips,
+								       fvs_sibs,probs_sibs,
+								       nt_fvs,nt_probs,K);
+		else
+		    d = decoder.decodeNonProjective(inst,fvs,probs,nt_fvs,nt_probs,K);
+	    }
 	    params.updateParamsMIRA(inst,d,upd);
 
 	}
@@ -133,10 +158,10 @@ public class DependencyParser {
 
 	long start = System.currentTimeMillis();
 
-	BufferedWriter pred = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file),"8859_2"));
+	BufferedWriter pred = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file),"UTF8"));
 
 	BufferedReader in =
-	    new BufferedReader(new InputStreamReader(new FileInputStream(tFile),"8859_2"));
+	    new BufferedReader(new InputStreamReader(new FileInputStream(tFile),"UTF8"));
 	System.out.print("Processing Sentence: ");
 	DependencyInstance il = pipe.createInstance(in);
 	int cnt = 0;
@@ -145,18 +170,44 @@ public class DependencyParser {
 	    System.out.print(cnt+" ");
 	    String[] toks = il.get("tokens");
 			
+	    int length = toks.length;
+
 	    FeatureVector[][][] fvs = new FeatureVector[toks.length][toks.length][2];
 	    double[][][] probs = new double[toks.length][toks.length][2];
 	    FeatureVector[][][][] nt_fvs = new FeatureVector[toks.length][pipe.types.length][2][2];
 	    double[][][][] nt_probs = new double[toks.length][pipe.types.length][2][2];
-	    pipe.getFeatureVector(il,fvs,probs,nt_fvs,nt_probs,params);
+	    FeatureVector[][][] fvs_trips = new FeatureVector[length][length][length];
+	    double[][][] probs_trips = new double[length][length][length];
+	    FeatureVector[][][] fvs_sibs = new FeatureVector[length][length][2];
+	    double[][][] probs_sibs = new double[length][length][2];
+	    if(secondOrder)
+		((DependencyPipe2O)pipe).getFeatureVector(il,fvs,probs,
+							  fvs_trips,probs_trips,
+							  fvs_sibs,probs_sibs,
+							  nt_fvs,nt_probs,params);
+	    else
+		pipe.getFeatureVector(il,fvs,probs,nt_fvs,nt_probs,params);
 
 	    int K = testK;
 	    Object[][] d = null;
-	    if(decodeType.equals("proj"))
-		d = decoder.decodeProjective(il,fvs,probs,nt_fvs,nt_probs,K);
-	    if(decodeType.equals("non-proj"))
-		d = decoder.decodeNonProjective(il,fvs,probs,nt_fvs,nt_probs,K);
+	    if(decodeType.equals("proj")) {
+		if(secondOrder)
+		    d = ((DependencyDecoder2O)decoder).decodeProjective(il,fvs,probs,
+									fvs_trips,probs_trips,
+									fvs_sibs,probs_sibs,
+									nt_fvs,nt_probs,K);
+		else
+		    d = decoder.decodeProjective(il,fvs,probs,nt_fvs,nt_probs,K);
+	    }
+	    if(decodeType.equals("non-proj")) {
+		if(secondOrder)
+		    d = ((DependencyDecoder2O)decoder).decodeNonProjective(il,fvs,probs,
+								       fvs_trips,probs_trips,
+								       fvs_sibs,probs_sibs,
+								       nt_fvs,nt_probs,K);
+		else
+		    d = decoder.decodeNonProjective(il,fvs,probs,nt_fvs,nt_probs,K);
+	    }
 
 	    String[] res = ((String)d[0][1]).split(" ");
 	    String[] sent = il.get("tokens");
@@ -196,10 +247,15 @@ public class DependencyParser {
 		
 	    DependencyPipe pipe;
 	    if (pipeType.equals("standard"))
-		pipe = new DependencyPipe (createForest);
+		pipe = secondOrder ? new DependencyPipe2O (createForest) : new DependencyPipe (createForest);
+
 	    else 
+		if (secondOrder) {
+		    System.out.println("Cannot use extended dependency pipe with second order features yet.");
+		    System.exit(0);
+		}
 		pipe = new ExtendedDependencyPipe (createForest);
-			
+
 	    pipe.setLabeled(trainfile);
 
 	    DependencyInstance[] trainingData = pipe.createInstances(trainfile,trainforest);
@@ -224,10 +280,15 @@ public class DependencyParser {
 	if (test) {
 	    DependencyPipe pipe;
 	    if (pipeType.equals("standard"))
-		pipe = new DependencyPipe (true);
-	    else 
-		pipe = new ExtendedDependencyPipe (true);
+		pipe = secondOrder ? new DependencyPipe2O (createForest) : new DependencyPipe (createForest);
 
+	    else 
+		if (secondOrder) {
+		    System.out.println("Cannot use extended dependency pipe with second order features yet.");
+		    System.exit(0);
+		}
+		pipe = new ExtendedDependencyPipe (createForest);
+			
 	    pipe.setLabeled(testfile);
 	    DependencyParser dp = new DependencyParser(pipe);
 
@@ -282,6 +343,9 @@ public class DependencyParser {
 	    if(pair[0].equals("loss-type")) {
 		lossType = pair[1];
 	    }			
+	    if(pair[0].equals("order") && pair[1].equals("2")) {
+		secondOrder = true;
+	    }			
 	    if(pair[0].equals("create-forest")) {
 		createForest = pair[1].equals("true") ? true : false;
 	    }			
@@ -305,10 +369,12 @@ public class DependencyParser {
 	System.out.println("test: " + test);
 	System.out.println("eval: " + eval);
 	System.out.println("loss-type: " + lossType);
+	System.out.println("second-order: " + secondOrder);
 	System.out.println("training-iterations: " + numIters);
 	System.out.println("training-k: " + trainK);
 	System.out.println("decode-type: " + decodeType);
 	System.out.println("create-forest: " + createForest);
+	System.out.println("pipe-type: " + pipeType);
 	System.out.println("------\n");
     }
 }

@@ -18,7 +18,7 @@ public class DependencyEvaluator {
 	act_in = new BufferedReader(new FileReader(act_file));
 	BufferedReader pred_in = new BufferedReader(new FileReader(pred_file));
 
-	act_in.readLine(); act_in.readLine();
+	act_in.readLine(); String[] pos = act_in.readLine().split("\t");
 	pred_in.readLine(); pred_in.readLine();
 	String act_lab = labeled ? act_in.readLine().trim() : "" ; String act_dep = act_in.readLine().trim();
 	String pred_lab = labeled ? pred_in.readLine().trim() : ""; String pred_dep = pred_in.readLine().trim();
@@ -55,7 +55,7 @@ public class DependencyEvaluator {
 	    if(wholeL) corrsentL++;
 	    numsent++;
 						
-	    act_in.readLine(); act_in.readLine();
+	    act_in.readLine(); try {pos = act_in.readLine().split("\t");} catch(Exception e){}
 	    pred_in.readLine(); pred_in.readLine();
 	    act_lab = labeled ? act_in.readLine() : ""; act_dep = act_in.readLine();
 	    pred_lab = labeled ? pred_in.readLine() : ""; pred_dep = pred_in.readLine();
