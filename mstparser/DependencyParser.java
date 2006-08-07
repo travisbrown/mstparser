@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.StringTokenizer;
 import gnu.trove.*;
 
+import mstparser.io.*;
+
 public class DependencyParser {
 
     public static String trainfile = null;
@@ -26,8 +28,8 @@ public class DependencyParser {
     public static int testK = 1;
     public static boolean secondOrder = false;
 
-    //public static String pipeType = "standard";
-    public static String pipeType = "extended";
+    public static String pipeType = "standard";
+    //public static String pipeType = "extended";
 
     private DependencyPipe pipe;
     private DependencyDecoder decoder;
@@ -160,10 +162,12 @@ public class DependencyParser {
 
 	BufferedWriter pred = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file),"UTF8"));
 
-	BufferedReader in =
-	    new BufferedReader(new InputStreamReader(new FileInputStream(tFile),"UTF8"));
+	DependencyReader depReader = new MSTReader(tFile);
+	pipe.labeled = depReader.isLabeled();
+
+
 	System.out.print("Processing Sentence: ");
-	DependencyInstance il = pipe.createInstance(in);
+	DependencyInstance il = pipe.createInstance(depReader);
 	int cnt = 0;
 	while(il != null) {
 	    cnt++;
@@ -222,12 +226,11 @@ public class DependencyParser {
 		       + (pipe.labeled ? line3.trim() + "\n" : "")
 		       + line4.trim() + "\n\n");
 	    
-	    il = pipe.createInstance(in);
+	    il = pipe.createInstance(depReader);
 	}
 	System.out.println();
 		
 	pred.close();
-	in.close();
 		
 	long end = System.currentTimeMillis();
 	System.out.println("Took: " + (end-start));
@@ -249,32 +252,32 @@ public class DependencyParser {
 	    if (pipeType.equals("standard"))
 		pipe = secondOrder ? new DependencyPipe2O (createForest) : new DependencyPipe (createForest);
 
-	    else 
+	    else {
 		if (secondOrder) {
 		    System.out.println("Cannot use extended dependency pipe with second order features yet.");
 		    System.exit(0);
 		}
+
 		pipe = new ExtendedDependencyPipe (createForest);
-
-	    pipe.setLabeled(trainfile);
-
+	    }
+	    
 	    DependencyInstance[] trainingData = pipe.createInstances(trainfile,trainforest);
-			
+		
 	    pipe.closeAlphabets();
-			
+	    
 	    DependencyParser dp = new DependencyParser(pipe);
-
+	    
 	    int numFeats = pipe.dataAlphabet.size();
 	    int numTypes = pipe.typeAlphabet.size();
 	    System.out.println("Num Feats: " + numFeats);	
 	    System.out.println("Num Edge Labels: " + numTypes);
-
+	    
 	    dp.train(trainingData,trainfile,trainforest);
-	
+	    
 	    System.out.print("Saving model ... ");
 	    dp.saveModel(modelName);
 	    System.out.println("done.");
-			
+	    
 	}
 		
 	if (test) {
@@ -282,14 +285,15 @@ public class DependencyParser {
 	    if (pipeType.equals("standard"))
 		pipe = secondOrder ? new DependencyPipe2O (createForest) : new DependencyPipe (createForest);
 
-	    else 
+	    else {
 		if (secondOrder) {
 		    System.out.println("Cannot use extended dependency pipe with second order features yet.");
 		    System.exit(0);
 		}
 		pipe = new ExtendedDependencyPipe (createForest);
 			
-	    pipe.setLabeled(testfile);
+	    }
+
 	    DependencyParser dp = new DependencyParser(pipe);
 
 	    System.out.println("\nLoading model ... ");

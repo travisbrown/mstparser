@@ -14,34 +14,14 @@ public class ExtendedDependencyPipe extends DependencyPipe {
 	super(createForest);
     }
 
-    public DependencyInstance getLines(BufferedReader in) throws IOException {
+    protected void augmentInstance (DependencyInstance depinst) {
 
-	String line = in.readLine();
-	String pos_line = in.readLine();
-	String lab_line = labeled ? in.readLine() : pos_line;
-	String deps_line = in.readLine();
-	in.readLine(); // blank line
+	String[] toks = depinst.get("tokens");
 
-	if(line == null) return null;
+	String[] stems = new String[toks.length];
+	String[] suffixes = new String[toks.length];
 
-	String[] toks = line.split("\t");
-	String[] pos = pos_line.split("\t");
-	String[] labs = lab_line.split("\t");
-	String[] deps = deps_line.split("\t");
-	
-	String[] toks_new = new String[toks.length+1];
-	String[] stems_new = new String[toks.length+1];
-	String[] suff_new = new String[toks.length+1];
-	String[] pos_new = new String[pos.length+1];
-	String[] labs_new = new String[labs.length+1];
-	String[] deps_new = new String[deps.length+1];
-	toks_new[0] = "<root>";
-	stems_new[0] = "<root-stem>";
-	pos_new[0] = "<root-POS>";
-	labs_new[0] = "<no-type>";
-	deps_new[0] = "-1";
 	for(int i = 0; i < toks.length; i++) {
-	    //toks_new[i+1] = normalize(toks[i]);
 
 	    String[] wordStem = toks[i].split("\\+");
 	    if (wordStem.length ==1) {
@@ -51,25 +31,17 @@ public class ExtendedDependencyPipe extends DependencyPipe {
 	    }
 
 	    if (wordStem[0].length() > wordStem[1].length())
-		suff_new[i] = wordStem[0].substring(wordStem[1].length());
+		suffixes[i] = wordStem[0].substring(wordStem[1].length());
 	    else
-		suff_new[i] = "<no-suffix>";
+		suffixes[i] = "<no-suffix>";
 
-	    toks_new[i+1] = normalize(wordStem[0]);
-	    stems_new[i+1] = normalize(wordStem[1]);
+	    toks[i] = wordStem[0];
+	    stems[i] = wordStem[1];
 
-	    pos_new[i+1] = pos[i];
-	    labs_new[i+1] = labeled ? labs[i] : "<no-type>";
-	    deps_new[i+1] = deps[i];
 	}
 
-	DependencyInstance depinst =
-	    new DependencyInstance(toks_new, pos_new, labs_new, deps_new);
-	
-	depinst.put("stems", stems_new);
-	depinst.put("suffixes", suff_new);
-
-	return depinst;
+	depinst.put("stems", stems);
+	depinst.put("suffixes", suffixes);
 
     }
 

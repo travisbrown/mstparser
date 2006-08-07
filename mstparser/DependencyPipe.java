@@ -1,5 +1,6 @@
 package mstparser;
 
+import mstparser.io.*;
 import java.io.*;
 import gnu.trove.*;
 import java.util.*;
@@ -26,51 +27,15 @@ public class DependencyPipe {
 	this.createForest = createForest;
     }
 
-    public void setLabeled(String file) throws IOException {
-	BufferedReader in = new BufferedReader(new FileReader(file));
-	in.readLine(); in.readLine(); in.readLine();
-	String line = in.readLine();
-	if(line.trim().length() > 0) labeled = true;
-	in.close();
+    protected void augmentInstance (DependencyInstance depinst) {
+	return;
     }
 
-    public DependencyInstance getLines(BufferedReader in) throws IOException {
-	String line = in.readLine();
-	String pos_line = in.readLine();
-	String lab_line = labeled ? in.readLine() : pos_line;
-	String deps_line = in.readLine();
-	in.readLine(); // blank line
-
-	if(line == null) return null;
-
-	String[] toks = line.split("\t");
-	String[] pos = pos_line.split("\t");
-	String[] labs = lab_line.split("\t");
-	String[] deps = deps_line.split("\t");
-	
-	String[] toks_new = new String[toks.length+1];
-	String[] pos_new = new String[pos.length+1];
-	String[] labs_new = new String[labs.length+1];
-	String[] deps_new = new String[deps.length+1];
-	toks_new[0] = "<root>";
-	pos_new[0] = "<root-POS>";
-	labs_new[0] = "<no-type>";
-	deps_new[0] = "-1";
-	for(int i = 0; i < toks.length; i++) {
-	    toks_new[i+1] = normalize(toks[i]);
-	    pos_new[i+1] = pos[i];
-	    labs_new[i+1] = labeled ? labs[i] : "<no-type>";
-	    deps_new[i+1] = deps[i];
-	}
-
-	//System.out.println(Arrays.toString(toks_new));
-
-	return new DependencyInstance(toks_new, pos_new, labs_new, deps_new);
-    }
-
-    public DependencyInstance createInstance(BufferedReader in) throws IOException {
-	DependencyInstance depinst = getLines(in);
+    public DependencyInstance createInstance(DependencyReader depReader) throws IOException {
+	DependencyInstance depinst = depReader.getNext();
 	if (depinst == null || depinst.numFeatureClasses() == 0) return null;
+
+	augmentInstance(depinst);
 
 	String[] labs = depinst.get("labels");
 	String[] deps = depinst.get("deps");
@@ -97,9 +62,11 @@ public class DependencyPipe {
 
 	System.out.println("Num Features: " + dataAlphabet.size());
 
-	BufferedReader in = //new BufferedReader(new FileReader(file));
-	    new BufferedReader(new InputStreamReader(new FileInputStream(file),"UTF8"));
-	DependencyInstance depinst = getLines(in);
+	DependencyReader depReader = new MSTReader(file);
+	labeled = depReader.isLabeled();
+
+	DependencyInstance depinst = depReader.getNext();
+	augmentInstance(depinst);
 		
 	LinkedList lt = new LinkedList();
 
@@ -132,7 +99,10 @@ public class DependencyPipe {
 			
 	    lt.add(new DependencyInstance(labs.length));
 			
-	    depinst = getLines(in);
+	    depinst = depReader.getNext();
+	    if (depinst != null)
+		augmentInstance(depinst);
+
 	    num1++;
 	}
 
@@ -146,8 +116,6 @@ public class DependencyPipe {
 	if(createForest)
 	    out.close();
 
-	in.close();
-
 	return allDepinsts;
 		
     }
@@ -156,9 +124,12 @@ public class DependencyPipe {
 
 	System.out.print("Creating Alphabet ... ");
 
-	BufferedReader in =
-	    new BufferedReader(new InputStreamReader(new FileInputStream(file),"UTF8"));
-	DependencyInstance depinst = getLines(in);
+
+	DependencyReader depReader = new MSTReader(file);
+	labeled = depReader.isLabeled();
+
+	DependencyInstance depinst = depReader.getNext();
+	augmentInstance(depinst);
 
 	int cnt = 0;
 		
@@ -177,15 +148,19 @@ public class DependencyPipe {
 			
 	    createFeatureVector(depinst,deps1);
 			
-	    depinst = getLines(in);
+	    depinst = depReader.getNext();
+
+	    if (depinst != null)
+		augmentInstance(depinst);
+
 	    cnt++;
 	}
 
 	closeAlphabets();
 
-	in.close();
-
 	System.out.println("Done.");
+	System.out.println("\tNumber of features:\t"+dataAlphabet.size());
+	System.out.println("\tNumber instances:\t"+cnt);
     }
 	
     public void closeAlphabets() {
@@ -202,15 +177,6 @@ public class DependencyPipe {
 	KBestParseForest.rootType = typeAlphabet.lookupIndex("<root-type>");
 		
     }
-
-    public String normalize(String s) {
-	if(s.matches("[0-9]+|[0-9]+\\.[0-9]+|[0-9]+[0-9,]+"))
-	    return "<num>";
-
-	return s;
-
-    }	
-	
 
 	
     public FeatureVector createFeatureVector(DependencyInstance depinst, int[] deps) {
