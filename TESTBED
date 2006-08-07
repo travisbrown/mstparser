@@ -1,0 +1,19 @@
+To test that changes to the code have not messed up previous results,
+do the following.
+
+Run the parser as such:
+
+> mst_parse.sh train train-file:data/train.lab model-name:testbed/model test test-file:data/test.lab output-file:testbed/my_run.txt eval gold-file:data/test.lab
+
+Score the results:
+
+> mst_score.sh data/test.lab testbed/my_run.txt > testbed/my_score.txt
+
+Then compare "gold_run.txt" to "my_run.txt" and "gold_score.txt" to
+"my_score.txt" -- they should be the same. 
+
+> cd testbed
+> diff gold_run.txt my_run.txt
+> diff gold_score.txt my_score.txt
+
+
