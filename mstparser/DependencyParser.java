@@ -238,16 +238,12 @@ public class DependencyParser {
     ////////////////////////////////////////////////////
     public static void main (String[] args) throws FileNotFoundException, Exception
     {
-
 		
 	processArguments(args);
 
-
-	DependencyReader depReader = DependencyReader.createDependencyReader(format);
-		
 	if(train) {
 		
-	    DependencyPipe pipe = secondOrder ? new DependencyPipe2O (createForest, depReader) : new DependencyPipe (createForest, depReader);
+	    DependencyPipe pipe = secondOrder ? new DependencyPipe2O (createForest, format) : new DependencyPipe (createForest, format);
 
 	    
 
@@ -271,7 +267,7 @@ public class DependencyParser {
 	}
 		
 	if (test) {
-	    DependencyPipe pipe = secondOrder ? new DependencyPipe2O (createForest, depReader) : new DependencyPipe (createForest, depReader);
+	    DependencyPipe pipe = secondOrder ? new DependencyPipe2O (createForest, format) : new DependencyPipe (createForest, format);
 
 	    DependencyParser dp = new DependencyParser(pipe);
 

@@ -21,14 +21,14 @@ public class DependencyPipe {
     public boolean createForest;
 	
     public DependencyPipe() throws IOException {
-	this(true, DependencyReader.createDependencyReader("MST"));
+	this(true, "MST");
     }
 
-    public DependencyPipe(boolean createForest, DependencyReader depReader) throws IOException {
+    public DependencyPipe(boolean createForest, String format) throws IOException {
 	dataAlphabet = new Alphabet();
 	typeAlphabet = new Alphabet();
 	this.createForest = createForest;
-	this.depReader = depReader;
+	depReader = DependencyReader.createDependencyReader(format);
     }
 
     public void loadFile (String file) throws IOException {

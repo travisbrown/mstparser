@@ -11,8 +11,8 @@ public class DependencyPipe2O extends DependencyPipe {
 	super();
     }
 
-    public DependencyPipe2O(boolean createForest, DependencyReader dr) throws IOException {
-	super(createForest, dr);
+    public DependencyPipe2O(boolean createForest, String format) throws IOException {
+	super(createForest, format);
     }
 
     public FeatureVector createFeatureVector(DependencyInstance depinst,
