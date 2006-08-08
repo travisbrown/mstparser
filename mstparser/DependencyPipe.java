@@ -10,6 +10,9 @@ public class DependencyPipe {
     public Alphabet dataAlphabet;
 	
     public Alphabet typeAlphabet;
+
+    private DependencyReader depReader;
+
     public String[] types;
     public int[] typesInt;
 	
@@ -18,24 +21,23 @@ public class DependencyPipe {
     public boolean createForest;
 	
     public DependencyPipe() throws IOException {
-	this(true);
+	this(true, DependencyReader.createDependencyReader("MST"));
     }
 
-    public DependencyPipe(boolean createForest) throws IOException {
+    public DependencyPipe(boolean createForest, DependencyReader depReader) throws IOException {
 	dataAlphabet = new Alphabet();
 	typeAlphabet = new Alphabet();
 	this.createForest = createForest;
+	this.depReader = depReader;
     }
 
-    protected void augmentInstance (DependencyInstance depinst) {
-	return;
+    public void loadFile (String file) throws IOException {
+	labeled = depReader.startReading(file);
     }
 
-    public DependencyInstance createInstance(DependencyReader depReader) throws IOException {
+    public DependencyInstance nextInstance() throws IOException {
 	DependencyInstance depinst = depReader.getNext();
 	if (depinst == null || depinst.numFeatureClasses() == 0) return null;
-
-	augmentInstance(depinst);
 
 	String[] labs = depinst.get("labels");
 	String[] deps = depinst.get("deps");
@@ -62,11 +64,9 @@ public class DependencyPipe {
 
 	System.out.println("Num Features: " + dataAlphabet.size());
 
-	DependencyReader depReader = new MSTReader(file);
-	labeled = depReader.isLabeled();
+	labeled = depReader.startReading(file);
 
 	DependencyInstance depinst = depReader.getNext();
-	augmentInstance(depinst);
 		
 	LinkedList lt = new LinkedList();
 
@@ -100,8 +100,6 @@ public class DependencyPipe {
 	    lt.add(new DependencyInstance(labs.length));
 			
 	    depinst = depReader.getNext();
-	    if (depinst != null)
-		augmentInstance(depinst);
 
 	    num1++;
 	}
@@ -125,11 +123,9 @@ public class DependencyPipe {
 	System.out.print("Creating Alphabet ... ");
 
 
-	DependencyReader depReader = new MSTReader(file);
-	labeled = depReader.isLabeled();
+	labeled = depReader.startReading(file);
 
 	DependencyInstance depinst = depReader.getNext();
-	augmentInstance(depinst);
 
 	int cnt = 0;
 		
@@ -150,17 +146,12 @@ public class DependencyPipe {
 			
 	    depinst = depReader.getNext();
 
-	    if (depinst != null)
-		augmentInstance(depinst);
-
 	    cnt++;
 	}
 
 	closeAlphabets();
 
 	System.out.println("Done.");
-	System.out.println("\tNumber of features:\t"+dataAlphabet.size());
-	System.out.println("\tNumber instances:\t"+cnt);
     }
 	
     public void closeAlphabets() {

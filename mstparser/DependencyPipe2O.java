@@ -3,6 +3,7 @@ package mstparser;
 import java.io.*;
 import gnu.trove.*;
 import java.util.*;
+import mstparser.io.*;
 
 public class DependencyPipe2O extends DependencyPipe {
 
@@ -10,8 +11,8 @@ public class DependencyPipe2O extends DependencyPipe {
 	super();
     }
 
-    public DependencyPipe2O(boolean createForest) throws IOException {
-	super(createForest);
+    public DependencyPipe2O(boolean createForest, DependencyReader dr) throws IOException {
+	super(createForest, dr);
     }
 
     public FeatureVector createFeatureVector(DependencyInstance depinst,

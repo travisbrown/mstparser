@@ -21,15 +21,13 @@ public class DependencyParser {
     public static String lossType = "punc";
     public static boolean createForest = true;
     public static String decodeType = "proj";
+    public static String format = "MST";
     public static int numIters = 10;
     public static String outfile = "out.txt";
     public static String goldfile = null;
     public static int trainK = 1;
     public static int testK = 1;
     public static boolean secondOrder = false;
-
-    public static String pipeType = "standard";
-    //public static String pipeType = "extended";
 
     private DependencyPipe pipe;
     private DependencyDecoder decoder;
@@ -162,12 +160,10 @@ public class DependencyParser {
 
 	BufferedWriter pred = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file),"UTF8"));
 
-	DependencyReader depReader = new MSTReader(tFile);
-	pipe.labeled = depReader.isLabeled();
-
+	pipe.loadFile(tFile);
 
 	System.out.print("Processing Sentence: ");
-	DependencyInstance il = pipe.createInstance(depReader);
+	DependencyInstance il = pipe.nextInstance();
 	int cnt = 0;
 	while(il != null) {
 	    cnt++;
@@ -226,7 +222,7 @@ public class DependencyParser {
 		       + (pipe.labeled ? line3.trim() + "\n" : "")
 		       + line4.trim() + "\n\n");
 	    
-	    il = pipe.createInstance(depReader);
+	    il = pipe.nextInstance();
 	}
 	System.out.println();
 		
@@ -245,22 +241,16 @@ public class DependencyParser {
 
 		
 	processArguments(args);
+
+
+	DependencyReader depReader = DependencyReader.createDependencyReader(format);
 		
 	if(train) {
 		
-	    DependencyPipe pipe;
-	    if (pipeType.equals("standard"))
-		pipe = secondOrder ? new DependencyPipe2O (createForest) : new DependencyPipe (createForest);
+	    DependencyPipe pipe = secondOrder ? new DependencyPipe2O (createForest, depReader) : new DependencyPipe (createForest, depReader);
 
-	    else {
-		if (secondOrder) {
-		    System.out.println("Cannot use extended dependency pipe with second order features yet.");
-		    System.exit(0);
-		}
-
-		pipe = new ExtendedDependencyPipe (createForest);
-	    }
 	    
+
 	    DependencyInstance[] trainingData = pipe.createInstances(trainfile,trainforest);
 		
 	    pipe.closeAlphabets();
@@ -281,18 +271,7 @@ public class DependencyParser {
 	}
 		
 	if (test) {
-	    DependencyPipe pipe;
-	    if (pipeType.equals("standard"))
-		pipe = secondOrder ? new DependencyPipe2O (createForest) : new DependencyPipe (createForest);
-
-	    else {
-		if (secondOrder) {
-		    System.out.println("Cannot use extended dependency pipe with second order features yet.");
-		    System.exit(0);
-		}
-		pipe = new ExtendedDependencyPipe (createForest);
-			
-	    }
+	    DependencyPipe pipe = secondOrder ? new DependencyPipe2O (createForest, depReader) : new DependencyPipe (createForest, depReader);
 
 	    DependencyParser dp = new DependencyParser(pipe);
 
@@ -356,9 +335,9 @@ public class DependencyParser {
 	    if(pair[0].equals("decode-type")) {
 		decodeType = pair[1];
 	    }			
-	    if(pair[0].equals("pipe-type")) {
-		pipeType = pair[1];
-	    }
+	    if(pair[0].equals("format")) {
+		decodeType = pair[1];
+	    }			
 	}
 	trainforest = trainfile == null ? null : trainfile+".forest";
 	testforest = testfile == null ? null : testfile+".forest";
@@ -378,7 +357,7 @@ public class DependencyParser {
 	System.out.println("training-k: " + trainK);
 	System.out.println("decode-type: " + decodeType);
 	System.out.println("create-forest: " + createForest);
-	System.out.println("pipe-type: " + pipeType);
+	System.out.println("format: " + format);
 	System.out.println("------\n");
     }
 }

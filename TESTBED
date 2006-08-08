@@ -16,4 +16,3 @@ Then compare "gold_run.txt" to "my_run.txt" and "gold_score.txt" to
 > diff gold_run.txt my_run.txt
 > diff gold_score.txt my_score.txt
 
-
