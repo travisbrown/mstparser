@@ -13,7 +13,8 @@ public class CONLLReader extends DependencyReader {
 
 	String line = inputReader.readLine();
 	while (line != null && !line.equals("")) {
-	    lineList.add(line.split(" "));
+	    lineList.add(line.split("\t"));
+	    line = inputReader.readLine();
 	}
 
 	int length = lineList.size();

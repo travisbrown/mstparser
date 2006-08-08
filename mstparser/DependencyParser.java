@@ -348,7 +348,7 @@ public class DependencyParser {
 		decodeType = pair[1];
 	    }			
 	    if(pair[0].equals("format")) {
-		decodeType = pair[1];
+		format = pair[1];
 	    }			
 	}
 	trainforest = trainfile == null ? null : trainfile+".forest";
