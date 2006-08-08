@@ -298,7 +298,7 @@ public class DependencyParser {
 		
 	if(eval) {
 	    System.out.println("\nEVALUATION PERFORMANCE:");
-	    DependencyEvaluator.evaluate(goldfile,outfile);
+	    DependencyEvaluator.evaluate(goldfile, outfile, format);
 	}
     }
 

@@ -22,7 +22,7 @@ public class CONLLWriter extends DependencyWriter {
 	    writer.write(toks[i]);               writer.write('\t');
 	    writer.write(pos[i]);                writer.write('\t');
 	    writer.write(pos[i]);                writer.write('\t');
-	    writer.write("-\t");                 writer.write('\t');
+	    writer.write("-");                   writer.write('\t');
 	    writer.write(deps[i]);               writer.write('\t');
 	    writer.write(labs[i]);               writer.write('\t');
 	    writer.newLine();
