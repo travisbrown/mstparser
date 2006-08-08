@@ -158,17 +158,16 @@ public class DependencyParser {
 
 	long start = System.currentTimeMillis();
 
-	BufferedWriter pred = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file),"UTF8"));
-
-	pipe.loadFile(tFile);
+	pipe.initInputFile(tFile);
+	pipe.initOutputFile(file);
 
 	System.out.print("Processing Sentence: ");
-	DependencyInstance il = pipe.nextInstance();
+	DependencyInstance instance = pipe.nextInstance();
 	int cnt = 0;
-	while(il != null) {
+	while(instance != null) {
 	    cnt++;
 	    System.out.print(cnt+" ");
-	    String[] toks = il.get("tokens");
+	    String[] toks = instance.get("tokens");
 			
 	    int length = toks.length;
 
@@ -181,52 +180,69 @@ public class DependencyParser {
 	    FeatureVector[][][] fvs_sibs = new FeatureVector[length][length][2];
 	    double[][][] probs_sibs = new double[length][length][2];
 	    if(secondOrder)
-		((DependencyPipe2O)pipe).getFeatureVector(il,fvs,probs,
+		((DependencyPipe2O)pipe).getFeatureVector(instance,fvs,probs,
 							  fvs_trips,probs_trips,
 							  fvs_sibs,probs_sibs,
 							  nt_fvs,nt_probs,params);
 	    else
-		pipe.getFeatureVector(il,fvs,probs,nt_fvs,nt_probs,params);
+		pipe.getFeatureVector(instance,fvs,probs,nt_fvs,nt_probs,params);
 
 	    int K = testK;
 	    Object[][] d = null;
 	    if(decodeType.equals("proj")) {
 		if(secondOrder)
-		    d = ((DependencyDecoder2O)decoder).decodeProjective(il,fvs,probs,
+		    d = ((DependencyDecoder2O)decoder).decodeProjective(instance,fvs,probs,
 									fvs_trips,probs_trips,
 									fvs_sibs,probs_sibs,
 									nt_fvs,nt_probs,K);
 		else
-		    d = decoder.decodeProjective(il,fvs,probs,nt_fvs,nt_probs,K);
+		    d = decoder.decodeProjective(instance,fvs,probs,nt_fvs,nt_probs,K);
 	    }
 	    if(decodeType.equals("non-proj")) {
 		if(secondOrder)
-		    d = ((DependencyDecoder2O)decoder).decodeNonProjective(il,fvs,probs,
+		    d = ((DependencyDecoder2O)decoder).decodeNonProjective(instance,fvs,probs,
 								       fvs_trips,probs_trips,
 								       fvs_sibs,probs_sibs,
 								       nt_fvs,nt_probs,K);
 		else
-		    d = decoder.decodeNonProjective(il,fvs,probs,nt_fvs,nt_probs,K);
+		    d = decoder.decodeNonProjective(instance,fvs,probs,nt_fvs,nt_probs,K);
 	    }
 
 	    String[] res = ((String)d[0][1]).split(" ");
-	    String[] sent = il.get("tokens");
-	    String[] pos = il.get("pos");
-	    String line1 = ""; String line2 = ""; String line3 = ""; String line4 = "";
-	    for(int j = 1; j < pos.length; j++) {
-		String[] trip = res[j-1].split("[\\|:]");
-		line1+= sent[j] + "\t"; line2 += pos[j] + "\t";
-		line4 += trip[0] + "\t"; line3 += pipe.types[Integer.parseInt(trip[2])] + "\t";
+
+	    String[] pos = instance.get("pos");
+
+	    String[] toksNoRoot = new String[toks.length-1];
+	    String[] posNoRoot = new String[toksNoRoot.length];
+	    String[] labels = new String[toksNoRoot.length];
+	    String[] deps = new String[toksNoRoot.length];
+
+	    Arrays.toString(toks);
+	    Arrays.toString(res);
+	    for(int j = 0; j < toksNoRoot.length; j++) {
+		toksNoRoot[j] = toks[j+1];
+		posNoRoot[j] = pos[j+1];
+
+		String[] trip = res[j].split("[\\|:]");
+		labels[j] = pipe.types[Integer.parseInt(trip[2])];
+		deps[j] = trip[0];
 	    }
-	    pred.write(line1.trim() + "\n" + line2.trim() + "\n"
-		       + (pipe.labeled ? line3.trim() + "\n" : "")
-		       + line4.trim() + "\n\n");
-	    
-	    il = pipe.nextInstance();
+
+	    pipe.outputInstance(new DependencyInstance(toksNoRoot, posNoRoot, labels, deps));
+
+	    //String line1 = ""; String line2 = ""; String line3 = ""; String line4 = "";
+	    //for(int j = 1; j < pos.length; j++) {
+	    //	String[] trip = res[j-1].split("[\\|:]");
+	    //	line1+= sent[j] + "\t"; line2 += pos[j] + "\t";
+	    //	line4 += trip[0] + "\t"; line3 += pipe.types[Integer.parseInt(trip[2])] + "\t";
+	    //}
+	    //pred.write(line1.trim() + "\n" + line2.trim() + "\n"
+	    //	       + (pipe.labeled ? line3.trim() + "\n" : "")
+	    //	       + line4.trim() + "\n\n");
+
+	    instance = pipe.nextInstance();
 	}
-	System.out.println();
-		
-	pred.close();
+	pipe.close();
 		
 	long end = System.currentTimeMillis();
 	System.out.println("Took: " + (end-start));

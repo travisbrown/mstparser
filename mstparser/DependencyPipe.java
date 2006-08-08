@@ -12,11 +12,13 @@ public class DependencyPipe {
     public Alphabet typeAlphabet;
 
     private DependencyReader depReader;
+    private DependencyWriter depWriter;
 
     public String[] types;
     public int[] typesInt;
 	
     public boolean labeled = false;
+    private String format;
 
     public boolean createForest;
 	
@@ -28,11 +30,27 @@ public class DependencyPipe {
 	dataAlphabet = new Alphabet();
 	typeAlphabet = new Alphabet();
 	this.createForest = createForest;
+	this.format = format;
 	depReader = DependencyReader.createDependencyReader(format);
     }
 
-    public void loadFile (String file) throws IOException {
+    public void initInputFile (String file) throws IOException {
 	labeled = depReader.startReading(file);
+    }
+
+    public void initOutputFile (String file) throws IOException {
+	depWriter = DependencyWriter.createDependencyWriter(format, labeled);
+	depWriter.startWriting(file);
+    }
+
+    public void outputInstance (DependencyInstance instance) throws IOException {
+	depWriter.write(instance);
+    }
+
+    public void close () throws IOException {
+	if (null != depWriter) {
+	    depWriter.finishWriting();
+	}
     }
 
     public DependencyInstance nextInstance() throws IOException {
