@@ -38,7 +38,7 @@ public class DependencyEvaluator {
 	    boolean whole = true;
 	    boolean wholeL = true;
 
-	    // NOTE: the first item is the root info added during nextInstance()
+	    // NOTE: the first item is the root info added during nextInstance(), so we skip it.
 
 	    for (int i = 1; i < instanceLength; i++) {
 		if (predDeps[i].equals(goldDeps[i])) {
@@ -54,7 +54,7 @@ public class DependencyEvaluator {
 		    whole = false; wholeL = false; 
 		}
 	    }
-	    total += instanceLength - 1; // Subtract one to get rid of fake root token
+	    total += instanceLength - 1; // Subtract one to not score fake root token
 
 	    if(whole) corrsent++;
 	    if(wholeL) corrsentL++;

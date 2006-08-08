@@ -1,18 +1,26 @@
 To test that changes to the code have not messed up previous results,
 do the following.
 
+1. Parse English in MST format:
+
 Run the parser as such:
 
-> mst_parse.sh train train-file:data/train.lab model-name:testbed/model test test-file:data/test.lab output-file:testbed/my_run.txt eval gold-file:data/test.lab
+> mst_parse.sh train train-file:data/train.lab model-name:testbed/model test test-file:data/test.lab output-file:testbed/my_english_parses.mst eval gold-file:data/test.lab
 
 Score the results:
 
-> mst_score.sh data/test.lab testbed/my_run.txt > testbed/my_score.txt
+> mst_score.sh data/test.lab testbed/my_english_parses.mst > testbed/my_english_score.txt
 
-Then compare "gold_run.txt" to "my_run.txt" and "gold_score.txt" to
-"my_score.txt" -- they should be the same. 
+Then compare "english_v0.2_parses.mst" to "my_english_parses.mst" and "english_v0.2_score.txt" to
+"my_english_score.txt" -- they should be the same. (diff them)
 
-> cd testbed
-> diff gold_run.txt my_run.txt
-> diff gold_score.txt my_score.txt
 
+2. Parse Portuguese in CONLL format:
+
+> mst_parse.sh format:CONLL train train-file:data/portuguese/floresta_train.conll model-name:testbed/model test test-file:data/portuguese/floresta_test.conll output-file:testbed/my_floresta_parses.conll eval gold-file:data/portuguese/floresta_test.conll
+
+Score the results:
+
+> mst_score.sh data/portuguese/floresta_test.conll testbed/my_floresta_parses.conll CONLL
+
+Compare as with English on the obvious file names.
