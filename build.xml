@@ -1,13 +1,13 @@
 <!-- $Id$ -->
 <!-- Copyright (C) 2006 Ryan McDonald -->
-<project default="package" basedir=".">
+<project default="compile" basedir=".">
 
   <!-- =================================================================== -->
   <!-- Initialization target                                               -->
   <!-- =================================================================== -->
   <target name="init">
     <tstamp/>
-    <property name="Name" value="MST Parser"/>
+    <property name="Name" value="MSTParser"/>
     <property name="name" value="mstparser"/>
     <property name="year" value="2006"/>
     <property name="version" value="0.2.1"/>
@@ -51,8 +51,8 @@
     <echo message=""/>
     <echo message=" Available targets are:"/>
     <echo message=""/>
-    <echo message="   package  --> generates the mstparser.jar file (default)"/>
-    <echo message="   compile  --> compiles the source code"/>
+    <echo message="   package  --> generates the mstparser.jar file"/>
+    <echo message="   compile  --> compiles the source code  (default)"/>
     <echo message="   javadoc  --> generates the API documentation"/>
     <echo message="   clean    --> cleans up the compilation directory"/>
     <echo message=""/>
@@ -78,7 +78,7 @@
   <!-- =================================================================== -->
   <target name="compile" 
           depends="prepare"
-          description="compiles the source code">
+          description="compiles the source code  (default)">
     <javac srcdir="${src.dir}"
            destdir="${build.dest}"
            debug="${debug}"
@@ -95,8 +95,8 @@
   <!-- =================================================================== -->
   <target name="package" 
           depends="compile"
-          description="generates the rde.jar file (default)">
-    <jar jarfile="${lib.dir}/${name}.jar">
+          description="generates the mstparser.jar file">
+    <jar jarfile="${build.dir}/${name}.jar">
       <fileset dir="${build.dest}" includes="**"/>
     </jar>
   </target>
@@ -108,13 +108,12 @@
   <target name="release" depends="clean,cleandocs">
     <tar tarfile="${name}-${version}-src.tar"
           basedir="../"
-          includes="${name}/**"
+          includes="${Name}/**"
           excludes="**/CVS" />
     <gzip src="${name}-${version}-src.tar" 
           zipfile="../${name}-${version}-src.tgz" />
     <delete file="${name}-${version}-src.tar" />
   </target>
-
 
   <!-- =================================================================== -->
   <!-- Creates the homepage                                                -->

@@ -1,3 +1,8 @@
+NOTE: This file is for developers -- don't let it confuse you if are
+just giving MSTParser a spin. Check out README and ALT_README instead.
+
+---------------------------------------------------------------------
+
 To test that changes to the code have not messed up previous results,
 do the following.
 

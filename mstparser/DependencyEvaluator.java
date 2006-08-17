@@ -76,7 +76,7 @@ public class DependencyEvaluator {
     }
 
     public static void main (String[] args) throws IOException {
-	String format = "MST";
+	String format = "CONLL";
 	if (args.length > 2)
 	    format = args[2];
 

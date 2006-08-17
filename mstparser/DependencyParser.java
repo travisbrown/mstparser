@@ -21,7 +21,7 @@ public class DependencyParser {
     public static String lossType = "punc";
     public static boolean createForest = true;
     public static String decodeType = "proj";
-    public static String format = "MST";
+    public static String format = "CONLL";
     public static int numIters = 10;
     public static String outfile = "out.txt";
     public static String goldfile = null;
