@@ -22,6 +22,11 @@ parser.add_option("-r", "--rightward", action="store_true",
                    default=False,
                    help="""Create right-linking baseline.""")
 
+parser.add_option("-d", "--default-relation", action="store",
+		  default="Elaboration",
+		  help="Pick default relation.",
+		  metavar="RELATION")
+
 def transform_meta_chars(string):
     return string.replace(",","+comma+")
 def untransform_meta_chars(string):
@@ -61,6 +66,7 @@ for line in lines:
 	    baseline_deps.pop(0)
 	    baseline_deps += [num_words, 0]
 
+	sentence_info[2] = [options.default_relation]*num_words
 	sentence_info[3] = baseline_deps
 
 	try:
@@ -77,3 +83,4 @@ for line in lines:
         sentence_info = []
     else:
         sentence_info.append(line.split())
+
