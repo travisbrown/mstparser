@@ -1,6 +1,7 @@
 package mstparser.io;
 
 import mstparser.DependencyInstance;
+import mstparser.Util;
 import java.io.*;
 
 public class MSTReader extends DependencyReader {
@@ -22,17 +23,18 @@ public class MSTReader extends DependencyReader {
 	String[] toks = line.split("\t");
 	String[] pos = pos_line.split("\t");
 	String[] labs = lab_line.split("\t");
-	String[] deps = deps_line.split("\t");
+	int[] deps = Util.stringsToInts(deps_line.split("\t"));
+
 
 	String[] toks_new = new String[toks.length+1];
 	String[] pos_new = new String[pos.length+1];
 	String[] labs_new = new String[labs.length+1];
-	String[] deps_new = new String[deps.length+1];
+	int[] deps_new = new int[deps.length+1];
 
 	toks_new[0] = "<root>";
 	pos_new[0] = "<root-POS>";
 	labs_new[0] = "<no-type>";
-	deps_new[0] = "-1";
+	deps_new[0] = -1;
 	for(int i = 0; i < toks.length; i++) {
 	    toks_new[i+1] = normalize(toks[i]);
 	    pos_new[i+1] = pos[i];

@@ -215,7 +215,7 @@ public class DependencyParser {
 	    String[] toksNoRoot = new String[toks.length-1];
 	    String[] posNoRoot = new String[toksNoRoot.length];
 	    String[] labels = new String[toksNoRoot.length];
-	    String[] deps = new String[toksNoRoot.length];
+	    int[] deps = new int[toksNoRoot.length];
 
 	    Arrays.toString(toks);
 	    Arrays.toString(res);
@@ -225,7 +225,7 @@ public class DependencyParser {
 
 		String[] trip = res[j].split("[\\|:]");
 		labels[j] = pipe.types[Integer.parseInt(trip[2])];
-		deps[j] = trip[0];
+		deps[j] = Integer.parseInt(trip[0]);
 	    }
 
 	    pipe.outputInstance(new DependencyInstance(toksNoRoot, posNoRoot, labels, deps));

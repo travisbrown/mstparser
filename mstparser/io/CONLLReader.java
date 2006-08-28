@@ -1,8 +1,10 @@
 package mstparser.io;
 
+import mstparser.DependencyInstance;
+import mstparser.Util;
+
 import java.io.*;
 import java.util.*;
-import mstparser.DependencyInstance;
 
 public class CONLLReader extends DependencyReader {
 
@@ -28,19 +30,19 @@ public class CONLLReader extends DependencyReader {
 	String[] toks = new String[length+1];
 	String[] pos = new String[length+1];
 	String[] labs = new String[length+1];
-	String[] deps = new String[length+1];
+	int[] deps = new int[length+1];
 
 	toks[0] = "<root>";
 	pos[0] = "<root-POS>";
 	labs[0] = "<no-type>";
-	deps[0] = "-1";
+	deps[0] = -1;
 
 	for(int i = 0; i < length; i++) {
 	    String[] info = lineList.get(i);
 	    toks[i+1] = normalize(info[1]);
 	    pos[i+1] = info[4];
 	    labs[i+1] = labeled ? info[7] : "<no-type>";
-	    deps[i+1] = info[6];
+	    deps[i+1] = Integer.parseInt(info[6]);
 	}
 
 	return new DependencyInstance(toks, pos, labs, deps);

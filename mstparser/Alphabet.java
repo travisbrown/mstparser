@@ -72,6 +72,7 @@ public class Alphabet implements Serializable
     public void stopGrowth ()
     {
 	growthStopped = true;
+	map.compact();
     }
 
     public void allowGrowth ()

@@ -9,6 +9,12 @@ public class FeatureVector {
     public double value;
     public FeatureVector next;
 	
+    public FeatureVector() {
+	index = -1;
+	value = -1.0;
+	next = null;
+    }
+
     public FeatureVector(int i, double v, FeatureVector n) {
 	index = i;
 	value = v;
@@ -16,7 +22,7 @@ public class FeatureVector {
     }
 
     public static FeatureVector cat(FeatureVector fv1, FeatureVector fv2) {
-	FeatureVector result = new FeatureVector(-1,-1.0,null);
+	FeatureVector result = new FeatureVector();
 	for(FeatureVector curr = fv1; curr.next != null; curr = curr.next) {
 	    if(curr.index < 0)
 		continue;
@@ -33,7 +39,7 @@ public class FeatureVector {
 
     // fv1 - fv2
     public static FeatureVector getDistVector(FeatureVector fv1, FeatureVector fv2) {
-	FeatureVector result = new FeatureVector(-1,-1.0,null);
+	FeatureVector result = new FeatureVector();
 	for(FeatureVector curr = fv1; curr.next != null; curr = curr.next) {
 	    if(curr.index < 0)
 		continue;
@@ -103,7 +109,7 @@ public class FeatureVector {
 
     public static FeatureVector twoNormalize(FeatureVector fv1) {
 	double norm = twoNorm(fv1);
-	FeatureVector result = new FeatureVector(-1,-1.0,null);
+	FeatureVector result = new FeatureVector();
 	for(FeatureVector curr = fv1; curr.next != null; curr = curr.next) {
 	    if(curr.index < 0)
 		continue;
@@ -134,7 +140,7 @@ public class FeatureVector {
 	    j++;
 	}
 	Arrays.sort(feats);
-	FeatureVector result = new FeatureVector(-1,-1.0,null);
+	FeatureVector result = new FeatureVector();
 	for(int i = feats.length-1; i >= 0; i--)
 	    result = new FeatureVector(feats[i],1.0,result);
 	this.index = result.index; this.value = result.value; this.next = result.next;

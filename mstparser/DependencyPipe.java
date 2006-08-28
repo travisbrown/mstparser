@@ -57,20 +57,16 @@ public class DependencyPipe {
 	DependencyInstance depinst = depReader.getNext();
 	if (depinst == null || depinst.numFeatureClasses() == 0) return null;
 
+	depinst.setFeatureVector(createFeatureVector(depinst));
+	
 	String[] labs = depinst.get("labels");
-	String[] deps = depinst.get("deps");
-	
-	int[] deps1 = new int[deps.length];
-	for(int i = 0; i < deps.length; i++)
-	    deps1[i] = Integer.parseInt(deps[i]);
+	int[] deps = depinst.getDeps();
 
-	depinst.setFeatureVector(createFeatureVector(depinst,deps1));
-	
-	String spans = "";
+	StringBuffer spans = new StringBuffer(deps.length*5);
 	for(int i = 1; i < deps.length; i++) {
-	    spans += deps[i]+"|"+i+":"+typeAlphabet.lookupIndex(labs[i])+" ";
+	    spans.append(deps[i]).append("|").append(i).append(":").append(typeAlphabet.lookupIndex(labs[i])).append(" ");
 	}
-	depinst.actParseTree = spans.trim();
+	depinst.actParseTree = spans.substring(0,spans.length()-1);
 	
 	return depinst;
     }
@@ -84,38 +80,34 @@ public class DependencyPipe {
 
 	labeled = depReader.startReading(file);
 
-	DependencyInstance depinst = depReader.getNext();
-		
-	LinkedList lt = new LinkedList();
+	ArrayList instances = new ArrayList();
 
 	ObjectOutputStream out = createForest
 	    ? new ObjectOutputStream(new FileOutputStream(featFileName))
 	    : null;
 		
+	DependencyInstance depinst = depReader.getNext();
 	int num1 = 0;
+
 	while(depinst != null) {
 	    System.out.println("Creating Feature Vector Instance: " + num1);
 	    
-	    String[] labs = depinst.get("labels");
-	    String[] deps = depinst.get("deps");
-	
-	    int[] deps1 = new int[deps.length];
-	    for(int i = 0; i < deps.length; i++)
-		deps1[i] = Integer.parseInt(deps[i]);
-
-	    depinst.setFeatureVector(createFeatureVector(depinst,deps1));
+	    depinst.setFeatureVector(createFeatureVector(depinst));
 			
-	    String spans = "";
+	    String[] labs = depinst.get("labels");
+	    int[] deps = depinst.getDeps();
+
+	    StringBuffer spans = new StringBuffer(deps.length*5);
 	    for(int i = 1; i < deps.length; i++) {
-		spans += deps[i]+"|"+i+":"+typeAlphabet.lookupIndex(labs[i])+" ";
+		spans.append(deps[i]).append("|").append(i).append(":").append(typeAlphabet.lookupIndex(labs[i])).append(" ");
 	    }
-	    depinst.actParseTree = spans.trim();
+	    depinst.actParseTree = spans.substring(0,spans.length()-1);
 
 	    if(createForest)
 		possibleFeatures(depinst,out);
 	    depinst = null;
 			
-	    lt.add(new DependencyInstance(labs.length));
+	    instances.add(new DependencyInstance(labs.length));
 			
 	    depinst = depReader.getNext();
 
@@ -124,10 +116,8 @@ public class DependencyPipe {
 
 	closeAlphabets();
 		
-	DependencyInstance[] allDepinsts = new DependencyInstance[lt.size()];
-	for(int i = 0; i < allDepinsts.length; i++) {
-	    allDepinsts[i] = (DependencyInstance)lt.get(i);
-	}
+	DependencyInstance[] allDepinsts = new DependencyInstance[instances.size()];
+	instances.toArray(allDepinsts);
 
 	if(createForest)
 	    out.close();
@@ -150,17 +140,11 @@ public class DependencyPipe {
 	while(depinst != null) {
 	    
 	    String[] labs = depinst.get("labels");
-	    String[] deps = depinst.get("deps");
 
 	    for(int i = 0; i < labs.length; i++)
 		typeAlphabet.lookupIndex(labs[i]);
 			
-	    int[] deps1 = new int[deps.length];
-	    for(int i = 0; i < deps.length; i++) {
-		deps1[i] = Integer.parseInt(deps[i]);
-	    }
-			
-	    createFeatureVector(depinst,deps1);
+	    createFeatureVector(depinst);
 			
 	    depinst = depReader.getNext();
 
@@ -188,7 +172,7 @@ public class DependencyPipe {
     }
 
 	
-    public FeatureVector createFeatureVector(DependencyInstance depinst, int[] deps) {
+    public FeatureVector createFeatureVector(DependencyInstance depinst) {
 
 	String[] pos = depinst.get("pos");
 	String[] labs = depinst.get("labels");
@@ -199,8 +183,10 @@ public class DependencyPipe {
 	}
 
 	depinst.put("posA", posA);
-		
-	FeatureVector fv = new FeatureVector(-1,-1.0,null);
+
+	int[] deps = depinst.getDeps();
+
+	FeatureVector fv = new FeatureVector();
 	for(int i = 0; i < depinst.length(); i++) {
 	    if(deps[i] == -1)
 		continue;
@@ -327,7 +313,7 @@ public class DependencyPipe {
 				
 		for(int ph = 0; ph < 2; ph++) {
 
-		    FeatureVector prodFV = new FeatureVector(-1,-1.0,null);
+		    FeatureVector prodFV = new FeatureVector();
 					
 		    int indx = in.readInt();
 		    while(indx != -2) {
@@ -355,7 +341,7 @@ public class DependencyPipe {
 			
 			for(int ch = 0; ch < 2; ch++) {						
 			    
-			    FeatureVector prodFV = new FeatureVector(-1,-1.0,null);
+			    FeatureVector prodFV = new FeatureVector();
 			    
 			    int indx = in.readInt();
 			    while(indx != -2) {
@@ -376,7 +362,7 @@ public class DependencyPipe {
 	    if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
 	}
 
-	FeatureVector nfv = new FeatureVector(-1,-1.0,null);
+	FeatureVector nfv = new FeatureVector();
 	int next = in.readInt();
 	while(next != -4) {
 	    nfv = new FeatureVector(next,1.0,nfv);

@@ -10,6 +10,7 @@ public class DependencyInstance {
     public int length;
 
     private THashMap typesToData = new THashMap();
+    public int[] deps;
 
     public DependencyInstance() {}
 
@@ -39,11 +40,11 @@ public class DependencyInstance {
     }
 
     public DependencyInstance(String[] sentence, String[] pos, 
-			      String[] labs, String[] deps) {
+			      String[] labs, int[] deps) {
 	put("tokens",sentence);
 	put("pos",pos);
 	put("labels",labs);
-	put("deps",deps);
+	this.deps = deps;
     }
 
     public void setFeatureVector (FeatureVector fv) {
@@ -66,6 +67,10 @@ public class DependencyInstance {
 
     public String[] get (String type) {
 	return (String[])typesToData.get(type);
+    }
+
+    public int[] getDeps () {
+	return deps;
     }
 
     public String[] keys () {

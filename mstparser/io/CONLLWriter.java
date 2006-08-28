@@ -14,7 +14,7 @@ public class CONLLWriter extends DependencyWriter {
 	String[] toks = instance.get("tokens");
 	String[] pos = instance.get("pos");
 	String[] labs = instance.get("labels");
-	String[] deps = instance.get("deps");
+	int[] deps = instance.getDeps();
 
 	for (int i=0; i<instance.length(); i++) {
 	    writer.write(Integer.toString(i+1)); writer.write('\t');
@@ -23,7 +23,7 @@ public class CONLLWriter extends DependencyWriter {
 	    writer.write(pos[i]);                writer.write('\t');
 	    writer.write(pos[i]);                writer.write('\t');
 	    writer.write("-");                   writer.write('\t');
-	    writer.write(deps[i]);               writer.write('\t');
+	    writer.write(Integer.toString(deps[i])); writer.write('\t');
 	    writer.write(labs[i]);               writer.write('\t');
 	    writer.newLine();
 	}
