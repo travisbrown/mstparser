@@ -10,7 +10,7 @@ mstparser_dir = ''
 if os.environ.has_key('MSTPARSER_DIR'):
     mstparser_dir = os.environ['MSTPARSER_DIR']
 else:
-    print "Please set the MSTPARSER_DIR environment variable to where you have Dan Bikel's parser installed."
+    print "Please set the MSTPARSER_DIR environment variable to where you have the MSTParser installed."
     exit(1)
 
 
@@ -164,13 +164,6 @@ os.system('touch %s' % model_output_filename)
 
 train_filename = args[0]
 
-# If a source of gold dependencies is given, set some flags and start
-# up the file for reading them in.
-#evaluate_deps = False
-#gold_deps_source = None
-#if options.gold_dependency_source != "None":
-#    evaluate_deps = True
-
 # This file accumulates the gold dependencies across all folds.
 gold_deps_filename = output_dir+"/gold.deps"
 
@@ -195,10 +188,12 @@ if num_folds != 0:
     while next_example:
         partition = counter % num_folds
 
-        examples.append((partition, next_example, train_file.readline(), 
-			 train_file.readline(), train_file.readline()))
+        elements = []
+        while next_example and next_example != "\n":
+            elements += next_example
+            next_example = train_file.readline()
 
-	train_file.readline() 	# eat up blank line
+        examples.append((partition, elements))
 
         next_example = train_file.readline()
 
@@ -229,10 +224,10 @@ if num_folds != 0:
 	counter = 0
         for ex in examples:
             if ex[0] == test_partition:
-                test_set.write("".join(ex[1:5])+"\n")
-                gold_deps.write("".join(ex[1:5])+"\n")
+                test_set.write("".join(ex[1])+"\n")
+                gold_deps.write("".join(ex[1])+"\n")
             else:
-                train_set.write("".join(ex[1:5])+"\n")
+                train_set.write("".join(ex[1])+"\n")
 
 	    counter += 1
 
