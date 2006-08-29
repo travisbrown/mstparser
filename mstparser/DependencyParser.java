@@ -40,7 +40,8 @@ public class DependencyParser {
 	decoder = secondOrder ? new DependencyDecoder2O(pipe) : new DependencyDecoder(pipe);
     }
 
-    public void train(DependencyInstance[] il, String trainfile, String train_forest) throws IOException {
+    public void train(int[] instanceLengths, String trainfile, String train_forest) 
+	throws IOException {
 		
 	System.out.println("About to train");
 	System.out.println("Num Feats: " + pipe.dataAlphabet.size());
@@ -55,30 +56,31 @@ public class DependencyParser {
 
 	    long start = System.currentTimeMillis();
 
-	    trainingIter(il,trainfile,train_forest,i+1);
+	    trainingIter(instanceLengths,trainfile,train_forest,i+1);
 
 	    long end = System.currentTimeMillis();
 	    System.out.println("Training iter took: " + (end-start));
 			
 	}
 
-	params.averageParams(i*il.length);
+	params.averageParams(i*instanceLengths.length);
 		
     }
 
-    private void trainingIter(DependencyInstance[] il, String trainfile, String train_forest, int iter) throws IOException {
+    private void trainingIter(int[] instanceLengths, String trainfile, 
+			      String train_forest, int iter) throws IOException {
 
 	int numUpd = 0;
 	ObjectInputStream in = new ObjectInputStream(new FileInputStream(train_forest));
 	boolean evaluateI = true;
 
-	for(int i = 0; i < il.length; i++) {
+	int numInstances = instanceLengths.length;
+
+	for(int i = 0; i < numInstances; i++) {
 	    if((i+1) % 500 == 0)
 		System.out.println("  "+(i+1)+" instances");
 
-	    DependencyInstance inst = il[i];
-		
-	    int length = inst.length;
+	    int length = instanceLengths[i];
 
 	    // Get production crap.
 	    FeatureVector[][][] fvs = new FeatureVector[length][length][2];
@@ -90,15 +92,17 @@ public class DependencyParser {
 	    FeatureVector[][][] fvs_sibs = new FeatureVector[length][length][2];
 	    double[][][] probs_sibs = new double[length][length][2];
 
+	    DependencyInstance inst;
+
 	    if(secondOrder)
-		inst = ((DependencyPipe2O)pipe).getFeatureVector(in,inst,fvs,probs,
+		inst = ((DependencyPipe2O)pipe).getFeatureVector(in,length,fvs,probs,
 								 fvs_trips,probs_trips,
 								 fvs_sibs,probs_sibs,
 								 nt_fvs,nt_probs,params);
 	    else
-		inst = pipe.getFeatureVector(in,inst,fvs,probs,nt_fvs,nt_probs,params);
+		inst = pipe.getFeatureVector(in,length,fvs,probs,nt_fvs,nt_probs,params);
 
-	    double upd = (double)(numIters*il.length - (il.length*(iter-1)+(i+1)) + 1);
+	    double upd = (double)(numIters*numInstances - (numInstances*(iter-1)+(i+1)) + 1);
 	    int K=trainK;
 	    Object[][] d = null;
 	    if(decodeType.equals("proj")) {
@@ -124,7 +128,7 @@ public class DependencyParser {
 	}
 	System.out.println("");
 	
-	System.out.println("  "+il.length+" instances");
+	System.out.println("  "+numInstances+" instances");
 		
 	in.close();
 
@@ -167,14 +171,14 @@ public class DependencyParser {
 	while(instance != null) {
 	    cnt++;
 	    System.out.print(cnt+" ");
-	    String[] toks = instance.get("tokens");
+	    String[] forms = instance.forms;
 			
-	    int length = toks.length;
+	    int length = forms.length;
 
-	    FeatureVector[][][] fvs = new FeatureVector[toks.length][toks.length][2];
-	    double[][][] probs = new double[toks.length][toks.length][2];
-	    FeatureVector[][][][] nt_fvs = new FeatureVector[toks.length][pipe.types.length][2][2];
-	    double[][][][] nt_probs = new double[toks.length][pipe.types.length][2][2];
+	    FeatureVector[][][] fvs = new FeatureVector[forms.length][forms.length][2];
+	    double[][][] probs = new double[forms.length][forms.length][2];
+	    FeatureVector[][][][] nt_fvs = new FeatureVector[forms.length][pipe.types.length][2][2];
+	    double[][][][] nt_probs = new double[forms.length][pipe.types.length][2][2];
 	    FeatureVector[][][] fvs_trips = new FeatureVector[length][length][length];
 	    double[][][] probs_trips = new double[length][length][length];
 	    FeatureVector[][][] fvs_sibs = new FeatureVector[length][length][2];
@@ -210,25 +214,25 @@ public class DependencyParser {
 
 	    String[] res = ((String)d[0][1]).split(" ");
 
-	    String[] pos = instance.get("pos");
+	    String[] pos = instance.cpostags;
 
-	    String[] toksNoRoot = new String[toks.length-1];
-	    String[] posNoRoot = new String[toksNoRoot.length];
-	    String[] labels = new String[toksNoRoot.length];
-	    int[] deps = new int[toksNoRoot.length];
+	    String[] formsNoRoot = new String[forms.length-1];
+	    String[] posNoRoot = new String[formsNoRoot.length];
+	    String[] labels = new String[formsNoRoot.length];
+	    int[] heads = new int[formsNoRoot.length];
 
-	    Arrays.toString(toks);
+	    Arrays.toString(forms);
 	    Arrays.toString(res);
-	    for(int j = 0; j < toksNoRoot.length; j++) {
-		toksNoRoot[j] = toks[j+1];
+	    for(int j = 0; j < formsNoRoot.length; j++) {
+		formsNoRoot[j] = forms[j+1];
 		posNoRoot[j] = pos[j+1];
 
 		String[] trip = res[j].split("[\\|:]");
 		labels[j] = pipe.types[Integer.parseInt(trip[2])];
-		deps[j] = Integer.parseInt(trip[0]);
+		heads[j] = Integer.parseInt(trip[0]);
 	    }
 
-	    pipe.outputInstance(new DependencyInstance(toksNoRoot, posNoRoot, labels, deps));
+	    pipe.outputInstance(new DependencyInstance(formsNoRoot, posNoRoot, labels, heads));
 
 	    //String line1 = ""; String line2 = ""; String line3 = ""; String line4 = "";
 	    //for(int j = 1; j < pos.length; j++) {
@@ -259,11 +263,12 @@ public class DependencyParser {
 
 	if(train) {
 		
-	    DependencyPipe pipe = secondOrder ? new DependencyPipe2O (createForest, format) : new DependencyPipe (createForest, format);
+	    DependencyPipe pipe = 
+		secondOrder ? new DependencyPipe2O (createForest, format) 
+		: new DependencyPipe (createForest, format);
 
 	    
-
-	    DependencyInstance[] trainingData = pipe.createInstances(trainfile,trainforest);
+	    int[] instanceLengths = pipe.createInstances(trainfile,trainforest);
 		
 	    pipe.closeAlphabets();
 	    
@@ -274,7 +279,7 @@ public class DependencyParser {
 	    System.out.println("Num Feats: " + numFeats);	
 	    System.out.println("Num Edge Labels: " + numTypes);
 	    
-	    dp.train(trainingData,trainfile,trainforest);
+	    dp.train(instanceLengths,trainfile,trainforest);
 	    
 	    System.out.print("Saving model ... ");
 	    dp.saveModel(modelName);

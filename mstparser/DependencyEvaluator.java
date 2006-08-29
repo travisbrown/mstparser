@@ -30,10 +30,10 @@ public class DependencyEvaluator {
 	    if (instanceLength != predInstance.length())
 		System.out.println("Lengths do not match on sentence "+numsent);
 
-	    int[] goldDeps = goldInstance.getDeps();
-	    String[] goldLabels = goldInstance.get("labels");
-	    int[] predDeps = predInstance.getDeps();
-	    String[] predLabels = predInstance.get("labels");
+	    int[] goldHeads = goldInstance.heads;
+	    String[] goldLabels = goldInstance.deprels;
+	    int[] predHeads = predInstance.heads;
+	    String[] predLabels = predInstance.deprels;
 
 	    boolean whole = true;
 	    boolean wholeL = true;
@@ -41,7 +41,7 @@ public class DependencyEvaluator {
 	    // NOTE: the first item is the root info added during nextInstance(), so we skip it.
 
 	    for (int i = 1; i < instanceLength; i++) {
-		if (predDeps[i] == goldDeps[i]) {
+		if (predHeads[i] == goldHeads[i]) {
 		    corr++;
 		    if (labeled) {
 			if (goldLabels[i].equals(predLabels[i])) 

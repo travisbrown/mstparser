@@ -1,50 +1,78 @@
 package mstparser;
 
 import gnu.trove.*;
+import java.io.*;
 import java.util.*;
 
-public class DependencyInstance {
+public class DependencyInstance implements Serializable {
 
     public FeatureVector fv;
     public String actParseTree;
-    public int length;
 
-    private THashMap typesToData = new THashMap();
-    public int[] deps;
+    // The various data types. Here's an example from Portuguese:
+    //
+    // 3  eles ele   pron       pron-pers M|3P|NOM 4    SUBJ   _     _
+    // ID FORM LEMMA COURSE-POS FINE-POS  FEATURES HEAD DEPREL PHEAD PDEPREL
+    //
+    // We ignore PHEAD and PDEPREL for now. 
+
+    // FORM: the forms - usually words, like "thought"
+    public String[] forms;
+
+    // LEMMA: the lemmas, or stems, e.g. "think"
+    public String[] lemmas;
+
+    // COURSE-POS: the course part-of-speech tags, e.g."V"
+    public String[] cpostags;
+
+    // FINE-POS: the fine-grained part-of-speech tags, e.g."VBD"
+    public String[] postags;
+
+    // FEATURES: some features associated with the elements separated by "|", e.g. "PAST|3P"
+    public String[] feats;
+
+    // HEAD: the IDs of the heads for each element
+    public int[] heads;
+
+    // DEPREL: the dependency relations, e.g. "SUBJ"
+    public String[] deprels;
+
 
     public DependencyInstance() {}
 
     public DependencyInstance(DependencyInstance source) {
 	this.fv = source.fv;
 	this.actParseTree = source.actParseTree;
-	this.length = source.length;
     }
     
-    public DependencyInstance(int length) { this.length = length; }
-
-    public DependencyInstance(String[] sentence, FeatureVector fv) {
-	this(sentence.length);
-	put("tokens",sentence);
+    public DependencyInstance(String[] forms, FeatureVector fv) {
+	this.forms = forms;
 	this.fv = fv;
     }
     
-    public DependencyInstance(String[] sentence, String[] pos, FeatureVector fv) {
-	this(sentence, fv);
-	put("pos",pos);
+    public DependencyInstance(String[] forms, String[] postags, FeatureVector fv) {
+	this(forms, fv);
+	this.postags = postags;
     }
     
-    public DependencyInstance(String[] sentence, String[] pos, 
+    public DependencyInstance(String[] forms, String[] postags, 
 			      String[] labs, FeatureVector fv) {
-	this(sentence, pos, fv);
-	put("labels",labs);
+	this(forms, postags, fv);
+	this.deprels = labs;
     }
 
-    public DependencyInstance(String[] sentence, String[] pos, 
-			      String[] labs, int[] deps) {
-	put("tokens",sentence);
-	put("pos",pos);
-	put("labels",labs);
-	this.deps = deps;
+    public DependencyInstance(String[] forms, String[] postags, 
+			      String[] labs, int[] heads) {
+	this.forms = forms;
+	this.postags = postags;
+	this.deprels = labs;
+	this.heads = heads;
+    }
+
+    public DependencyInstance(String[] forms, String[] cpostags, String[] postags, 
+			      String[] labs, int[] heads) {
+	this(forms, postags, labs, heads);
+	this.cpostags = cpostags;
     }
 
     public void setFeatureVector (FeatureVector fv) {
@@ -52,40 +80,34 @@ public class DependencyInstance {
     }
 
 
-    public void put (String type, String[] data) {
-	if (length == 0)
-	    length = data.length;
-	else 
-	    if (length != data.length)
-		System.out.println(
-		   "Something wrong. Trying to add feature class \""+ type + 
-		   "\" but the number of items (" + data.length +
-		   ") is different from the number input for other feature classes ("
-		   + length + "). Will add anyway, but you should expect problems.");
-	typesToData.put(type, data);
-    }
-
-    public String[] get (String type) {
-	return (String[])typesToData.get(type);
-    }
-
-    public int[] getDeps () {
-	return deps;
-    }
-
-    public String[] keys () {
-	String[] keys = new String[typesToData.size()];
-	typesToData.keySet().toArray(keys);
-	return keys;
-    }
-
-    public int numFeatureClasses () {
-	return typesToData.size();
-    }
-
     public int length () {
-	return length;
+	return forms.length;
     }
 
-    
+    public String toString () {
+	StringBuffer sb = new StringBuffer();
+	sb.append(Arrays.toString(forms)).append("\n");
+	return sb.toString();
+    }
+
+
+    private void writeObject (ObjectOutputStream out) throws IOException {
+	out.writeObject(forms);
+	out.writeObject(cpostags);
+	out.writeObject(postags);
+	out.writeObject(heads);
+	out.writeObject(deprels);
+	out.writeObject(actParseTree);
+    }
+
+
+    private void readObject (ObjectInputStream in) throws IOException, ClassNotFoundException {
+	forms = (String[])in.readObject();
+	cpostags = (String[])in.readObject();
+	postags = (String[])in.readObject();
+	heads = (int[])in.readObject();
+	deprels = (String[])in.readObject();
+	actParseTree = (String)in.readObject();
+    }
+
 }

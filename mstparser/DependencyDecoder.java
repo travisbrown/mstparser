@@ -43,23 +43,23 @@ public class DependencyDecoder {
 				       FeatureVector[][][][] nt_fvs,
 				       double[][][][] nt_probs, int K) {
 
-	String[] toks = inst.get("tokens");
-	String[] pos = inst.get("pos");
+	String[] forms = inst.forms;
+	String[] pos = inst.postags;
 
 	int[][] static_types = null;
 	if(pipe.labeled) {
-	    static_types = getTypes(nt_probs,toks.length);
+	    static_types = getTypes(nt_probs,forms.length);
 	}
 
-	KBestParseForest pf = new KBestParseForest(0,toks.length-1,inst,K);
+	KBestParseForest pf = new KBestParseForest(0,forms.length-1,inst,K);
 		
-	for(int s = 0; s < toks.length; s++) {
-	    pf.add(s,-1,0,0.0,new FeatureVector(-1,-1.0,null));
-	    pf.add(s,-1,1,0.0,new FeatureVector(-1,-1.0,null));
+	for(int s = 0; s < forms.length; s++) {
+	    pf.add(s,-1,0,0.0,new FeatureVector());
+	    pf.add(s,-1,1,0.0,new FeatureVector());
 	}
 			
-	for(int j = 1; j < toks.length; j++) {
-	    for(int s = 0; s < toks.length && s+j < toks.length; s++) {
+	for(int j = 1; j < forms.length; j++) {
+	    for(int s = 0; s < forms.length && s+j < forms.length; s++) {
 		int t = s+j;
 				
 		FeatureVector prodFV_st = fvs[s][t][0];
@@ -139,7 +139,7 @@ public class DependencyDecoder {
 				double bc = b1[comp1].prob+c1[comp2].prob;
 									
 				if(!pf.add(s,r,t,-1,0,0,bc,
-					   new FeatureVector(-1,-1.0,null),
+					   new FeatureVector(),
 					   b1[comp1],c1[comp2]))
 				    break;
 			    }
@@ -161,7 +161,7 @@ public class DependencyDecoder {
 				double bc = b1[comp1].prob+c1[comp2].prob;
 									
 				if(!pf.add(s,r,t,-1,1,0,bc,
-					   new FeatureVector(-1,-1.0,null),b1[comp1],c1[comp2]))
+					   new FeatureVector(),b1[comp1],c1[comp2]))
 				    break;
 			    }
 			}
@@ -180,7 +180,7 @@ public class DependencyDecoder {
 					  FeatureVector[][][][] nt_fvs,
 					  double[][][][] nt_probs, int K) {
 
-	String[] pos = inst.get("pos");
+	String[] pos = inst.postags;
 		
 	int numWords = inst.length();
 
@@ -255,7 +255,7 @@ public class DependencyDecoder {
 		    }
 		}
 		else
-		    fin_fv[k][ch] = new FeatureVector(-1,-1.0,null);
+		    fin_fv[k][ch] = new FeatureVector();
 	    }
 	}
 	
@@ -263,7 +263,7 @@ public class DependencyDecoder {
 	FeatureVector[] fin = new FeatureVector[new_k];
 	String[] result = new String[new_k];
 	for(int k = 0; k < fin.length; k++) {
-	    fin[k] = new FeatureVector(-1,-1.0,null);
+	    fin[k] = new FeatureVector();
 	    for(int i = 1; i < fin_fv[k].length; i++)
 		fin[k] = FeatureVector.cat(fin_fv[k][i],fin[k]);
 	    result[k] = "";

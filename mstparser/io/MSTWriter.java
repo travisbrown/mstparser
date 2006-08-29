@@ -12,11 +12,11 @@ public class MSTWriter extends DependencyWriter {
     }
 
     public void write(DependencyInstance instance) throws IOException {
-	writer.write(Util.join(instance.get("tokens"), '\t') + "\n");
-	writer.write(Util.join(instance.get("pos"), '\t') + "\n");
+	writer.write(Util.join(instance.forms, '\t') + "\n");
+	writer.write(Util.join(instance.postags, '\t') + "\n");
 	if (labeled)
-	    writer.write(Util.join(instance.get("labels"), '\t') + "\n");
-	writer.write(Util.join(instance.getDeps(), '\t') + "\n\n");
+	    writer.write(Util.join(instance.deprels, '\t') + "\n");
+	writer.write(Util.join(instance.heads, '\t') + "\n\n");
     }
 
 }

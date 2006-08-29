@@ -84,8 +84,8 @@ public class DependencyDecoder2O extends DependencyDecoder {
 					  FeatureVector[][][][] nt_fvs,
 					  double[][][][] nt_probs, int K) {
 
-	String[] toks = inst.get("tokens");
-	String[] pos = inst.get("pos");
+	String[] forms = inst.forms;
+	String[] pos = inst.postags;
 
 	Object[][] orig = decodeProjective(inst,fvs,probs,fvs_trips,probs_trips,fvs_sibs,probs_sibs,nt_fvs,nt_probs,1);
 	String[] o = ((String)orig[0][1]).split(" ");
@@ -104,7 +104,9 @@ public class DependencyDecoder2O extends DependencyDecoder {
 	for(int i = 1; i < par.length; i++)
 	    pars += par[i]+"|"+i+":"+labs[i]+" ";
 
-	orig[0][0] = ((DependencyPipe2O)pipe).createFeatureVector(inst,labs,par);
+	inst.heads = par;
+
+	orig[0][0] = ((DependencyPipe2O)pipe).createFeatureVector(inst,labs);
 	orig[0][1] = pars;
 		
 
@@ -164,23 +166,23 @@ public class DependencyDecoder2O extends DependencyDecoder {
 				       FeatureVector[][][][] nt_fvs,
 				       double[][][][] nt_probs, int K) {
 		
-	String[] toks = inst.get("tokens");
-	String[] pos = inst.get("pos");
+	String[] forms = inst.forms;
+	String[] pos = inst.postags;
 		
 	int[][] static_types = null;
 	if(pipe.labeled) {
-	    static_types = getTypes(nt_probs,toks.length);
+	    static_types = getTypes(nt_probs,forms.length);
 	}
 
-	KBestParseForest2O pf = new KBestParseForest2O(0,toks.length-1,inst,K);
+	KBestParseForest2O pf = new KBestParseForest2O(0,forms.length-1,inst,K);
 		
-	for(int s = 0; s < toks.length; s++) {
-	    pf.add(s,-1,0,0.0,new FeatureVector(-1,-1.0,null));
-	    pf.add(s,-1,1,0.0,new FeatureVector(-1,-1.0,null));
+	for(int s = 0; s < forms.length; s++) {
+	    pf.add(s,-1,0,0.0,new FeatureVector());
+	    pf.add(s,-1,1,0.0,new FeatureVector());
 	}
 		
-	for(int j = 1; j < toks.length; j++) {
-	    for(int s = 0; s < toks.length && s+j < toks.length; s++) {
+	for(int j = 1; j < forms.length; j++) {
+	    for(int s = 0; s < forms.length && s+j < forms.length; s++) {
 		int t = s+j;
 				
 		FeatureVector prodFV_st = fvs[s][t][0];
@@ -289,8 +291,8 @@ public class DependencyDecoder2O extends DependencyDecoder {
 							
 			    double bc = b1[comp1].prob+c1[comp2].prob;
 							
-			    pf.add(s,r,t,-1,0,2,bc,new FeatureVector(-1,-1.0,null),b1[comp1],c1[comp2]);
-			    pf.add(s,r,t,-1,1,2,bc,new FeatureVector(-1,-1.0,null),b1[comp1],c1[comp2]);
+			    pf.add(s,r,t,-1,0,2,bc,new FeatureVector(),b1[comp1],c1[comp2]);
+			    pf.add(s,r,t,-1,1,2,bc,new FeatureVector(),b1[comp1],c1[comp2]);
 			}
 		    }
 		}
@@ -377,7 +379,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 								
 				double bc = b1[comp1].prob+c1[comp2].prob;
 								
-				if(!pf.add(s,r,t,-1,0,0,bc,new FeatureVector(-1,-1.0,null),b1[comp1],c1[comp2]))
+				if(!pf.add(s,r,t,-1,0,0,bc,new FeatureVector(),b1[comp1],c1[comp2]))
 				    break;
 			    }
 			}
@@ -400,7 +402,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 								
 				double bc = b1[comp1].prob+c1[comp2].prob;
 								
-				if(!pf.add(s,r,t,-1,1,0,bc,new FeatureVector(-1,-1.0,null),b1[comp1],c1[comp2]))
+				if(!pf.add(s,r,t,-1,1,0,bc,new FeatureVector(),b1[comp1],c1[comp2]))
 				    break;
 			    }
 			}

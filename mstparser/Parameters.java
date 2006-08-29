@@ -198,7 +198,7 @@ public class Parameters {
 	String[] act_spans = act.split(" ");
 	String[] pred_spans = pred.split(" ");
 	
-	String[] pos = inst.get("pos");
+	String[] pos = inst.postags;
 	
 	int correct = 0;
 	int numPunc = 0;
@@ -223,7 +223,7 @@ public class Parameters {
 	String[] act_spans = act.split(" ");
 	String[] pred_spans = pred.split(" ");
 
-	String[] pos = inst.get("pos");
+	String[] pos = inst.postags;
 	
 	int correct = 0;
 	int numPunc = 0;

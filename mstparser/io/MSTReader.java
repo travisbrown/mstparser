@@ -11,8 +11,8 @@ public class MSTReader extends DependencyReader {
 
 	String line = inputReader.readLine();
 	String pos_line = inputReader.readLine();
-	String lab_line = labeled ? inputReader.readLine() : pos_line;
-	String deps_line = inputReader.readLine();
+	String deprel_line = labeled ? inputReader.readLine() : pos_line;
+	String heads_line = inputReader.readLine();
 	inputReader.readLine(); // blank line
 
 	if(line == null) {
@@ -20,32 +20,38 @@ public class MSTReader extends DependencyReader {
 	    return null;
 	}
 
-	String[] toks = line.split("\t");
+	String[] forms = line.split("\t");
 	String[] pos = pos_line.split("\t");
-	String[] labs = lab_line.split("\t");
-	int[] deps = Util.stringsToInts(deps_line.split("\t"));
+	String[] deprels = deprel_line.split("\t");
+	int[] heads = Util.stringsToInts(heads_line.split("\t"));
 
-
-	String[] toks_new = new String[toks.length+1];
+	String[] forms_new = new String[forms.length+1];
 	String[] pos_new = new String[pos.length+1];
-	String[] labs_new = new String[labs.length+1];
-	int[] deps_new = new int[deps.length+1];
+	String[] deprels_new = new String[deprels.length+1];
+	int[] heads_new = new int[heads.length+1];
 
-	toks_new[0] = "<root>";
+	forms_new[0] = "<root>";
 	pos_new[0] = "<root-POS>";
-	labs_new[0] = "<no-type>";
-	deps_new[0] = -1;
-	for(int i = 0; i < toks.length; i++) {
-	    toks_new[i+1] = normalize(toks[i]);
+	deprels_new[0] = "<no-type>";
+	heads_new[0] = -1;
+	for(int i = 0; i < forms.length; i++) {
+	    forms_new[i+1] = normalize(forms[i]);
 	    pos_new[i+1] = pos[i];
-	    labs_new[i+1] = labeled ? labs[i] : "<no-type>";
-	    deps_new[i+1] = deps[i];
+	    deprels_new[i+1] = labeled ? deprels[i] : "<no-type>";
+	    heads_new[i+1] = heads[i];
 	}
 
-	//System.out.println(java.util.Arrays.toString(toks_new));
+	DependencyInstance instance = 
+	    new DependencyInstance(forms_new, pos_new, deprels_new, heads_new);
 
-	return new DependencyInstance(toks_new, pos_new, labs_new, deps_new);
+	// set up the course pos tags as just the first letter of the fine-grained ones
+	String[] cpostags = new String[pos_new.length];
+	cpostags[0] = "<root-CPOS>";
+	for(int i = 1; i < pos_new.length; i++)
+	    cpostags[i] = pos_new[i].substring(0,1);
+	instance.cpostags = cpostags;
 
+	return instance;
     }
 
 

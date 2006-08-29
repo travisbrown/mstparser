@@ -10,11 +10,11 @@ do the following.
 
 Run the parser as such:
 
-> mst_parse.sh train train-file:data/train.lab model-name:testbed/model test test-file:data/test.lab output-file:testbed/my_english_parses.mst eval gold-file:data/test.lab
+> mst_parse.sh format:MST train train-file:data/train.lab model-name:testbed/model test test-file:data/test.lab output-file:testbed/my_english_parses.mst eval gold-file:data/test.lab
 
 Score the results:
 
-> mst_score.sh data/test.lab testbed/my_english_parses.mst > testbed/my_english_score.txt
+> mst_score.sh data/test.lab testbed/my_english_parses.mst MST > testbed/my_english_score.txt
 
 Then compare "english_v0.2_parses.mst" to "my_english_parses.mst" and "english_v0.2_score.txt" to
 "my_english_score.txt" -- they should be the same. (diff them)
