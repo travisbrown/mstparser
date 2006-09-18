@@ -157,11 +157,7 @@ public class DependencyPipe2O extends DependencyPipe {
 			FeatureVector prodFV = createFeatureVector(instance,w1,w2,attR,
 								   new FeatureVector());
 						
-			for(FeatureVector curr = prodFV; curr != null; curr = curr.next) {
-			    if(curr.index >= 0)
-				out.writeInt(curr.index);
-			}
-			out.writeInt(-2);
+			out.writeObject(prodFV.keys());
 		    }
 		}
 			
@@ -186,11 +182,7 @@ public class DependencyPipe2O extends DependencyPipe {
 									   attR,child,
 									   new FeatureVector());
 				
-				for(FeatureVector curr = prodFV; curr != null; curr = curr.next) {
-				    if(curr.index >= 0)
-					out.writeInt(curr.index);
-				}
-				out.writeInt(-2);
+				out.writeObject(prodFV.keys());
 				
 			    }
 			}
@@ -206,22 +198,14 @@ public class DependencyPipe2O extends DependencyPipe {
 		    for(int w3 = w2+1; w3 < instanceLength; w3++) {
 			FeatureVector prodFV = createFeatureVector(instance,w1,w2,w3,
 								   new FeatureVector());
-			for(FeatureVector curr = prodFV; curr != null; curr = curr.next) {
-			    if(curr.index >= 0)
-				out.writeInt(curr.index);
-			}
-			out.writeInt(-2);
+			out.writeObject(prodFV.keys());
 		    }
 		}
 		for(int w2 = w1; w2 >= 0; w2--) {
 		    for(int w3 = w2-1; w3 >= 0; w3--) {
 			FeatureVector prodFV = createFeatureVector(instance,w1,w2,w3,
 								   new FeatureVector());
-			for(FeatureVector curr = prodFV; curr != null; curr = curr.next) {
-			    if(curr.index >= 0)
-				out.writeInt(curr.index);
-			}
-			out.writeInt(-2);
+			out.writeObject(prodFV.keys());
 		    }
 		}
 	    }
@@ -234,25 +218,20 @@ public class DependencyPipe2O extends DependencyPipe {
 			if(w1 != w2) {
 			    FeatureVector prodFV = createFeatureVectorSib(instance,w1,w2,wh == 0,
 									  new FeatureVector());
-			    for(FeatureVector curr = prodFV; curr != null; curr = curr.next) {
-				if(curr.index >= 0)
-				    out.writeInt(curr.index);
-			    }
-			    out.writeInt(-2);
+			    out.writeObject(prodFV.keys());
 			}
 		    }
 		}
 	    }
 
 	    out.writeInt(-3);
-						
-	    for(FeatureVector curr = instance.fv; curr.next != null; curr = curr.next)
-		out.writeInt(curr.index);
-
+				
+	    out.writeObject(instance.fv.keys());
 	    out.writeInt(-4);
-	    out.writeObject(instance);
 
+	    out.writeObject(instance);
 	    out.writeInt(-1);
+
 	    out.reset();
 
 	} catch (IOException e) {}
@@ -271,140 +250,87 @@ public class DependencyPipe2O extends DependencyPipe {
 					       double[][][][] nt_probs,
 					       Parameters params) throws IOException {
 
-	// Get production crap.		
-	for(int w1 = 0; w1 < length; w1++) {
-	    for(int w2 = w1+1; w2 < length; w2++) {
-				
-		for(int ph = 0; ph < 2; ph++) {
-
-		    FeatureVector prodFV = new FeatureVector();
-					
-		    int indx = in.readInt();
-		    while(indx != -2) {
-			prodFV = new FeatureVector(indx,1.0,prodFV);
-			indx = in.readInt();
+	try {
+	    // Get production crap.		
+	    for(int w1 = 0; w1 < length; w1++) {
+		for(int w2 = w1+1; w2 < length; w2++) {
+		    for(int ph = 0; ph < 2; ph++) {
+			FeatureVector prodFV = new FeatureVector((int[])in.readObject());
+			double prodProb = params.getScore(prodFV);
+			fvs[w1][w2][ph] = prodFV;
+			probs[w1][w2][ph] = prodProb;
 		    }
-					
-		    double prodProb = params.getScore(prodFV);
-		    fvs[w1][w2][ph] = prodFV;
-		    probs[w1][w2][ph] = prodProb;
 		}
 	    }
-			
-	}
-	int last = in.readInt();
-	if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
+	    int last = in.readInt();
+	    if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
 
-	if(labeled) {
-	    for(int w1 = 0; w1 < length; w1++) {
-		
-		for(int t = 0; t < types.length; t++) {
-		    String type = types[t];
-		    
-		    for(int ph = 0; ph < 2; ph++) {						
-			
-			for(int ch = 0; ch < 2; ch++) {						
-			    
-			    FeatureVector prodFV = new FeatureVector();
-			    
-			    int indx = in.readInt();
-			    while(indx != -2) {
-				prodFV = new FeatureVector(indx,1.0,prodFV);
-				indx = in.readInt();
+	    if(labeled) {
+		for(int w1 = 0; w1 < length; w1++) {
+		    for(int t = 0; t < types.length; t++) {
+			String type = types[t];
+			for(int ph = 0; ph < 2; ph++) {						
+			    for(int ch = 0; ch < 2; ch++) {
+				FeatureVector prodFV = new FeatureVector((int[])in.readObject());
+				double nt_prob = params.getScore(prodFV);
+				nt_fvs[w1][t][ph][ch] = prodFV;
+				nt_probs[w1][t][ph][ch] = nt_prob;
 			    }
-			    
-			    double nt_prob = params.getScore(prodFV);
-			    nt_fvs[w1][t][ph][ch] = prodFV;
-			    nt_probs[w1][t][ph][ch] = nt_prob;
-			    
 			}
 		    }
 		}
-		
+		last = in.readInt();
+		if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
+	    }
+
+	    for(int w1 = 0; w1 < length; w1++) {
+		for(int w2 = w1; w2 < length; w2++) {
+		    for(int w3 = w2+1; w3 < length; w3++) {
+			FeatureVector prodFV = new FeatureVector((int[])in.readObject());
+			double prodProb = params.getScore(prodFV);
+			fvs_trips[w1][w2][w3] = prodFV;
+			probs_trips[w1][w2][w3] = prodProb;
+		    }
+		}
+		for(int w2 = w1; w2 >= 0; w2--) {
+		    for(int w3 = w2-1; w3 >= 0; w3--) {
+			FeatureVector prodFV = new FeatureVector((int[])in.readObject());
+			double prodProb = params.getScore(prodFV);
+			fvs_trips[w1][w2][w3] = prodFV;
+			probs_trips[w1][w2][w3] = prodProb;
+		    }
+		}
 	    }
 	    last = in.readInt();
 	    if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
-	}
 
-	for(int w1 = 0; w1 < length; w1++) {
-	    for(int w2 = w1; w2 < length; w2++) {
-		for(int w3 = w2+1; w3 < length; w3++) {
-		    FeatureVector prodFV = new FeatureVector();
-		    
-		    int indx = in.readInt();
-		    while(indx != -2) {
-			prodFV = new FeatureVector(indx,1.0,prodFV);
-			indx = in.readInt();
-		    }
-
-		    double prodProb = params.getScore(prodFV);
-		    fvs_trips[w1][w2][w3] = prodFV;
-		    probs_trips[w1][w2][w3] = prodProb;
-		    
-
-		}
-	    }
-	    for(int w2 = w1; w2 >= 0; w2--) {
-		for(int w3 = w2-1; w3 >= 0; w3--) {
-		    FeatureVector prodFV = new FeatureVector();
-		    
-		    int indx = in.readInt();
-		    while(indx != -2) {
-			prodFV = new FeatureVector(indx,1.0,prodFV);
-			indx = in.readInt();
-		    }
-
-		    double prodProb = params.getScore(prodFV);
-		    fvs_trips[w1][w2][w3] = prodFV;
-		    probs_trips[w1][w2][w3] = prodProb;
-
-		}
-	    }
-	}
-			
-	last = in.readInt();
-	if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
-			
-	for(int w1 = 0; w1 < length; w1++) {
-	    for(int w2 = 0; w2 < length; w2++) {
-		for(int wh = 0; wh < 2; wh++) {
-		    if(w1 != w2) {
-			FeatureVector prodFV = new FeatureVector();
-			
-			int indx = in.readInt();
-			while(indx != -2) {
-			    prodFV = new FeatureVector(indx,1.0,prodFV);
-			    indx = in.readInt();
+	    for(int w1 = 0; w1 < length; w1++) {
+		for(int w2 = 0; w2 < length; w2++) {
+		    for(int wh = 0; wh < 2; wh++) {
+			if(w1 != w2) {
+			    FeatureVector prodFV = new FeatureVector((int[])in.readObject());
+			    double prodProb = params.getScore(prodFV);
+			    fvs_sibs[w1][w2][wh] = prodFV;
+			    probs_sibs[w1][w2][wh] = prodProb;
 			}
-
-			double prodProb = params.getScore(prodFV);
-			fvs_sibs[w1][w2][wh] = prodFV;
-			probs_sibs[w1][w2][wh] = prodProb;
-
 		    }
 		}
 	    }
-	}
+	    last = in.readInt();
+	    if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
+	    
+	    FeatureVector nfv = new FeatureVector((int[])in.readObject());
+	    last = in.readInt();
+	    if(last != -4) { System.out.println("Error reading file."); System.exit(0); }
 
-	last = in.readInt();
-	if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
-
-	FeatureVector nfv = new FeatureVector();
-	int next = in.readInt();
-	while(next != -4) {
-	    nfv = new FeatureVector(next,1.0,nfv);
-	    next = in.readInt();
-	}
-
-	DependencyInstance marshalledDI;
-	try {
+	    DependencyInstance marshalledDI;
 	    marshalledDI = (DependencyInstance)in.readObject();
 	    marshalledDI.setFeatureVector(nfv);	
-	    next = in.readInt();
-	    if(next != -1) { 
-		System.out.println("Error reading file."); System.exit(0); 
-	    }
+	    last = in.readInt();
+	    if(last != -1) { System.out.println("Error reading file."); System.exit(0); }
+
 	    return marshalledDI;
+
 	} catch(ClassNotFoundException e) { 
 	    System.out.println("Error reading file."); System.exit(0); 
 	}	    

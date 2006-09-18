@@ -57,12 +57,13 @@ public class Parameters {
 	FeatureVector fv  = null;
 	int res = 0;
 	for(int k = 0; k < K; k++) {
-	    fv = dist[k];				
-	    for(FeatureVector curr = fv; curr.index >= 0; curr = curr.next) {
-		if(curr.index < 0)
-		    continue;
-		parameters[curr.index] += alpha[k]*curr.value;
-		total[curr.index] += upd*alpha[k]*curr.value;
+	    fv = dist[k];
+	    int[] featureIDs = fv.keys();
+	    for (int i=0; i<featureIDs.length; i++) {
+		int id = featureIDs[i];
+		double val = fv.get(id) * alpha[k];
+		parameters[id] += val;
+		total[id] += upd * val;
 	    }
 	}
 
@@ -70,8 +71,9 @@ public class Parameters {
 
     public double getScore(FeatureVector fv) {
 	double score = 0.0;
-	for(FeatureVector curr = fv; curr.index >= 0; curr = curr.next) {
-	    score += parameters[curr.index]*curr.value;
+	int[] featureIDs = fv.keys();
+	for (int i=0; i<featureIDs.length; i++) {	
+	    score += parameters[featureIDs[i]] * fv.get(featureIDs[i]);
 	}		
 	return score;
     }

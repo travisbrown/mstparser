@@ -3,110 +3,75 @@ package mstparser;
 import gnu.trove.*;
 import java.util.*;
 
-public class FeatureVector {
+public class FeatureVector extends gnu.trove.TIntDoubleHashMap {
 
-    public int index;
-    public double value;
-    public FeatureVector next;
-	
-    public FeatureVector() {
-	index = -1;
-	value = -1.0;
-	next = null;
+    private static final double DEFAULT_VALUE = 1.0;
+
+    //public FeatureVector add(String s, double v) {
+    //	index = i;
+    //	value = v;
+    //}
+
+    public FeatureVector () {
+	super();
     }
 
-    public FeatureVector(int i, double v, FeatureVector n) {
-	index = i;
-	value = v;
-	next = n;
+    public FeatureVector (int[] initialKeys) {
+	for (int i=0; i<initialKeys.length; i++)
+	    put(initialKeys[i], DEFAULT_VALUE);
+    }
+
+    // add an index with the default value
+    public void put(int index) {
+	put(index, DEFAULT_VALUE);
     }
 
     public FeatureVector cat(FeatureVector fv2) {
-	FeatureVector result = new FeatureVector();
-	for(FeatureVector curr = this; curr.next != null; curr = curr.next) {
-	    if(curr.index < 0)
-		continue;
-	    result = new FeatureVector(curr.index,curr.value,result);
+	FeatureVector result = (FeatureVector)clone();
+
+	int[] keys = fv2.keys();
+	for (int i=0; i<keys.length; i++) {
+	    int id = keys[i];
+	    if (containsKey(id))
+		result.put(id, get(id) + fv2.get(id));
+	    else
+		result.put(id, fv2.get(id));
 	}
-	for(FeatureVector curr = fv2; curr.next != null; curr = curr.next) {
-	    if(curr.index < 0)
-		continue;
-	    result = new FeatureVector(curr.index,curr.value,result);
-	}
+
 	return result;
 		
     }
 
     // fv1 - fv2
     public FeatureVector getDistVector(FeatureVector fv2) {
-	FeatureVector result = new FeatureVector();
-	for(FeatureVector curr = this; curr.next != null; curr = curr.next) {
-	    if(curr.index < 0)
-		continue;
-	    result = new FeatureVector(curr.index,curr.value,result);
+	FeatureVector result = (FeatureVector)clone();
+
+	int[] keys = fv2.keys();
+	for (int i=0; i<keys.length; i++) {
+	    int id = keys[i];
+	    if (containsKey(id))
+		result.put(id, get(id) - fv2.get(id));
+	    else
+		result.put(id, -fv2.get(id));
 	}
-	for(FeatureVector curr = fv2; curr.next != null; curr = curr.next) {
-	    if(curr.index < 0)
-		continue;
-	    result = new FeatureVector(curr.index,-curr.value,result);
-	}
+
 	return result;
+		
     }
-	
+
     public double dotProduct(FeatureVector fv2) {
 	double result = 0.0;
-	TIntDoubleHashMap hm1 = new TIntDoubleHashMap();
-	TIntDoubleHashMap hm2 = new TIntDoubleHashMap();
 
-	for(FeatureVector curr = this; curr.next != null; curr = curr.next) {
-	    if(curr.index < 0)
-		continue;
-	    hm1.put(curr.index,hm1.get(curr.index)+curr.value);
-	}
-	for(FeatureVector curr = fv2; curr.next != null; curr = curr.next) {
-	    if(curr.index < 0)
-		continue;
-	    hm2.put(curr.index,hm2.get(curr.index)+curr.value);
-	}
-
-	int[] keys = hm1.keys();
-
-	for(int i = 0; i < keys.length; i++) {
-	    double v1 = hm1.get(keys[i]);
-	    double v2 = hm2.get(keys[i]);
-	    result += v1*v2;
-	}
+	int[] keys = keys();
+	for(int i=0; i < keys.length; i++)
+	    result += get(keys[i]) * fv2.get(keys[i]);
 		
 	return result;
-		
     }
+
 
     public String toString() {
-	if(next == null)
-	    return ""+index;
-	return index + " " + next.toString();
+	return Arrays.toString(keys());
     }
 
-    public int sum() {
-	if(next == null)
-	    return index >= 0 ? 1 : 0;
-	return (index >= 0 ? 1 : 0) + next.sum();
-    }
-
-    public void sort() {
-	int[] feats = new int[sum()];
-	int j = 0;
-	for(FeatureVector curr = this; curr.next != null; curr = curr.next) {
-	    if(curr.index < 0)
-		continue;
-	    feats[j] = curr.index;
-	    j++;
-	}
-	Arrays.sort(feats);
-	FeatureVector result = new FeatureVector();
-	for(int i = feats.length-1; i >= 0; i--)
-	    result = new FeatureVector(feats[i],1.0,result);
-	this.index = result.index; this.value = result.value; this.next = result.next;
-    }
-	
 }
