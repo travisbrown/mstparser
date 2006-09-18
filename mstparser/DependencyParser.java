@@ -94,11 +94,13 @@ public class DependencyParser {
 
 	    DependencyInstance inst;
 
-	    if(secondOrder)
+	    if(secondOrder) {
 		inst = ((DependencyPipe2O)pipe).getFeatureVector(in,length,fvs,probs,
 								 fvs_trips,probs_trips,
 								 fvs_sibs,probs_sibs,
 								 nt_fvs,nt_probs,params);
+	    }
+
 	    else
 		inst = pipe.getFeatureVector(in,length,fvs,probs,nt_fvs,nt_probs,params);
 

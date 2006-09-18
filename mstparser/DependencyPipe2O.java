@@ -144,12 +144,12 @@ public class DependencyPipe2O extends DependencyPipe {
 
     public void possibleFeatures(DependencyInstance instance, ObjectOutputStream out) {
 
-	String[] forms = instance.forms;
+	int instanceLength = instance.length();
 		
 	try {
 
-	    for(int w1 = 0; w1 < forms.length; w1++) {
-		for(int w2 = w1+1; w2 < forms.length; w2++) {
+	    for(int w1 = 0; w1 < instanceLength; w1++) {
+		for(int w2 = w1+1; w2 < instanceLength; w2++) {
 					
 		    for(int ph = 0; ph < 2; ph++) {						
 			boolean attR = ph == 0 ? true : false;
@@ -170,7 +170,7 @@ public class DependencyPipe2O extends DependencyPipe {
 	    out.writeInt(-3);
 
 	    if(labeled) {
-		for(int w1 = 0; w1 < forms.length; w1++) {
+		for(int w1 = 0; w1 < instanceLength; w1++) {
 		    
 		    for(int t = 0; t < types.length; t++) {
 			String type = types[t];
@@ -201,9 +201,9 @@ public class DependencyPipe2O extends DependencyPipe {
 		out.writeInt(-3);
 	    }
 
-	    for(int w1 = 0; w1 < forms.length; w1++) {
-		for(int w2 = w1; w2 < forms.length; w2++) {
-		    for(int w3 = w2+1; w3 < forms.length; w3++) {
+	    for(int w1 = 0; w1 < instanceLength; w1++) {
+		for(int w2 = w1; w2 < instanceLength; w2++) {
+		    for(int w3 = w2+1; w3 < instanceLength; w3++) {
 			FeatureVector prodFV = createFeatureVector(instance,w1,w2,w3,
 								   new FeatureVector());
 			for(FeatureVector curr = prodFV; curr != null; curr = curr.next) {
@@ -228,8 +228,8 @@ public class DependencyPipe2O extends DependencyPipe {
 			
 	    out.writeInt(-3);
 			
-	    for(int w1 = 0; w1 < forms.length; w1++) {
-		for(int w2 = 0; w2 < forms.length; w2++) {
+	    for(int w1 = 0; w1 < instanceLength; w1++) {
+		for(int w2 = 0; w2 < instanceLength; w2++) {
 		    for(int wh = 0; wh < 2; wh++) {
 			if(w1 != w2) {
 			    FeatureVector prodFV = createFeatureVectorSib(instance,w1,w2,wh == 0,
@@ -249,6 +249,7 @@ public class DependencyPipe2O extends DependencyPipe {
 	    for(FeatureVector curr = instance.fv; curr.next != null; curr = curr.next)
 		out.writeInt(curr.index);
 
+	    out.writeInt(-4);
 	    out.writeObject(instance);
 
 	    out.writeInt(-1);
@@ -406,10 +407,10 @@ public class DependencyPipe2O extends DependencyPipe {
 	    return marshalledDI;
 	} catch(ClassNotFoundException e) { 
 	    System.out.println("Error reading file."); System.exit(0); 
-	} finally {
-	    // this won't happen, but it takes care of compilation complaints
-	    return null;
-	}
+	}	    
+
+	// this won't happen, but it takes care of compilation complaints
+	return null;
 		
     }
 		

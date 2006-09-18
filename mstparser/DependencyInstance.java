@@ -37,7 +37,6 @@ public class DependencyInstance implements Serializable {
     // DEPREL: the dependency relations, e.g. "SUBJ"
     public String[] deprels;
 
-
     public DependencyInstance() {}
 
     public DependencyInstance(DependencyInstance source) {

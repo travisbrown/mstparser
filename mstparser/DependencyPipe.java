@@ -198,8 +198,7 @@ public class DependencyPipe {
 	return fv;
     }
 
-    public void possibleFeatures(DependencyInstance instance, 
-				 ObjectOutputStream out) {
+    public void possibleFeatures(DependencyInstance instance, ObjectOutputStream out) {
 
 	int instanceLength = instance.length();
 
@@ -211,9 +210,6 @@ public class DependencyPipe {
 		    for(int ph = 0; ph < 2; ph++) {						
 			boolean attR = ph == 0 ? true : false;
 
-			int childInt = attR ? w2 : w1;
-			int parInt = attR ? w1 : w2;
-						
 			FeatureVector prodFV = createFeatureVector(instance,w1,w2,attR,
 								   new FeatureVector());
 								
@@ -222,7 +218,6 @@ public class DependencyPipe {
 				out.writeInt(curr.index);
 			}
 			out.writeInt(-2);
-								
 		    }
 		}
 			
