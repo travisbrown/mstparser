@@ -230,7 +230,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 			    FeatureVector fv_fin = pf.cat(prodFV_st,prodFV_sst);
 			    if(pipe.labeled) {
 				bc += nt_prob_s_01+nt_prob_t_00;
-				fv_fin = FeatureVector.cat(nt_fv_s_01,FeatureVector.cat(nt_fv_t_00,fv_fin));
+				fv_fin = nt_fv_s_01.cat(nt_fv_t_00.cat(fv_fin));
 			    }
 
 			    pf.add(s,s,t,type1,0,1,bc,fv_fin,b1[comp1],c1[comp2]);
@@ -264,7 +264,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 			    FeatureVector fv_fin = pf.cat(prodFV_ts,prodFV_stt);
 			    if(pipe.labeled) {
 				bc += nt_prob_t_11+nt_prob_s_10;
-				fv_fin = FeatureVector.cat(nt_fv_t_11,FeatureVector.cat(nt_fv_s_10,fv_fin));
+				fv_fin = nt_fv_t_11.cat(nt_fv_s_10.cat(fv_fin));
 			    }
 
 			    pf.add(s,t,t,type2,1,1,bc,fv_fin,b1[comp1],c1[comp2]);
@@ -320,7 +320,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 
 			    if(pipe.labeled) {
 				bc += nt_prob_s_01+nt_prob_t_00;
-				fv_fin = FeatureVector.cat(nt_fv_s_01,FeatureVector.cat(nt_fv_t_00,fv_fin));
+				fv_fin = nt_fv_s_01.cat(nt_fv_t_00.cat(fv_fin));
 			    }
 
 			    pf.add(s,r,t,type1,0,1,bc,fv_fin,b1[comp1],c1[comp2]);
@@ -349,7 +349,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 			    FeatureVector fv_fin = pf.cat(prodFV_ts,pf.cat(fvs_trips[t][r][s],fvs_sibs[r][s][1]));
 			    if(pipe.labeled) {
 				bc += nt_prob_t_11+nt_prob_s_10;
-				fv_fin = FeatureVector.cat(nt_fv_t_11,FeatureVector.cat(nt_fv_s_10,fv_fin));
+				fv_fin = nt_fv_t_11.cat(nt_fv_s_10.cat(fv_fin));
 			    }
 
 			    pf.add(s,r,t,type2,1,1,bc,fv_fin,b1[comp1],c1[comp2]);

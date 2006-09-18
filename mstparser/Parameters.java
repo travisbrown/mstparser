@@ -49,7 +49,7 @@ public class Parameters {
 		- getScore((FeatureVector)d[k][0]);
 	    b[k] = (double)numErrors(inst,(String)d[k][1],actParseTree);
 	    b[k] -= lam_dist[k];
-	    dist[k] = FeatureVector.getDistVector(actFV,(FeatureVector)d[k][0]);
+	    dist[k] = actFV.getDistVector((FeatureVector)d[k][0]);
 	}
 
 	double[] alpha = hildreth(dist,b);
@@ -94,7 +94,7 @@ public class Parameters {
 	double[][] A = new double[K][K];
 	boolean[] is_computed = new boolean[K];
 	for(i = 0; i < K; i++) {
-	    A[i][i] = FeatureVector.dotProduct(a[i],a[i]);
+	    A[i][i] = a[i].dotProduct(a[i]);
 	    is_computed[i] = false;
 	}
 				
@@ -127,7 +127,7 @@ public class Parameters {
 
 	    if (!is_computed[max_kkt_i]) {
 		for(i = 0; i < K; i++) {
-		    A[i][max_kkt_i] = FeatureVector.dotProduct(a[i],a[max_kkt_i]); // for version 1
+		    A[i][max_kkt_i] = a[i].dotProduct(a[max_kkt_i]); // for version 1
 		    is_computed[max_kkt_i] = true;
 		}
 	    }

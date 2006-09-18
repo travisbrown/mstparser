@@ -155,7 +155,7 @@ public class KBestParseForest2O {
     }
 	
     public FeatureVector cat(FeatureVector fv1, FeatureVector fv2) {
-	return FeatureVector.cat(fv1,fv2);
+	return fv1.cat(fv2);
     }
 
 	

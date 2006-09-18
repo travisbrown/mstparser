@@ -103,7 +103,7 @@ public class DependencyDecoder {
 				double prob_fin = bc+prodProb_st;
 				FeatureVector fv_fin = prodFV_st;
 				if(pipe.labeled) {
-				    fv_fin = FeatureVector.cat(nt_fv_s_01,FeatureVector.cat(nt_fv_t_00,fv_fin));
+				    fv_fin = nt_fv_s_01.cat(nt_fv_t_00.cat(fv_fin));
 				    prob_fin += nt_prob_s_01+nt_prob_t_00;
 				}
 				pf.add(s,r,t,type1,0,1,prob_fin,fv_fin,b1[comp1],c1[comp2]);
@@ -111,7 +111,7 @@ public class DependencyDecoder {
 				prob_fin = bc+prodProb_ts;
 				fv_fin = prodFV_ts;
 				if(pipe.labeled) {
-				    fv_fin = FeatureVector.cat(nt_fv_t_11,FeatureVector.cat(nt_fv_s_10,fv_fin));
+				    fv_fin = nt_fv_t_11.cat(nt_fv_s_10.cat(fv_fin));
 				    prob_fin += nt_prob_t_11+nt_prob_s_10;
 				}
 				pf.add(s,r,t,type2,1,1,prob_fin,fv_fin,b1[comp1],c1[comp2]);
@@ -250,8 +250,10 @@ public class DependencyDecoder {
 		if(pr != -1) {
 		    fin_fv[k][ch] = fvs[ch < pr ? ch : pr][ch < pr ? pr : ch][ch < pr ? 1 : 0];
 		    if(pipe.labeled) {
-			fin_fv[k][ch] = FeatureVector.cat(fin_fv[k][ch],nt_fvs[ch][static_types[pr][ch]][ch < pr ? 1 : 0][0]);
-			fin_fv[k][ch] = FeatureVector.cat(fin_fv[k][ch],nt_fvs[pr][static_types[pr][ch]][ch < pr ? 1 : 0][1]);
+			fin_fv[k][ch] = 
+			    fin_fv[k][ch].cat(nt_fvs[ch][static_types[pr][ch]][ch < pr ? 1 : 0][0]);
+			fin_fv[k][ch] = 
+			    fin_fv[k][ch].cat(nt_fvs[pr][static_types[pr][ch]][ch < pr ? 1 : 0][1]);
 		    }
 		}
 		else
@@ -265,7 +267,7 @@ public class DependencyDecoder {
 	for(int k = 0; k < fin.length; k++) {
 	    fin[k] = new FeatureVector();
 	    for(int i = 1; i < fin_fv[k].length; i++)
-		fin[k] = FeatureVector.cat(fin_fv[k][i],fin[k]);
+		fin[k] = fin_fv[k][i].cat(fin[k]);
 	    result[k] = "";
 	    for(int i = 1; i < par.length; i++)
 		result[k] += fin_par[k][i]+"|"+i + (pipe.labeled ? ":"+static_types[fin_par[k][i]][i] : ":0") +" ";

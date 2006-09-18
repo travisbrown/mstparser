@@ -21,9 +21,9 @@ public class FeatureVector {
 	next = n;
     }
 
-    public static FeatureVector cat(FeatureVector fv1, FeatureVector fv2) {
+    public FeatureVector cat(FeatureVector fv2) {
 	FeatureVector result = new FeatureVector();
-	for(FeatureVector curr = fv1; curr.next != null; curr = curr.next) {
+	for(FeatureVector curr = this; curr.next != null; curr = curr.next) {
 	    if(curr.index < 0)
 		continue;
 	    result = new FeatureVector(curr.index,curr.value,result);
@@ -38,9 +38,9 @@ public class FeatureVector {
     }
 
     // fv1 - fv2
-    public static FeatureVector getDistVector(FeatureVector fv1, FeatureVector fv2) {
+    public FeatureVector getDistVector(FeatureVector fv2) {
 	FeatureVector result = new FeatureVector();
-	for(FeatureVector curr = fv1; curr.next != null; curr = curr.next) {
+	for(FeatureVector curr = this; curr.next != null; curr = curr.next) {
 	    if(curr.index < 0)
 		continue;
 	    result = new FeatureVector(curr.index,curr.value,result);
@@ -53,12 +53,12 @@ public class FeatureVector {
 	return result;
     }
 	
-    public static double dotProduct(FeatureVector fv1, FeatureVector fv2) {
+    public double dotProduct(FeatureVector fv2) {
 	double result = 0.0;
 	TIntDoubleHashMap hm1 = new TIntDoubleHashMap();
 	TIntDoubleHashMap hm2 = new TIntDoubleHashMap();
 
-	for(FeatureVector curr = fv1; curr.next != null; curr = curr.next) {
+	for(FeatureVector curr = this; curr.next != null; curr = curr.next) {
 	    if(curr.index < 0)
 		continue;
 	    hm1.put(curr.index,hm1.get(curr.index)+curr.value);
@@ -79,43 +79,6 @@ public class FeatureVector {
 		
 	return result;
 		
-    }
-
-    public static double oneNorm(FeatureVector fv1) {
-	double sum = 0.0;
-	for(FeatureVector curr = fv1; curr.next != null; curr = curr.next) {
-	    if(curr.index < 0)
-		continue;
-	    sum += curr.value;
-	}
-	return sum;
-    }
-	
-    public static double twoNorm(FeatureVector fv1) {
-	TIntDoubleHashMap hm = new TIntDoubleHashMap();
-	double sum = 0.0;
-	for(FeatureVector curr = fv1; curr.next != null; curr = curr.next) {
-	    if(curr.index < 0)
-		continue;
-	    hm.put(curr.index,hm.get(curr.index)+curr.value);
-	}
-	int[] keys = hm.keys();
-
-	for(int i = 0; i < keys.length; i++)
-	    sum += Math.pow(hm.get(keys[i]),2.0);
-		
-	return Math.sqrt(sum);
-    }
-
-    public static FeatureVector twoNormalize(FeatureVector fv1) {
-	double norm = twoNorm(fv1);
-	FeatureVector result = new FeatureVector();
-	for(FeatureVector curr = fv1; curr.next != null; curr = curr.next) {
-	    if(curr.index < 0)
-		continue;
-	    result = new FeatureVector(curr.index,curr.value/norm,result);
-	}
-	return result;
     }
 
     public String toString() {
