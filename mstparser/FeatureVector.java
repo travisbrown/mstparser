@@ -11,13 +11,20 @@ public class FeatureVector {
 	
 
     public FeatureVector(int[] keys) {
-	FeatureVector result = new FeatureVector();
-	for (int i=0; i<keys.length-1; i++)
-	    result = new FeatureVector(keys[i],1.0,result);
+	if (keys.length == 0) {
+	    index = -1;
+	    value = -1.0;
+	    next = null;
+	}
+	else {
+	    FeatureVector result = new FeatureVector();
+	    for (int i=0; i<keys.length-1; i++)
+		result = new FeatureVector(keys[i],1.0,result);
 
-	index = keys[keys.length-1];
-	value = 1.0;
-	next = result;
+	    index = keys[keys.length-1];
+	    value = 1.0;
+	    next = result;
+	}
     }
 
     public FeatureVector() {
