@@ -15,7 +15,7 @@ public class FeatureVector {
 	for (int i=0; i<keys.length-1; i++)
 	    result = new FeatureVector(keys[i],1.0,result);
 
-	index = keys[keys.length];
+	index = keys[keys.length-1];
 	value = 1.0;
 	next = result;
     }
