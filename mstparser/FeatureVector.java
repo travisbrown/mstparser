@@ -47,7 +47,6 @@ public class FeatureVector {
 	    keys.add(curr.index);
 	}
 	return keys.toNativeArray();
-
     }
 
     public FeatureVector cat(FeatureVector fv2) {

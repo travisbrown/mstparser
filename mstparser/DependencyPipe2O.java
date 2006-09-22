@@ -15,34 +15,134 @@ public class DependencyPipe2O extends DependencyPipe {
 	super(createForest, format);
     }
 
-    public FeatureVector createFeatureVector(DependencyInstance instance,
-					     int par,
-					     int ch1, int ch2,
-					     FeatureVector fv) {
+			
+    protected FeatureVector addExtendedFeatures(DependencyInstance instance,
+						FeatureVector fv) {
+	    
+	final int instanceLength = instance.length();
+	int[] heads = instance.heads;
 
-	String[] forms = instance.forms;
-	String[] pos = instance.postags;
-		
-	// ch1 is always the closes to par
-	String dir = par > ch2 ? "RA" : "LA";
-		
-	String par_pos = pos[par];
-	String ch1_pos = ch1 == par ? "STPOS" : pos[ch1];
-	String ch2_pos = pos[ch2];
-	String ch1_word = ch1 == par ? "STWRD" : forms[ch1];
-	String ch2_word = forms[ch2];
-
-	String pTrip = par_pos+"_"+ch1_pos+"_"+ch2_pos;
-	fv = add("POS_TRIP="+pTrip+"_"+dir,1.0,fv);
-	fv = add("APOS_TRIP="+pTrip,1.0,fv);
+	// find all trip features
+	for(int i = 0; i < instanceLength; i++) {
+	    if(heads[i] == -1 && i != 0) continue;
+	    // right children
+	    int prev = i;
+	    for(int j = i+1; j < instanceLength; j++) {
+		if(heads[j] == i) {
+		    fv = addTripFeatures(instance,i,prev,j,fv);
+		    fv = addSiblingFeatures(instance,prev,j,prev==i,fv);
+		    prev = j;
+		}
+	    }
+	    prev = i;
+	    for(int j = i-1; j >= 0; j--) {
+		if(heads[j] == i) {
+		    fv = addTripFeatures(instance,i,prev,j,fv);
+		    fv = addSiblingFeatures(instance,prev,j,prev==i,fv);
+		    prev = j;
+		}
+	    }
+	}
 		
 	return fv;
     }
-	
-    public FeatureVector createFeatureVectorSib(DependencyInstance instance,
-						int ch1, int ch2,
-						boolean isST,
-						FeatureVector fv) {
+
+    public void getFeatureVector(DependencyInstance instance,
+				 FeatureVector[][][] fvs,
+				 double[][][] probs,
+				 FeatureVector[][][] fvs_trips,
+				 double[][][] probs_trips,
+				 FeatureVector[][][] fvs_sibs,
+				 double[][][] probs_sibs,
+				 FeatureVector[][][][] nt_fvs,
+				 double[][][][] nt_probs, Parameters params) {
+
+	String[] forms = instance.forms;
+	String[] pos = instance.postags;
+	String[] labs = instance.deprels;
+		
+	// Get production crap.		
+	for(int w1 = 0; w1 < forms.length; w1++) {
+	    for(int w2 = w1+1; w2 < forms.length; w2++) {
+		for(int ph = 0; ph < 2; ph++) {
+		    boolean attR = ph == 0 ? true : false;
+		    
+		    int childInt = attR ? w2 : w1;
+		    int parInt = attR ? w1 : w2;
+		    
+		    FeatureVector prodFV = addCoreFeatures(instance,w1,w2,attR,
+							   new FeatureVector());
+										
+		    double prodProb = params.getScore(prodFV);
+		    fvs[w1][w2][ph] = prodFV;
+		    probs[w1][w2][ph] = prodProb;
+		}
+	    }
+	}
+
+	if(labeled) {
+	    for(int w1 = 0; w1 < forms.length; w1++) {
+		for(int t = 0; t < types.length; t++) {
+		    String type = types[t];
+		    for(int ph = 0; ph < 2; ph++) {						
+			boolean attR = ph == 0 ? true : false;
+			for(int ch = 0; ch < 2; ch++) {				
+			    boolean child = ch == 0 ? true : false;			    
+			    FeatureVector prodFV = addLabeledFeatures(instance,w1,
+								      type,attR,child,
+								      new FeatureVector());
+			    
+			    double nt_prob = params.getScore(prodFV);
+			    nt_fvs[w1][t][ph][ch] = prodFV;
+			    nt_probs[w1][t][ph][ch] = nt_prob;
+			    
+			}
+		    }
+		}
+	    }
+	}
+		
+	for(int w1 = 0; w1 < forms.length; w1++) {
+	    for(int w2 = w1; w2 < forms.length; w2++) {
+		for(int w3 = w2+1; w3 < forms.length; w3++) {
+		    FeatureVector prodFV = addTripFeatures(instance,w1,w2,w3,
+							   new FeatureVector());
+		    double prodProb = params.getScore(prodFV);
+		    fvs_trips[w1][w2][w3] = prodFV;
+		    probs_trips[w1][w2][w3] = prodProb;
+		}
+	    }
+	    for(int w2 = w1; w2 >= 0; w2--) {
+		for(int w3 = w2-1; w3 >= 0; w3--) {
+		    FeatureVector prodFV = addTripFeatures(instance,w1,w2,w3,
+							   new FeatureVector());
+		    double prodProb = params.getScore(prodFV);
+		    fvs_trips[w1][w2][w3] = prodFV;
+		    probs_trips[w1][w2][w3] = prodProb;
+		}
+	    }
+	}
+			
+	for(int w1 = 0; w1 < forms.length; w1++) {
+	    for(int w2 = 0; w2 < forms.length; w2++) {
+		for(int wh = 0; wh < 2; wh++) {
+		    if(w1 != w2) {
+			FeatureVector prodFV = addSiblingFeatures(instance,w1,w2,wh == 0,
+								  new FeatureVector());
+			double prodProb = params.getScore(prodFV);
+			fvs_sibs[w1][w2][wh] = prodFV;
+			probs_sibs[w1][w2][wh] = prodProb;
+		    }
+		}
+	    }
+	}
+    }
+
+
+    private final FeatureVector addSiblingFeatures(DependencyInstance instance,
+						   int ch1, int ch2,
+						   boolean isST,
+						   FeatureVector fv) {
 
 	String[] forms = instance.forms;
 	String[] pos = instance.postags;
@@ -86,169 +186,86 @@ public class DependencyPipe2O extends DependencyPipe {
 		
 	return fv;
     }
-			
-    public FeatureVector createFeatureVector(DependencyInstance instance, int[] labs1) {
 
-	String[] labs = new String[labs1.length];
-	for(int i = 0; i < labs.length; i++)
-	    labs[i] = types[labs1[i]];
 
-	instance.deprels = labs;
+    private final FeatureVector addTripFeatures(DependencyInstance instance,
+					 int par,
+					 int ch1, int ch2,
+					 FeatureVector fv) {
 
-	return createFeatureVector(instance);	    
-    }
+	String[] pos = instance.postags;
+		
+	// ch1 is always the closest to par
+	String dir = par > ch2 ? "RA" : "LA";
+		
+	String par_pos = pos[par];
+	String ch1_pos = ch1 == par ? "STPOS" : pos[ch1];
+	String ch2_pos = pos[ch2];
 
-    public FeatureVector createFeatureVector(DependencyInstance instance) {
-	    
-	String[] forms = instance.forms;
-	String[] labs = instance.deprels;
-	int[] heads = instance.heads;	
-
-	FeatureVector fv = new FeatureVector();
-	for(int i = 0; i < forms.length; i++) {
-	    if(heads[i] == -1)
-		continue;
-	    int small = i < heads[i] ? i : heads[i];
-	    int large = i > heads[i] ? i : heads[i];
-	    boolean attR = i < heads[i] ? false : true;
-	    fv = createFeatureVector(instance,small,large,attR,fv);
-	    if(labeled) {
-		fv = createFeatureVector(instance,i,labs[i],attR,true,fv);
-		fv = createFeatureVector(instance,heads[i],labs[i],attR,false,fv);
-	    }
-	}
-	// find all trip features
-	for(int i = 0; i < forms.length; i++) {
-	    if(heads[i] == -1 && i != 0) continue;
-	    // right children
-	    int prev = i;
-	    for(int j = i+1; j < forms.length; j++) {
-		if(heads[j] == i) {
-		    fv = createFeatureVector(instance,i,prev,j,fv);
-		    fv = createFeatureVectorSib(instance,prev,j,prev==i,fv);
-		    prev = j;
-		}
-	    }
-	    prev = i;
-	    for(int j = i-1; j >= 0; j--) {
-		if(heads[j] == i) {
-		    fv = createFeatureVector(instance,i,prev,j,fv);
-		    fv = createFeatureVectorSib(instance,prev,j,prev==i,fv);
-		    prev = j;
-		}
-	    }
-	}
+	String pTrip = par_pos+"_"+ch1_pos+"_"+ch2_pos;
+	fv = add("POS_TRIP="+pTrip+"_"+dir,1.0,fv);
+	fv = add("APOS_TRIP="+pTrip,1.0,fv);
 		
 	return fv;
     }
+	
 
-    public void possibleFeatures(DependencyInstance instance, ObjectOutputStream out) {
 
-	int instanceLength = instance.length();
-		
-	try {
+    /**
+     * Write out the second order features.
+     *
+     **/
+    protected void writeExtendedFeatures (DependencyInstance instance, ObjectOutputStream out) 
+	throws IOException {
 
-	    for(int w1 = 0; w1 < instanceLength; w1++) {
-		for(int w2 = w1+1; w2 < instanceLength; w2++) {
-					
-		    for(int ph = 0; ph < 2; ph++) {						
-			boolean attR = ph == 0 ? true : false;
-							
-			FeatureVector prodFV = createFeatureVector(instance,w1,w2,attR,
-								   new FeatureVector());
-						
-			out.writeObject(prodFV.keys());
-		    }
+	final int instanceLength = instance.length();
+
+	for(int w1 = 0; w1 < instanceLength; w1++) {
+	    for(int w2 = w1; w2 < instanceLength; w2++) {
+		for(int w3 = w2+1; w3 < instanceLength; w3++) {
+		    FeatureVector prodFV = addTripFeatures(instance,w1,w2,w3,
+							   new FeatureVector());
+		    out.writeObject(prodFV.keys());
 		}
-			
 	    }
-
-	    out.writeInt(-3);
-
-	    if(labeled) {
-		for(int w1 = 0; w1 < instanceLength; w1++) {
-		    
-		    for(int t = 0; t < types.length; t++) {
-			String type = types[t];
-			
-			for(int ph = 0; ph < 2; ph++) {						
-			    boolean attR = ph == 0 ? true : false;
-			    
-			    for(int ch = 0; ch < 2; ch++) {						
-				boolean child = ch == 0 ? true : false;						
-				
-				FeatureVector prodFV = createFeatureVector(instance,w1,
-									   type,
-									   attR,child,
-									   new FeatureVector());
-				
-				out.writeObject(prodFV.keys());
-				
-			    }
-			}
-		    }
-		    
+	    for(int w2 = w1; w2 >= 0; w2--) {
+		for(int w3 = w2-1; w3 >= 0; w3--) {
+		    FeatureVector prodFV = addTripFeatures(instance,w1,w2,w3,
+							   new FeatureVector());
+		    out.writeObject(prodFV.keys());
 		}
-		
-		out.writeInt(-3);
 	    }
-
-	    for(int w1 = 0; w1 < instanceLength; w1++) {
-		for(int w2 = w1; w2 < instanceLength; w2++) {
-		    for(int w3 = w2+1; w3 < instanceLength; w3++) {
-			FeatureVector prodFV = createFeatureVector(instance,w1,w2,w3,
-								   new FeatureVector());
-			out.writeObject(prodFV.keys());
-		    }
-		}
-		for(int w2 = w1; w2 >= 0; w2--) {
-		    for(int w3 = w2-1; w3 >= 0; w3--) {
-			FeatureVector prodFV = createFeatureVector(instance,w1,w2,w3,
-								   new FeatureVector());
+	}
+			
+	out.writeInt(-3);
+	
+	for(int w1 = 0; w1 < instanceLength; w1++) {
+	    for(int w2 = 0; w2 < instanceLength; w2++) {
+		for(int wh = 0; wh < 2; wh++) {
+		    if(w1 != w2) {
+			FeatureVector prodFV = addSiblingFeatures(instance,w1,w2,wh == 0,
+								  new FeatureVector());
 			out.writeObject(prodFV.keys());
 		    }
 		}
 	    }
-			
-	    out.writeInt(-3);
-			
-	    for(int w1 = 0; w1 < instanceLength; w1++) {
-		for(int w2 = 0; w2 < instanceLength; w2++) {
-		    for(int wh = 0; wh < 2; wh++) {
-			if(w1 != w2) {
-			    FeatureVector prodFV = createFeatureVectorSib(instance,w1,w2,wh == 0,
-									  new FeatureVector());
-			    out.writeObject(prodFV.keys());
-			}
-		    }
-		}
-	    }
-
-	    out.writeInt(-3);
-				
-	    out.writeObject(instance.fv.keys());
-	    out.writeInt(-4);
-
-	    out.writeObject(instance);
-	    out.writeInt(-1);
-
-	    out.reset();
-
-	} catch (IOException e) {}
-		
+	}
+	
+	out.writeInt(-3);
     }
 
-    public DependencyInstance getFeatureVector(ObjectInputStream in,
-					       int length,
-					       FeatureVector[][][] fvs,
-					       double[][][] probs,
-					       FeatureVector[][][] fvs_trips,
-					       double[][][] probs_trips,
-					       FeatureVector[][][] fvs_sibs,
-					       double[][][] probs_sibs,
-					       FeatureVector[][][][] nt_fvs,
-					       double[][][][] nt_probs,
-					       Parameters params) throws IOException {
+
+    public DependencyInstance readInstance(ObjectInputStream in,
+					   int length,
+					   FeatureVector[][][] fvs,
+					   double[][][] probs,
+					   FeatureVector[][][] fvs_trips,
+					   double[][][] probs_trips,
+					   FeatureVector[][][] fvs_sibs,
+					   double[][][] probs_sibs,
+					   FeatureVector[][][][] nt_fvs,
+					   double[][][][] nt_probs,
+					   Parameters params) throws IOException {
 
 	try {
 	    // Get production crap.		
@@ -340,103 +357,6 @@ public class DependencyPipe2O extends DependencyPipe {
 		
     }
 		
-    public void getFeatureVector(DependencyInstance instance,
-				 FeatureVector[][][] fvs,
-				 double[][][] probs,
-				 FeatureVector[][][] fvs_trips,
-				 double[][][] probs_trips,
-				 FeatureVector[][][] fvs_sibs,
-				 double[][][] probs_sibs,
-				 FeatureVector[][][][] nt_fvs,
-				 double[][][][] nt_probs, Parameters params) {
 
-	String[] forms = instance.forms;
-	String[] pos = instance.postags;
-	String[] labs = instance.deprels;
-		
-	// Get production crap.		
-	for(int w1 = 0; w1 < forms.length; w1++) {
-	    for(int w2 = w1+1; w2 < forms.length; w2++) {
-				
-		for(int ph = 0; ph < 2; ph++) {
-		    boolean attR = ph == 0 ? true : false;
-		    
-		    int childInt = attR ? w2 : w1;
-		    int parInt = attR ? w1 : w2;
-		    
-		    FeatureVector prodFV = createFeatureVector(instance,w1,w2,attR,
-							       new FeatureVector());
-										
-		    double prodProb = params.getScore(prodFV);
-		    fvs[w1][w2][ph] = prodFV;
-		    probs[w1][w2][ph] = prodProb;
-		}
-	    }
-			
-	}
-
-	if(labeled) {
-	    for(int w1 = 0; w1 < forms.length; w1++) {
-		
-		for(int t = 0; t < types.length; t++) {
-		    String type = types[t];
-		    
-		    for(int ph = 0; ph < 2; ph++) {						
-			boolean attR = ph == 0 ? true : false;
-			
-			for(int ch = 0; ch < 2; ch++) {						
-			    boolean child = ch == 0 ? true : false;						
-			    
-			    FeatureVector prodFV = createFeatureVector(instance,w1,
-								       type,attR,child,
-								       new FeatureVector());
-			    
-			    double nt_prob = params.getScore(prodFV);
-			    nt_fvs[w1][t][ph][ch] = prodFV;
-			    nt_probs[w1][t][ph][ch] = nt_prob;
-			    
-			}
-		    }
-		}
-		
-	    }
-	}
-
-		
-	for(int w1 = 0; w1 < forms.length; w1++) {
-	    for(int w2 = w1; w2 < forms.length; w2++) {
-		for(int w3 = w2+1; w3 < forms.length; w3++) {
-		    FeatureVector prodFV = createFeatureVector(instance,w1,w2,w3,
-							       new FeatureVector());
-		    double prodProb = params.getScore(prodFV);
-		    fvs_trips[w1][w2][w3] = prodFV;
-		    probs_trips[w1][w2][w3] = prodProb;
-		}
-	    }
-	    for(int w2 = w1; w2 >= 0; w2--) {
-		for(int w3 = w2-1; w3 >= 0; w3--) {
-		    FeatureVector prodFV = createFeatureVector(instance,w1,w2,w3,
-							       new FeatureVector());
-		    double prodProb = params.getScore(prodFV);
-		    fvs_trips[w1][w2][w3] = prodFV;
-		    probs_trips[w1][w2][w3] = prodProb;
-		}
-	    }
-	}
-			
-	for(int w1 = 0; w1 < forms.length; w1++) {
-	    for(int w2 = 0; w2 < forms.length; w2++) {
-		for(int wh = 0; wh < 2; wh++) {
-		    if(w1 != w2) {
-			FeatureVector prodFV = createFeatureVectorSib(instance,w1,w2,wh == 0,
-								      new FeatureVector());
-			double prodProb = params.getScore(prodFV);
-			fvs_sibs[w1][w2][wh] = prodFV;
-			probs_sibs[w1][w2][wh] = prodProb;
-		    }
-		}
-	    }
-	}
-    }
 		
 }

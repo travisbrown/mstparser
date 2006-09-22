@@ -6,6 +6,8 @@ import gnu.trove.*;
 
 public class Parameters {
 
+    private double SCORE = 0.0;
+
     public double[] parameters;
     public double[] total;
     public String lossType = "punc";
@@ -66,28 +68,15 @@ public class Parameters {
                 total[curr.index] += upd*alpha[k]*curr.value;
             }
 	    
-	    //int[] featureIDs = fv.keys();
-	    //for (int i=0; i<featureIDs.length; i++) {
-	    //	int id = featureIDs[i];
-	    //	double val = fv.get(id) * alpha[k];
-	    //	parameters[id] += val;
-	    //	total[id] += upd * val;
-	    //}
 	}
 
     }
 
     public double getScore(FeatureVector fv) {
 	double score = 0.0;
-	for(FeatureVector curr = fv; curr.index >= 0; curr = curr.next) {
+
+	for(FeatureVector curr = fv; curr.index >= 0; curr = curr.next)
             score += parameters[curr.index]*curr.value;
-        }
-
-
-	//int[] featureIDs = fv.keys();
-	//for (int i=0; i<featureIDs.length; i++) {	
-	//    score += parameters[featureIDs[i]] * fv.get(featureIDs[i]);
-	//}		
 
 	return score;
     }

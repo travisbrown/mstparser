@@ -106,7 +106,11 @@ public class DependencyDecoder2O extends DependencyDecoder {
 
 	inst.heads = par;
 
-	orig[0][0] = ((DependencyPipe2O)pipe).createFeatureVector(inst,labs);
+	inst.deprels = new String[labs.length];
+	for(int i = 0; i < labs.length; i++)
+	    inst.deprels[i] = pipe.getType(labs[i]);
+
+	orig[0][0] = ((DependencyPipe2O)pipe).createFeatureVector(inst);
 	orig[0][1] = pars;
 		
 
