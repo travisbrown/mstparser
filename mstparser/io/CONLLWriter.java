@@ -14,9 +14,9 @@ public class CONLLWriter extends DependencyWriter {
 	for (int i=0; i<instance.length(); i++) {
 	    writer.write(Integer.toString(i+1));                writer.write('\t');
 	    writer.write(instance.forms[i]);                    writer.write('\t');
-	    writer.write(instance.forms[i]);                    writer.write('\t');
-	    //writer.write(instance.cpostags[i]);                 writer.write('\t');
-	    writer.write(instance.postags[i]);                 writer.write('\t');
+	    writer.write(instance.lemmas[i]);                   writer.write('\t');
+	    writer.write(instance.cpostags[i]);                 writer.write('\t');
+	    //writer.write(instance.postags[i]);                writer.write('\t');
 	    writer.write(instance.postags[i]);                  writer.write('\t');
 	    writer.write("-");                                  writer.write('\t');
 	    writer.write(Integer.toString(instance.heads[i]));  writer.write('\t');

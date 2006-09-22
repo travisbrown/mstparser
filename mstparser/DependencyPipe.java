@@ -381,16 +381,16 @@ public class DependencyPipe {
 	if(hL > 5 || cL > 5) {
 	    String[] lemmas = instance.lemmas;
 
-	    head = attR ? lemmas[small] : lemmas[large];
-	    child = attR ? lemmas[large] : lemmas[small];
+	    String hLemma = attR ? lemmas[small] : lemmas[large];
+	    String cLemma = attR ? lemmas[large] : lemmas[small];
 		    
-	    all = head + " " + headP + " " + child + " " + childP;
-	    hPos = headP + " " + child + " " + childP;
-	    cPos = head + " " + headP + " " + childP;
-	    hP = headP + " " + child;
-	    cP = head + " " + childP;
+	    all = hLemma + " " + headP + " " + cLemma + " " + childP;
+	    hPos = headP + " " + cLemma + " " + childP;
+	    cPos = hLemma + " " + headP + " " + childP;
+	    hP = headP + " " + cLemma;
+	    cP = hLemma + " " + childP;
 	    oPos = headP + " " + childP;
-	    oLex = head + " " + child;
+	    oLex = hLemma + " " + cLemma;
 	
 	    fv = add("SA="+all+attDist,fv); //this
 	    fv = add("SF="+oLex+attDist,fv); //this
@@ -400,23 +400,23 @@ public class DependencyPipe {
 	    if(cL > 5) {
 		fv = add("SB="+hPos+attDist,fv);
 		fv = add("SD="+hP+attDist,fv);
-		fv = add("SK="+child+" "+childP+attDist,fv);
-		fv = add("SM="+child+attDist,fv); //this
+		fv = add("SK="+cLemma+" "+childP+attDist,fv);
+		fv = add("SM="+cLemma+attDist,fv); //this
 		fv = add("SBB="+hPos,fv);
 		fv = add("SDD="+hP,fv);
-		fv = add("SKK="+child+" "+childP,fv);
-		fv = add("SMM="+child,fv); //this
+		fv = add("SKK="+cLemma+" "+childP,fv);
+		fv = add("SMM="+cLemma,fv); //this
 	    }
 	    if(hL > 5) {
 		fv = add("SC="+cPos+attDist,fv);
 		fv = add("SE="+cP+attDist,fv);
-		fv = add("SH="+head+" "+headP+attDist,fv);
-		fv = add("SJ="+head+attDist,fv); //this
+		fv = add("SH="+hLemma+" "+headP+attDist,fv);
+		fv = add("SJ="+hLemma+attDist,fv); //this
 			
 		fv = add("SCC="+cPos,fv);
 		fv = add("SEE="+cP,fv);
-		fv = add("SHH="+head+" "+headP,fv);
-		fv = add("SJJ="+head,fv); //this
+		fv = add("SHH="+hLemma+" "+headP,fv);
+		fv = add("SJJ="+hLemma,fv); //this
 	    }
 	}
 		
@@ -432,7 +432,6 @@ public class DependencyPipe {
 					    FeatureVector fv) {
 		
 	if(!labeled) return fv;
-
 
 	String[] forms = instance.forms;
 	String[] pos = instance.postags;

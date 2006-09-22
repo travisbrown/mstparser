@@ -68,9 +68,10 @@ public class DependencyInstance implements Serializable {
 	this.heads = heads;
     }
 
-    public DependencyInstance(String[] forms, String[] cpostags, String[] postags, 
-			      String[] labs, int[] heads) {
+    public DependencyInstance(String[] forms, String[] lemmas, String[] cpostags, 
+			      String[] postags, String[] labs, int[] heads) {
 	this(forms, postags, labs, heads);
+	this.lemmas = lemmas;
 	this.cpostags = cpostags;
     }
 

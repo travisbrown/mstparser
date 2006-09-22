@@ -28,12 +28,14 @@ public class CONLLReader extends DependencyReader {
 
 
 	String[] forms = new String[length+1];
+	String[] lemmas = new String[length+1];
 	String[] cpos = new String[length+1];
 	String[] pos = new String[length+1];
 	String[] deprels = new String[length+1];
 	int[] heads = new int[length+1];
 
 	forms[0] = "<root>";
+	lemmas[0] = "<root-LEMMA>";
 	cpos[0] = "<root-CPOS>";
 	pos[0] = "<root-POS>";
 	deprels[0] = "<no-type>";
@@ -42,13 +44,14 @@ public class CONLLReader extends DependencyReader {
 	for(int i = 0; i < length; i++) {
 	    String[] info = lineList.get(i);
 	    forms[i+1] = normalize(info[1]);
+	    lemmas[i+1] = normalize(info[2]);
 	    cpos[i+1] = info[3];
 	    pos[i+1] = info[4];
 	    deprels[i+1] = labeled ? info[7] : "<no-type>";
 	    heads[i+1] = Integer.parseInt(info[6]);
 	}
 
-	return new DependencyInstance(forms, cpos, pos, deprels, heads);
+	return new DependencyInstance(forms, lemmas, cpos, pos, deprels, heads);
 
     }
 
