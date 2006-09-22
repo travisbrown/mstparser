@@ -220,6 +220,72 @@ public class DependencyPipe {
 	return fv;
     }
 
+    private final FeatureVector 
+	addCorePosFeatures(String prefix,
+			   String leftOf1, String one, String rightOf1, 
+			   String leftOf2, String two, String rightOf2, 
+			   String attachDistance, 
+			   FeatureVector fv) {
+
+	// feature posL-1 posL posR posR+1
+
+	fv = add(prefix+"="+leftOf1+" "+one+" "+two+"*"+attachDistance, fv);
+
+	StringBuilder feat = 
+	    new StringBuilder(prefix+"1="+leftOf1+" "+one+" "+two);
+	fv = add(feat.toString(), fv);
+	feat.append(' ').append(rightOf2);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+
+	feat = new StringBuilder(prefix+"2="+leftOf1+" "+two+" "+rightOf2);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+	
+	feat = new StringBuilder(prefix+"3="+leftOf1+" "+one+" "+rightOf2);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+	
+	feat = new StringBuilder(prefix+"4="+one+" "+two+" "+rightOf2);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+
+
+	// feature posL posL+1 posR-1 posR
+	prefix = "A"+prefix;
+
+	fv = add(prefix+"1="+one+" "+rightOf1+" "+leftOf2+"*"+attachDistance, fv);
+
+	feat = new StringBuilder(prefix+"1="+one+" "+rightOf1+" "+leftOf2);
+	fv = add(feat.toString(), fv);
+	feat.append(' ').append(two);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+
+	feat = new StringBuilder(prefix+"2="+one+" "+rightOf1+" "+two);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+	
+	feat = new StringBuilder(prefix+"3="+one+" "+leftOf2+" "+two);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+	
+	feat = new StringBuilder(prefix+"4="+rightOf1+" "+leftOf2+" "+two);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+	
+	return fv;
+
+    }
+
 
     public FeatureVector addCoreFeatures(DependencyInstance instance,
 					 int small,
@@ -233,7 +299,7 @@ public class DependencyPipe {
 	String[] posA = instance.cpostags;
 
 	String att = attR ? "RA" : "LA";
-		
+
 	int dist = Math.abs(large-small);
 	String distBool = "0";
 	if (dist > 10)
@@ -249,74 +315,34 @@ public class DependencyPipe {
 	String pRight = large < pos.length-1 ? pos[large+1] : "END";
 	String pLeftRight = small < large-1 ? pos[small+1] : "MID";
 	String pRightLeft = large > small+1 ? pos[large-1] : "MID";
+
 	String pLeftA = small > 0 ? posA[small-1] : "STR";
 	String pRightA = large < pos.length-1 ? posA[large+1] : "END";
 	String pLeftRightA = small < large-1 ? posA[small+1] : "MID";
 	String pRightLeftA = large > small+1 ? posA[large-1] : "MID";
 		
 	// feature posR posMid posL
+	StringBuilder featPos = 
+	    new StringBuilder("PC="+pos[small]+" "+pos[large]);
+	StringBuilder featPosA = 
+	    new StringBuilder("1PC"+posA[small]+" "+posA[large]);
+
 	for(int i = small+1; i < large; i++) {
-	    String allPos = pos[small]+" "+pos[i]+" "+pos[large];
-	    String allPosA = posA[small]+" "+posA[i]+" "+posA[large];
-	    fv = add("PC="+allPos+attDist,fv);
-	    fv = add("1PC="+allPos,fv);
-	    fv = add("XPC="+allPosA+attDist,fv);
-	    fv = add("X1PC="+allPosA,fv);
+	    String allPos = featPos.toString() + ' ' + pos[i];
+	    fv = add(allPos, fv);
+	    fv = add(allPos+attDist, fv);
+
+	    String allPosA = featPosA.toString() + ' ' + posA[i];
+	    fv = add(allPosA, fv);
+	    fv = add(allPosA+attDist, fv);
 	}
 
-	// feature posL-1 posL posR posR+1
-	fv = add("PT="+pLeft+" "+pos[small]+" "+pos[large]+" "+pRight+attDist,fv);
-	fv = add("PT1="+pos[small]+" "+pos[large]+" " +pRight+attDist,fv);
-	fv = add("PT2="+pLeft+" "+pos[small]+" "+pos[large]+attDist,fv);
-	fv = add("PT3="+pLeft+" "+pos[large]+" "+pRight+attDist,fv);
-	fv = add("PT4="+pLeft+" "+pos[small]+" "+pRight+attDist,fv);
-		
-	fv = add("1PT="+pLeft+" "+pos[small]+" "+pos[large]+" "+pRight,fv);
-	fv = add("1PT1="+pos[small]+" "+pos[large]+" " +pRight,fv);
-	fv = add("1PT2="+pLeft+" "+pos[small]+" "+pos[large],fv);
-	fv = add("1PT3="+pLeft+" "+pos[large]+" "+pRight,fv);
-	fv = add("1PT4="+pLeft+" "+pos[small]+" "+pRight,fv);
-		
-	fv = add("XPT="+pLeftA+" "+posA[small]+" "+posA[large]+" "+pRightA+attDist,fv);
-	fv = add("XPT1="+posA[small]+" "+posA[large]+" " +pRightA+attDist,fv);
-	fv = add("XPT2="+pLeftA+" "+posA[small]+" "+posA[large]+attDist,fv);
-	fv = add("XPT3="+pLeftA+" "+posA[large]+" "+pRightA+attDist,fv);
-	fv = add("XPT4="+pLeftA+" "+posA[small]+" "+pRightA+attDist,fv);
-		
-	fv = add("X1PT="+pLeftA+" "+posA[small]+" "+posA[large]+" "+pRightA,fv);
-	fv = add("X1PT1="+posA[small]+" "+posA[large]+" " +pRightA,fv);
-	fv = add("X1PT2="+pLeftA+" "+posA[small]+" "+posA[large],fv);
-	fv = add("X1PT3="+pLeftA+" "+posA[large]+" "+pRightA,fv);
-	fv = add("X1PT4="+pLeftA+" "+posA[small]+" "+pRightA,fv);
-		
-	// feature posL posL+1 posR-1 posR
-	fv = add("APT="+pos[small]+" "+pLeftRight+" "
-		 +pRightLeft+" "+pos[large]+attDist,fv);
-	fv = add("APT1="+pos[small]+" "+pRightLeft+" "+pos[large]+attDist,fv);
-	fv = add("APT2="+pos[small]+" "+pLeftRight+" "+pos[large]+attDist,fv);
-	fv = add("APT3="+pLeftRight+" "+pRightLeft+" "+pos[large]+attDist,fv);
-	fv = add("APT4="+pos[small]+" "+pLeftRight+" "+pRightLeft+attDist,fv);
+	fv = addCorePosFeatures("PT", pLeft, pos[small], pLeftRight, 
+				pRightLeft, pos[large], pRight, attDist, fv);
+	
+	fv = addCorePosFeatures("CPT", pLeftA, posA[small], pLeftRightA, 
+				pRightLeftA, posA[large], pRightA, attDist, fv);
 
-	fv = add("1APT="+pos[small]+" "+pLeftRight+" "
-		 +pRightLeft+" "+pos[large],fv);
-	fv = add("1APT1="+pos[small]+" "+pRightLeft+" "+pos[large],fv);
-	fv = add("1APT2="+pos[small]+" "+pLeftRight+" "+pos[large],fv);
-	fv = add("1APT3="+pLeftRight+" "+pRightLeft+" "+pos[large],fv);
-	fv = add("1APT4="+pos[small]+" "+pLeftRight+" "+pRightLeft,fv);
-		
-	fv = add("XAPT="+posA[small]+" "+pLeftRightA+" "
-		 +pRightLeftA+" "+posA[large]+attDist,fv);
-	fv = add("XAPT1="+posA[small]+" "+pRightLeftA+" "+posA[large]+attDist,fv);
-	fv = add("XAPT2="+posA[small]+" "+pLeftRightA+" "+posA[large]+attDist,fv);
-	fv = add("XAPT3="+pLeftRightA+" "+pRightLeftA+" "+posA[large]+attDist,fv);
-	fv = add("XAPT4="+posA[small]+" "+pLeftRightA+" "+pRightLeftA+attDist,fv);
-
-	fv = add("X1APT="+posA[small]+" "+pLeftRightA+" "
-		 +pRightLeftA+" "+posA[large],fv);
-	fv = add("X1APT1="+posA[small]+" "+pRightLeftA+" "+posA[large],fv);
-	fv = add("X1APT2="+posA[small]+" "+pLeftRightA+" "+posA[large],fv);
-	fv = add("X1APT3="+pLeftRightA+" "+pRightLeftA+" "+posA[large],fv);
-	fv = add("X1APT4="+posA[small]+" "+pLeftRightA+" "+pRightLeftA,fv);
 		
 	// feature posL-1 posL posR-1 posR
 	// feature posL posL+1 posR posR+1

@@ -109,7 +109,7 @@
     <tar tarfile="${name}-${version}-src.tar"
           basedir="../"
           includes="${Name}/**"
-          excludes="**/CVS" />
+          excludes="**/CVS **/*forest testbed/my*" />
     <gzip src="${name}-${version}-src.tar" 
           zipfile="../${name}-${version}-src.tgz" />
     <delete file="${name}-${version}-src.tar" />
