@@ -468,18 +468,17 @@ public class DependencyPipe {
     }
 
 
-    public void getFeatureVector(DependencyInstance instance,
-				 FeatureVector[][][] fvs,
-				 double[][][] probs,
-				 FeatureVector[][][][] nt_fvs,
-				 double[][][][] nt_probs, Parameters params) {
+    public void fillFeatureVectors(DependencyInstance instance,
+				   FeatureVector[][][] fvs,
+				   double[][][] probs,
+				   FeatureVector[][][][] nt_fvs,
+				   double[][][][] nt_probs, Parameters params) {
 
-	int instanceLength = instance.length();
+	final int instanceLength = instance.length();
 
 	// Get production crap.		
 	for(int w1 = 0; w1 < instanceLength; w1++) {
 	    for(int w2 = w1+1; w2 < instanceLength; w2++) {
-				
 		for(int ph = 0; ph < 2; ph++) {
 		    boolean attR = ph == 0 ? true : false;
 		    
@@ -497,13 +496,10 @@ public class DependencyPipe {
 
 	if(labeled) {
 	    for(int w1 = 0; w1 < instanceLength; w1++) {
-		
 		for(int t = 0; t < types.length; t++) {
 		    String type = types[t];
-		    
 		    for(int ph = 0; ph < 2; ph++) {						
 			boolean attR = ph == 0 ? true : false;
-			
 			for(int ch = 0; ch < 2; ch++) {						
 			    boolean child = ch == 0 ? true : false;			    
 			    FeatureVector prodFV = addLabeledFeatures(instance,w1,

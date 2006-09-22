@@ -47,64 +47,23 @@ public class DependencyPipe2O extends DependencyPipe {
 	return fv;
     }
 
-    public void getFeatureVector(DependencyInstance instance,
-				 FeatureVector[][][] fvs,
-				 double[][][] probs,
-				 FeatureVector[][][] fvs_trips,
-				 double[][][] probs_trips,
-				 FeatureVector[][][] fvs_sibs,
-				 double[][][] probs_sibs,
-				 FeatureVector[][][][] nt_fvs,
-				 double[][][][] nt_probs, Parameters params) {
+    public void fillFeatureVectors(DependencyInstance instance,
+				   FeatureVector[][][] fvs,
+				   double[][][] probs,
+				   FeatureVector[][][] fvs_trips,
+				   double[][][] probs_trips,
+				   FeatureVector[][][] fvs_sibs,
+				   double[][][] probs_sibs,
+				   FeatureVector[][][][] nt_fvs,
+				   double[][][][] nt_probs, Parameters params) {
 
-	String[] forms = instance.forms;
-	String[] pos = instance.postags;
-	String[] labs = instance.deprels;
-		
-	// Get production crap.		
-	for(int w1 = 0; w1 < forms.length; w1++) {
-	    for(int w2 = w1+1; w2 < forms.length; w2++) {
-		for(int ph = 0; ph < 2; ph++) {
-		    boolean attR = ph == 0 ? true : false;
-		    
-		    int childInt = attR ? w2 : w1;
-		    int parInt = attR ? w1 : w2;
-		    
-		    FeatureVector prodFV = addCoreFeatures(instance,w1,w2,attR,
-							   new FeatureVector());
-										
-		    double prodProb = params.getScore(prodFV);
-		    fvs[w1][w2][ph] = prodFV;
-		    probs[w1][w2][ph] = prodProb;
-		}
-	    }
-	}
+	fillFeatureVectors(instance, fvs, probs, nt_fvs, nt_probs, params);
 
-	if(labeled) {
-	    for(int w1 = 0; w1 < forms.length; w1++) {
-		for(int t = 0; t < types.length; t++) {
-		    String type = types[t];
-		    for(int ph = 0; ph < 2; ph++) {						
-			boolean attR = ph == 0 ? true : false;
-			for(int ch = 0; ch < 2; ch++) {				
-			    boolean child = ch == 0 ? true : false;			    
-			    FeatureVector prodFV = addLabeledFeatures(instance,w1,
-								      type,attR,child,
-								      new FeatureVector());
-			    
-			    double nt_prob = params.getScore(prodFV);
-			    nt_fvs[w1][t][ph][ch] = prodFV;
-			    nt_probs[w1][t][ph][ch] = nt_prob;
-			    
-			}
-		    }
-		}
-	    }
-	}
-		
-	for(int w1 = 0; w1 < forms.length; w1++) {
-	    for(int w2 = w1; w2 < forms.length; w2++) {
-		for(int w3 = w2+1; w3 < forms.length; w3++) {
+	final int instanceLength = instance.length();
+
+	for(int w1 = 0; w1 < instanceLength; w1++) {
+	    for(int w2 = w1; w2 < instanceLength; w2++) {
+		for(int w3 = w2+1; w3 < instanceLength; w3++) {
 		    FeatureVector prodFV = addTripFeatures(instance,w1,w2,w3,
 							   new FeatureVector());
 		    double prodProb = params.getScore(prodFV);
@@ -123,8 +82,8 @@ public class DependencyPipe2O extends DependencyPipe {
 	    }
 	}
 			
-	for(int w1 = 0; w1 < forms.length; w1++) {
-	    for(int w2 = 0; w2 < forms.length; w2++) {
+	for(int w1 = 0; w1 < instanceLength; w1++) {
+	    for(int w2 = 0; w2 < instanceLength; w2++) {
 		for(int wh = 0; wh < 2; wh++) {
 		    if(w1 != w2) {
 			FeatureVector prodFV = addSiblingFeatures(instance,w1,w2,wh == 0,
@@ -356,7 +315,5 @@ public class DependencyPipe2O extends DependencyPipe {
 	return null;
 		
     }
-		
-
 		
 }

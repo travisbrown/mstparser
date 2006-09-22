@@ -29,3 +29,11 @@ Score the results:
 > mst_score.sh data/portuguese/floresta_test.conll testbed/my_floresta_parses.conll CONLL
 
 Compare as with English on the obvious file names.
+
+3. Parse English with second order model.
+
+Run the parser as such:
+
+> mst_parse.sh format:MST train train-file:data/train.lab model-name:testbed/model test test-file:data/test.lab output-file:testbed/my_english_parses.mst eval gold-file:data/test.lab order:2
+
+

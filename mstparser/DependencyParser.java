@@ -186,12 +186,12 @@ public class DependencyParser {
 	    FeatureVector[][][] fvs_sibs = new FeatureVector[length][length][2];
 	    double[][][] probs_sibs = new double[length][length][2];
 	    if(secondOrder)
-		((DependencyPipe2O)pipe).getFeatureVector(instance,fvs,probs,
-							  fvs_trips,probs_trips,
-							  fvs_sibs,probs_sibs,
-							  nt_fvs,nt_probs,params);
+		((DependencyPipe2O)pipe).fillFeatureVectors(instance,fvs,probs,
+							    fvs_trips,probs_trips,
+							    fvs_sibs,probs_sibs,
+							    nt_fvs,nt_probs,params);
 	    else
-		pipe.getFeatureVector(instance,fvs,probs,nt_fvs,nt_probs,params);
+		pipe.fillFeatureVectors(instance,fvs,probs,nt_fvs,nt_probs,params);
 
 	    int K = testK;
 	    Object[][] d = null;
