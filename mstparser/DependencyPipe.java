@@ -19,6 +19,7 @@ public class DependencyPipe {
 	
     public boolean labeled = false;
     private String format;
+    private boolean isCONLL = true;
 
     public boolean createForest;
 	
@@ -31,6 +32,8 @@ public class DependencyPipe {
 	typeAlphabet = new Alphabet();
 	this.createForest = createForest;
 	this.format = format;
+	if (!format.equals("CONLL"))
+	    isCONLL = false;
 	depReader = DependencyReader.createDependencyReader(format);
     }
 
@@ -378,7 +381,7 @@ public class DependencyPipe {
 	int hL = head.length();
 	int cL = child.length();
 
-	if(hL > 5 || cL > 5) {
+	if(isCONLL || hL > 5 || cL > 5) {
 	    String[] lemmas = instance.lemmas;
 
 	    String hLemma = attR ? lemmas[small] : lemmas[large];
