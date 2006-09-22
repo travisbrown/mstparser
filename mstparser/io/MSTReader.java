@@ -51,6 +51,15 @@ public class MSTReader extends DependencyReader {
 	    cpostags[i] = pos_new[i].substring(0,1);
 	instance.cpostags = cpostags;
 
+	// set up the lemmas as just the first 5 characters of the forms
+	String[] lemmas = new String[forms_new.length];
+	cpostags[0] = "<root-LEMMA>";
+	for(int i = 1; i < forms_new.length; i++) {
+	    int formLength = forms_new[i].length();
+	    lemmas[i] = formLength > 5 ? forms_new[i].substring(0,5) : forms_new[i];
+	}
+	instance.lemmas = lemmas;
+
 	return instance;
     }
 

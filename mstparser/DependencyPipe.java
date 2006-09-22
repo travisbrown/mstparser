@@ -375,12 +375,14 @@ public class DependencyPipe {
 	fv = add("LL="+childP,fv);
 	fv = add("MM="+child,fv); //this
 
-	if(head.length() > 5 || child.length() > 5) {
-	    int hL = head.length();
-	    int cL = child.length();
-		    
-	    head = hL > 5 ? head.substring(0,5) : head;
-	    child = cL > 5 ? child.substring(0,5) : child;
+	int hL = head.length();
+	int cL = child.length();
+
+	if(hL > 5 || cL > 5) {
+	    String[] lemmas = instance.lemmas;
+
+	    head = attR ? lemmas[small] : lemmas[large];
+	    child = attR ? lemmas[large] : lemmas[small];
 		    
 	    all = head + " " + headP + " " + child + " " + childP;
 	    hPos = headP + " " + child + " " + childP;
