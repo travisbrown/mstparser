@@ -232,26 +232,16 @@ public class DependencyPipe {
 	String[] pos = instance.postags;
 	String[] posA = instance.cpostags;
 
-	String att = "";
-	if(attR)
-	    att = "RA";
-	else
-	    att = "LA";
+	String att = attR ? "RA" : "LA";
 		
 	int dist = Math.abs(large-small);
 	String distBool = "0";
-	if(dist > 1)
-	    distBool = "1";
-	if(dist > 2)
-	    distBool = "2";
-	if(dist > 3)
-	    distBool = "3";
-	if(dist > 4)
-	    distBool = "4";
-	if(dist > 5)
-	    distBool = "5";
-	if(dist > 10)
+	if (dist > 10)
 	    distBool = "10";
+	else if (dist > 5)
+	    distBool = "5";
+	else
+	    distBool = Integer.toString(dist-1);
 		
 	String attDist = "&"+att+"&"+distBool;
 
@@ -333,7 +323,7 @@ public class DependencyPipe {
 	fv = add("BPT="+pLeft+" "+pos[small]+" "+pRightLeft+" "+pos[large]+attDist,fv);
 	fv = add("1BPT="+pLeft+" "+pos[small]+" "+pRightLeft+" "+pos[large],fv);
 	fv = add("CPT="+pos[small]+" "+pLeftRight+" "+pos[large]+" "+pRight+attDist,fv);
-	fv = add("1CPT="+pos[small]+" "+pLeftRight+" "+pos[large]+" "+pRight,fv);
+ 	fv = add("1CPT="+pos[small]+" "+pLeftRight+" "+pos[large]+" "+pRight,fv);
 		
 	fv = add("XBPT="+pLeftA+" "+posA[small]+" "+pRightLeftA+" "+posA[large]+attDist,fv);
 	fv = add("X1BPT="+pLeftA+" "+posA[small]+" "+pRightLeftA+" "+posA[large],fv);
