@@ -97,8 +97,9 @@ public class DependencyPipe {
 	DependencyInstance instance = depReader.getNext();
 	int num1 = 0;
 
+	System.out.println("Creating Feature Vector Instances: ");
 	while(instance != null) {
-	    System.out.println("Creating Feature Vector Instance: " + num1);
+	    System.out.print(num1 + " ");
 	    
 	    instance.setFeatureVector(createFeatureVector(instance));
 			
@@ -121,6 +122,8 @@ public class DependencyPipe {
 
 	    num1++;
 	}
+
+	System.out.println();
 
 	closeAlphabets();
 		
