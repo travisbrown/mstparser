@@ -285,74 +285,7 @@ public class DependencyPipe {
 	String child = attR ? forms[large] : forms[small];
 	String childP = attR ? pos[large] : pos[small];
 
-	StringBuilder feat = new StringBuilder("H1="+head);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attDist);
-	fv = add(feat.toString(), fv);
-	
-	feat = new StringBuilder("H1="+head+" "+headP);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attDist);
-	fv = add(feat.toString(), fv);
-
-	feat = new StringBuilder("H1="+head+" "+headP+" "+childP);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attDist);
-	fv = add(feat.toString(), fv);
-
-	feat = new StringBuilder("H1="+head+" "+headP+" "+childP+" "+child);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attDist);
-	fv = add(feat.toString(), fv);
-	
-	feat = new StringBuilder("H2="+head+" "+child);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attDist);
-	fv = add(feat.toString(), fv);
-
-	feat = new StringBuilder("H3="+head+" "+childP);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attDist);
-	fv = add(feat.toString(), fv);
-
-
-	feat = new StringBuilder("H4="+headP+" "+child);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attDist);
-	fv = add(feat.toString(), fv);
-
-	feat = new StringBuilder("H4="+headP+" "+child+" "+childP);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attDist);
-	fv = add(feat.toString(), fv);
-
-	feat = new StringBuilder("H5="+headP+" "+childP);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attDist);
-	fv = add(feat.toString(), fv);
-
-	feat = new StringBuilder("H6="+child+" "+childP);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attDist);
-	fv = add(feat.toString(), fv);
-
-	feat = new StringBuilder("H7="+headP);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attDist);
-	fv = add(feat.toString(), fv);
-	
-	feat = new StringBuilder("H8="+child);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attDist);
-	fv = add(feat.toString(), fv);
-	
-	feat = new StringBuilder("H9="+childP);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attDist);
-	fv = add(feat.toString(), fv);
-	
-
-
+	fv = addTwoFactorFeatures("HC", head, headP, child, childP, attDist, fv);
 	
 	String oLex = head + " " + child;
 	String cP =   head + " " + childP;
@@ -494,6 +427,92 @@ public class DependencyPipe {
 
     }
 
+
+
+    /**
+     * Add features for two items, each with two factors, e.g. head,
+     * head pos, child, and child pos.
+     *
+     * The use of StringBuilders is not yet as efficient as it could
+     * be, but this is a start. (And it abstracts the logic so we can
+     * add other features more easily based on other items and
+     * factors.)
+     **/
+    private final FeatureVector addTwoFactorFeatures(String prefix, 
+						     String item1F1, String item1F2, 
+						     String item2F1, String item2F2, 
+						     String attachDistance,
+						     FeatureVector fv) {
+
+	StringBuilder feat = new StringBuilder(prefix+"2FF1="+item1F1);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+	
+	feat = new StringBuilder(prefix+"2FF1="+item1F1+" "+item1F2);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+
+	feat = new StringBuilder(prefix+"2FF1="+item1F1+" "+item1F2+" "+item2F2);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+
+	feat = new StringBuilder(prefix+"2FF1="+item1F1+" "+item1F2+" "+item2F2+" "+item2F1);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+	
+	feat = new StringBuilder(prefix+"2FF2="+item1F1+" "+item2F1);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+
+	feat = new StringBuilder(prefix+"2FF3="+item1F1+" "+item2F2);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+
+
+	feat = new StringBuilder(prefix+"2FF4="+item1F2+" "+item2F1);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+
+	feat = new StringBuilder(prefix+"2FF4="+item1F2+" "+item2F1+" "+item2F2);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+
+	feat = new StringBuilder(prefix+"2FF5="+item1F2+" "+item2F2);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+
+	feat = new StringBuilder(prefix+"2FF6="+item2F1+" "+item2F2);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+
+	feat = new StringBuilder(prefix+"2FF7="+item1F2);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+	
+	feat = new StringBuilder(prefix+"2FF8="+item2F1);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+	
+	feat = new StringBuilder(prefix+"2FF9="+item2F2);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+	
+	return fv;
+
+    }
 
 
 	
