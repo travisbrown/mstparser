@@ -220,72 +220,6 @@ public class DependencyPipe {
 	return fv;
     }
 
-    private final FeatureVector 
-	addCorePosFeatures(String prefix,
-			   String leftOf1, String one, String rightOf1, 
-			   String leftOf2, String two, String rightOf2, 
-			   String attachDistance, 
-			   FeatureVector fv) {
-
-	// feature posL-1 posL posR posR+1
-
-	fv = add(prefix+"="+leftOf1+" "+one+" "+two+"*"+attachDistance, fv);
-
-	StringBuilder feat = 
-	    new StringBuilder(prefix+"1="+leftOf1+" "+one+" "+two);
-	fv = add(feat.toString(), fv);
-	feat.append(' ').append(rightOf2);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
-
-	feat = new StringBuilder(prefix+"2="+leftOf1+" "+two+" "+rightOf2);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
-	
-	feat = new StringBuilder(prefix+"3="+leftOf1+" "+one+" "+rightOf2);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
-	
-	feat = new StringBuilder(prefix+"4="+one+" "+two+" "+rightOf2);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
-
-
-	// feature posL posL+1 posR-1 posR
-	prefix = "A"+prefix;
-
-	fv = add(prefix+"1="+one+" "+rightOf1+" "+leftOf2+"*"+attachDistance, fv);
-
-	feat = new StringBuilder(prefix+"1="+one+" "+rightOf1+" "+leftOf2);
-	fv = add(feat.toString(), fv);
-	feat.append(' ').append(two);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
-
-	feat = new StringBuilder(prefix+"2="+one+" "+rightOf1+" "+two);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
-	
-	feat = new StringBuilder(prefix+"3="+one+" "+leftOf2+" "+two);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
-	
-	feat = new StringBuilder(prefix+"4="+rightOf1+" "+leftOf2+" "+two);
-	fv = add(feat.toString(), fv);
-	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
-	
-	return fv;
-
-    }
-
 
     public FeatureVector addCoreFeatures(DependencyInstance instance,
 					 int small,
@@ -343,60 +277,92 @@ public class DependencyPipe {
 	fv = addCorePosFeatures("CPT", pLeftA, posA[small], pLeftRightA, 
 				pRightLeftA, posA[large], pRightA, attDist, fv);
 
-		
-	// feature posL-1 posL posR-1 posR
-	// feature posL posL+1 posR posR+1
-	fv = add("BPT="+pLeft+" "+pos[small]+" "+pRightLeft+" "+pos[large]+attDist,fv);
-	fv = add("1BPT="+pLeft+" "+pos[small]+" "+pRightLeft+" "+pos[large],fv);
-	fv = add("CPT="+pos[small]+" "+pLeftRight+" "+pos[large]+" "+pRight+attDist,fv);
- 	fv = add("1CPT="+pos[small]+" "+pLeftRight+" "+pos[large]+" "+pRight,fv);
-		
-	fv = add("XBPT="+pLeftA+" "+posA[small]+" "+pRightLeftA+" "+posA[large]+attDist,fv);
-	fv = add("X1BPT="+pLeftA+" "+posA[small]+" "+pRightLeftA+" "+posA[large],fv);
-	fv = add("XCPT="+posA[small]+" "+pLeftRightA+" "+posA[large]+" "+pRightA+attDist,fv);
-	fv = add("X1CPT="+posA[small]+" "+pLeftRightA+" "+posA[large]+" "+pRightA,fv);
-
+	
+	//////////////////////////////////////////////////////////////////////
+	
 	String head = attR ? forms[small] : forms[large];
 	String headP = attR ? pos[small] : pos[large];
 	String child = attR ? forms[large] : forms[small];
 	String childP = attR ? pos[large] : pos[small];
 
-	String all = head + " " + headP + " " + child + " " + childP;
-	String hPos = headP + " " + child + " " + childP;
-	String cPos = head + " " + headP + " " + childP;
-	String hP = headP + " " + child;
-	String cP = head + " " + childP;
-	String oPos = headP + " " + childP;
+	StringBuilder feat = new StringBuilder("H1="+head);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attDist);
+	fv = add(feat.toString(), fv);
+	
+	feat = new StringBuilder("H1="+head+" "+headP);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attDist);
+	fv = add(feat.toString(), fv);
+
+	feat = new StringBuilder("H1="+head+" "+headP+" "+childP);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attDist);
+	fv = add(feat.toString(), fv);
+
+	feat = new StringBuilder("H1="+head+" "+headP+" "+childP+" "+child);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attDist);
+	fv = add(feat.toString(), fv);
+	
+	feat = new StringBuilder("H2="+head+" "+child);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attDist);
+	fv = add(feat.toString(), fv);
+
+	feat = new StringBuilder("H3="+head+" "+childP);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attDist);
+	fv = add(feat.toString(), fv);
+
+
+	feat = new StringBuilder("H4="+headP+" "+child);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attDist);
+	fv = add(feat.toString(), fv);
+
+	feat = new StringBuilder("H4="+headP+" "+child+" "+childP);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attDist);
+	fv = add(feat.toString(), fv);
+
+	feat = new StringBuilder("H5="+headP+" "+childP);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attDist);
+	fv = add(feat.toString(), fv);
+
+	feat = new StringBuilder("H6="+child+" "+childP);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attDist);
+	fv = add(feat.toString(), fv);
+
+	feat = new StringBuilder("H7="+headP);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attDist);
+	fv = add(feat.toString(), fv);
+	
+	feat = new StringBuilder("H8="+child);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attDist);
+	fv = add(feat.toString(), fv);
+	
+	feat = new StringBuilder("H9="+childP);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attDist);
+	fv = add(feat.toString(), fv);
+	
+
+
+	
 	String oLex = head + " " + child;
-
-	fv = add("A="+all+attDist,fv); //this
-	fv = add("B="+hPos+attDist,fv);
-	fv = add("C="+cPos+attDist,fv);
-	fv = add("D="+hP+attDist,fv);
-	fv = add("E="+cP+attDist,fv);
-	fv = add("F="+oLex+attDist,fv); //this
-	fv = add("G="+oPos+attDist,fv);
-	fv = add("H="+head+" "+headP+attDist,fv);
-	fv = add("I="+headP+attDist,fv);
-	fv = add("J="+head+attDist,fv); //this
-	fv = add("K="+child+" "+childP+attDist,fv);
-	fv = add("L="+childP+attDist,fv);
-	fv = add("M="+child+attDist,fv); //this
-
-	fv = add("AA="+all,fv); //this
-	fv = add("BB="+hPos,fv);
-	fv = add("CC="+cPos,fv);
-	fv = add("DD="+hP,fv);
-	fv = add("EE="+cP,fv);
-	fv = add("FF="+oLex,fv); //this
-	fv = add("GG="+oPos,fv);
-	fv = add("HH="+head+" "+headP,fv);
-	fv = add("II="+headP,fv);
-	fv = add("JJ="+head,fv); //this
-	fv = add("KK="+child+" "+childP,fv);
-	fv = add("LL="+childP,fv);
-	fv = add("MM="+child,fv); //this
-
+	String cP =   head + " " + childP;
+	String cPos = head + " " + headP + " " + childP;
+	String all =  head + " " + headP + " " + child + " " + childP;
+	
+	String hP =   headP + " " + child;
+	String oPos = headP + " " + childP;
+	String hPos = headP + " " + child + " " + childP;
+	
 	int hL = head.length();
 	int cL = child.length();
 
@@ -445,6 +411,91 @@ public class DependencyPipe {
 	return fv;
 		
     }
+
+
+    private final FeatureVector 
+	addCorePosFeatures(String prefix,
+			   String leftOf1, String one, String rightOf1, 
+			   String leftOf2, String two, String rightOf2, 
+			   String attachDistance, 
+			   FeatureVector fv) {
+
+	// feature posL-1 posL posR posR+1
+
+	fv = add(prefix+"="+leftOf1+" "+one+" "+two+"*"+attachDistance, fv);
+
+	StringBuilder feat = 
+	    new StringBuilder(prefix+"1="+leftOf1+" "+one+" "+two);
+	fv = add(feat.toString(), fv);
+	feat.append(' ').append(rightOf2);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+
+	feat = new StringBuilder(prefix+"2="+leftOf1+" "+two+" "+rightOf2);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+	
+	feat = new StringBuilder(prefix+"3="+leftOf1+" "+one+" "+rightOf2);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+	
+	feat = new StringBuilder(prefix+"4="+one+" "+two+" "+rightOf2);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+
+	/////////////////////////////////////////////////////////////
+	prefix = "A"+prefix;
+
+	// feature posL posL+1 posR-1 posR
+	fv = add(prefix+"1="+one+" "+rightOf1+" "+leftOf2+"*"+attachDistance, fv);
+
+	feat = new StringBuilder(prefix+"1="+one+" "+rightOf1+" "+leftOf2);
+	fv = add(feat.toString(), fv);
+	feat.append(' ').append(two);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+
+	feat = new StringBuilder(prefix+"2="+one+" "+rightOf1+" "+two);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+	
+	feat = new StringBuilder(prefix+"3="+one+" "+leftOf2+" "+two);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+	
+	feat = new StringBuilder(prefix+"4="+rightOf1+" "+leftOf2+" "+two);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+
+	///////////////////////////////////////////////////////////////
+	prefix = "B"+prefix;
+
+	//// feature posL-1 posL posR-1 posR
+	feat = new StringBuilder(prefix+"1="+leftOf1+" "+one+" "+leftOf2+" "+two);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+
+	//// feature posL posL+1 posR posR+1
+	feat = new StringBuilder(prefix+"2="+one+" "+rightOf1+" "+two+" "+rightOf2);
+	fv = add(feat.toString(), fv);
+	feat.append('*').append(attachDistance);
+	fv = add(feat.toString(), fv);
+
+	return fv;
+
+    }
+
+
+
 	
     public FeatureVector addLabeledFeatures(DependencyInstance instance,
 					    int word,
