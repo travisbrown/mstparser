@@ -245,56 +245,54 @@ public class DependencyPipe {
 		
 	String attDist = "&"+att+"&"+distBool;
 
-	String pLeft = small > 0 ? pos[small-1] : "STR";
-	String pRight = large < pos.length-1 ? pos[large+1] : "END";
-	String pLeftRight = small < large-1 ? pos[small+1] : "MID";
-	String pRightLeft = large > small+1 ? pos[large-1] : "MID";
+	fv = addLinearFeatures("POS", pos, small, large, attDist, fv);
+	fv = addLinearFeatures("CPOS", posA, small, large, attDist, fv);
 
-	String pLeftA = small > 0 ? posA[small-1] : "STR";
-	String pRightA = large < pos.length-1 ? posA[large+1] : "END";
-	String pLeftRightA = small < large-1 ? posA[small+1] : "MID";
-	String pRightLeftA = large > small+1 ? posA[large-1] : "MID";
-		
-	// feature posR posMid posL
-	StringBuilder featPos = 
-	    new StringBuilder("PC="+pos[small]+" "+pos[large]);
-	StringBuilder featPosA = 
-	    new StringBuilder("1PC"+posA[small]+" "+posA[large]);
-
-	for(int i = small+1; i < large; i++) {
-	    String allPos = featPos.toString() + ' ' + pos[i];
-	    fv = add(allPos, fv);
-	    fv = add(allPos+attDist, fv);
-
-	    String allPosA = featPosA.toString() + ' ' + posA[i];
-	    fv = add(allPosA, fv);
-	    fv = add(allPosA+attDist, fv);
-	}
-
-	fv = addCorePosFeatures("PT", pLeft, pos[small], pLeftRight, 
-				pRightLeft, pos[large], pRight, attDist, fv);
-	
-	fv = addCorePosFeatures("CPT", pLeftA, posA[small], pLeftRightA, 
-				pRightLeftA, posA[large], pRightA, attDist, fv);
+	//String pLeft = small > 0 ? pos[small-1] : "STR";
+	//String pRight = large < pos.length-1 ? pos[large+1] : "END";
+	//String pLeftRight = small < large-1 ? pos[small+1] : "MID";
+	//String pRightLeft = large > small+1 ? pos[large-1] : "MID";
+	//
+	//String pLeftA = small > 0 ? posA[small-1] : "STR";
+	//String pRightA = large < pos.length-1 ? posA[large+1] : "END";
+	//String pLeftRightA = small < large-1 ? posA[small+1] : "MID";
+	//String pRightLeftA = large > small+1 ? posA[large-1] : "MID";
+	//	
+	//// feature posR posMid posL
+	//StringBuilder featPos = 
+	//    new StringBuilder("PC="+pos[small]+" "+pos[large]);
+	//StringBuilder featPosA = 
+	//    new StringBuilder("1PC"+posA[small]+" "+posA[large]);
+	//
+	//for(int i = small+1; i < large; i++) {
+	//    String allPos = featPos.toString() + ' ' + pos[i];
+	//    fv = add(allPos, fv);
+	//    fv = add(allPos+attDist, fv);
+	//
+	//    String allPosA = featPosA.toString() + ' ' + posA[i];
+	//    fv = add(allPosA, fv);
+	//    fv = add(allPosA+attDist, fv);
+	//}
+	//
+	//fv = addCorePosFeatures("PT", pLeft, pos[small], pLeftRight, 
+	//			pRightLeft, pos[large], pRight, attDist, fv);
+	//
+	//fv = addCorePosFeatures("CPT", pLeftA, posA[small], pLeftRightA, 
+	//			pRightLeftA, posA[large], pRightA, attDist, fv);
 
 	
 	//////////////////////////////////////////////////////////////////////
 	
 	String head = attR ? forms[small] : forms[large];
 	String headP = attR ? pos[small] : pos[large];
+	String headPA = attR ? posA[small] : posA[large];
+
 	String child = attR ? forms[large] : forms[small];
 	String childP = attR ? pos[large] : pos[small];
+	String childPA = attR ? posA[large] : posA[small];
 
 	fv = addTwoFactorFeatures("HC", head, headP, child, childP, attDist, fv);
-	
-	String oLex = head + " " + child;
-	String cP =   head + " " + childP;
-	String cPos = head + " " + headP + " " + childP;
-	String all =  head + " " + headP + " " + child + " " + childP;
-	
-	String hP =   headP + " " + child;
-	String oPos = headP + " " + childP;
-	String hPos = headP + " " + child + " " + childP;
+	//fv = addTwoFactorFeatures("HCA", head, headPA, child, childPA, attDist, fv);
 	
 	int hL = head.length();
 	int cL = child.length();
@@ -305,44 +303,74 @@ public class DependencyPipe {
 	    String hLemma = attR ? lemmas[small] : lemmas[large];
 	    String cLemma = attR ? lemmas[large] : lemmas[small];
 		    
-	    all = hLemma + " " + headP + " " + cLemma + " " + childP;
-	    hPos = headP + " " + cLemma + " " + childP;
-	    cPos = hLemma + " " + headP + " " + childP;
-	    hP = headP + " " + cLemma;
-	    cP = hLemma + " " + childP;
-	    oPos = headP + " " + childP;
-	    oLex = hLemma + " " + cLemma;
+	    String all = hLemma + " " + headP + " " + cLemma + " " + childP;
+	    String hPos = headP + " " + cLemma + " " + childP;
+	    String cPos = hLemma + " " + headP + " " + childP;
+	    String hP = headP + " " + cLemma;
+	    String cP = hLemma + " " + childP;
+	    String oPos = headP + " " + childP;
+	    String oLex = hLemma + " " + cLemma;
+
+	    //fv = addTwoFactorFeatures("LC", hLemma, headP, cLemma, childP, attDist, fv);
 	
 	    fv = add("SA="+all+attDist,fv); //this
 	    fv = add("SF="+oLex+attDist,fv); //this
 	    fv = add("SAA="+all,fv); //this
 	    fv = add("SFF="+oLex,fv); //this
-
+	    
 	    if(cL > 5) {
-		fv = add("SB="+hPos+attDist,fv);
-		fv = add("SD="+hP+attDist,fv);
-		fv = add("SK="+cLemma+" "+childP+attDist,fv);
-		fv = add("SM="+cLemma+attDist,fv); //this
-		fv = add("SBB="+hPos,fv);
-		fv = add("SDD="+hP,fv);
-		fv = add("SKK="+cLemma+" "+childP,fv);
-		fv = add("SMM="+cLemma,fv); //this
+	    	fv = add("SB="+hPos+attDist,fv);
+	    	fv = add("SD="+hP+attDist,fv);
+	    	fv = add("SK="+cLemma+" "+childP+attDist,fv);
+	    	fv = add("SM="+cLemma+attDist,fv); //this
+	    	fv = add("SBB="+hPos,fv);
+	    	fv = add("SDD="+hP,fv);
+	    	fv = add("SKK="+cLemma+" "+childP,fv);
+	    	fv = add("SMM="+cLemma,fv); //this
 	    }
 	    if(hL > 5) {
-		fv = add("SC="+cPos+attDist,fv);
-		fv = add("SE="+cP+attDist,fv);
-		fv = add("SH="+hLemma+" "+headP+attDist,fv);
-		fv = add("SJ="+hLemma+attDist,fv); //this
-			
-		fv = add("SCC="+cPos,fv);
-		fv = add("SEE="+cP,fv);
-		fv = add("SHH="+hLemma+" "+headP,fv);
-		fv = add("SJJ="+hLemma,fv); //this
+	    	fv = add("SC="+cPos+attDist,fv);
+	    	fv = add("SE="+cP+attDist,fv);
+	    	fv = add("SH="+hLemma+" "+headP+attDist,fv);
+	    	fv = add("SJ="+hLemma+attDist,fv); //this
+	    		
+	    	fv = add("SCC="+cPos,fv);
+	    	fv = add("SEE="+cP,fv);
+	    	fv = add("SHH="+hLemma+" "+headP,fv);
+	    	fv = add("SJJ="+hLemma,fv); //this
 	    }
 	}
 		
 	return fv;
 		
+    }
+ 
+    private final FeatureVector addLinearFeatures(String type, String[] factorVals, 
+						  int first, int second,
+						  String attachDistance,
+						  FeatureVector fv) {
+	
+	String pLeft = first > 0 ? factorVals[first-1] : "STR";
+	String pRight = second < factorVals.length-1 ? factorVals[second+1] : "END";
+	String pLeftRight = first < second-1 ? factorVals[first+1] : "MID";
+	String pRightLeft = second > first+1 ? factorVals[second-1] : "MID";
+
+	// feature posR posMid posL
+	StringBuilder featPos = 
+	    new StringBuilder(type+"PC="+factorVals[first]+" "+factorVals[second]);
+
+	for(int i = first+1; i < second; i++) {
+	    String allPos = featPos.toString() + ' ' + factorVals[i];
+	    fv = add(allPos, fv);
+	    fv = add(allPos+attachDistance, fv);
+
+	}
+
+	fv = addCorePosFeatures(type+"PT", pLeft, factorVals[first], pLeftRight, 
+				pRightLeft, factorVals[second], pRight, attachDistance, fv);
+
+	return fv;
+
     }
 
 
