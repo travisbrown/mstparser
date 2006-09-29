@@ -248,98 +248,47 @@ public class DependencyPipe {
 	fv = addLinearFeatures("POS", pos, small, large, attDist, fv);
 	fv = addLinearFeatures("CPOS", posA, small, large, attDist, fv);
 
-	//String pLeft = small > 0 ? pos[small-1] : "STR";
-	//String pRight = large < pos.length-1 ? pos[large+1] : "END";
-	//String pLeftRight = small < large-1 ? pos[small+1] : "MID";
-	//String pRightLeft = large > small+1 ? pos[large-1] : "MID";
-	//
-	//String pLeftA = small > 0 ? posA[small-1] : "STR";
-	//String pRightA = large < pos.length-1 ? posA[large+1] : "END";
-	//String pLeftRightA = small < large-1 ? posA[small+1] : "MID";
-	//String pRightLeftA = large > small+1 ? posA[large-1] : "MID";
-	//	
-	//// feature posR posMid posL
-	//StringBuilder featPos = 
-	//    new StringBuilder("PC="+pos[small]+" "+pos[large]);
-	//StringBuilder featPosA = 
-	//    new StringBuilder("1PC"+posA[small]+" "+posA[large]);
-	//
-	//for(int i = small+1; i < large; i++) {
-	//    String allPos = featPos.toString() + ' ' + pos[i];
-	//    fv = add(allPos, fv);
-	//    fv = add(allPos+attDist, fv);
-	//
-	//    String allPosA = featPosA.toString() + ' ' + posA[i];
-	//    fv = add(allPosA, fv);
-	//    fv = add(allPosA+attDist, fv);
-	//}
-	//
-	//fv = addCorePosFeatures("PT", pLeft, pos[small], pLeftRight, 
-	//			pRightLeft, pos[large], pRight, attDist, fv);
-	//
-	//fv = addCorePosFeatures("CPT", pLeftA, posA[small], pLeftRightA, 
-	//			pRightLeftA, posA[large], pRightA, attDist, fv);
-
 	
 	//////////////////////////////////////////////////////////////////////
 	
-	String head = attR ? forms[small] : forms[large];
-	String headP = attR ? pos[small] : pos[large];
-	String headPA = attR ? posA[small] : posA[large];
+	int headIndex = small;
+	int childIndex = large;
+	if (!attR) {
+	    headIndex = large;
+	    childIndex = small;
+	}	
 
-	String child = attR ? forms[large] : forms[small];
-	String childP = attR ? pos[large] : pos[small];
-	String childPA = attR ? posA[large] : posA[small];
+	fv = addTwoFactorFeatures("HC", forms[headIndex], pos[headIndex], 
+				  forms[childIndex], pos[childIndex], attDist, fv);
 
-	fv = addTwoFactorFeatures("HC", head, headP, child, childP, attDist, fv);
-	//fv = addTwoFactorFeatures("HCA", head, headPA, child, childPA, attDist, fv);
-	
-	int hL = head.length();
-	int cL = child.length();
+	if (isCONLL) {
+	    fv = addTwoFactorFeatures("HCA", forms[headIndex], posA[headIndex], 
+				      forms[childIndex], posA[childIndex], attDist, fv);
 
-	if(isCONLL || hL > 5 || cL > 5) {
-	    String[] lemmas = instance.lemmas;
+	    fv = addTwoFactorFeatures("HCB", forms[headIndex], instance.lemmas[headIndex],
+				      forms[childIndex], instance.lemmas[childIndex], 
+				      attDist, fv);
 
-	    String hLemma = attR ? lemmas[small] : lemmas[large];
-	    String cLemma = attR ? lemmas[large] : lemmas[small];
-		    
-	    String all = hLemma + " " + headP + " " + cLemma + " " + childP;
-	    String hPos = headP + " " + cLemma + " " + childP;
-	    String cPos = hLemma + " " + headP + " " + childP;
-	    String hP = headP + " " + cLemma;
-	    String cP = hLemma + " " + childP;
-	    String oPos = headP + " " + childP;
-	    String oLex = hLemma + " " + cLemma;
+	    fv = addTwoFactorFeatures("HCC", instance.lemmas[headIndex], pos[headIndex], 
+				      instance.lemmas[childIndex], pos[childIndex], 
+				      attDist, fv);
 
-	    //fv = addTwoFactorFeatures("LC", hLemma, headP, cLemma, childP, attDist, fv);
-	
-	    fv = add("SA="+all+attDist,fv); //this
-	    fv = add("SF="+oLex+attDist,fv); //this
-	    fv = add("SAA="+all,fv); //this
-	    fv = add("SFF="+oLex,fv); //this
-	    
-	    if(cL > 5) {
-	    	fv = add("SB="+hPos+attDist,fv);
-	    	fv = add("SD="+hP+attDist,fv);
-	    	fv = add("SK="+cLemma+" "+childP+attDist,fv);
-	    	fv = add("SM="+cLemma+attDist,fv); //this
-	    	fv = add("SBB="+hPos,fv);
-	    	fv = add("SDD="+hP,fv);
-	    	fv = add("SKK="+cLemma+" "+childP,fv);
-	    	fv = add("SMM="+cLemma,fv); //this
+	    fv = addTwoFactorFeatures("HCD", instance.lemmas[headIndex], posA[headIndex], 
+				      instance.lemmas[childIndex], posA[childIndex], 
+				      attDist, fv);
+
+	} else {
+	    // Pick up stem features the way they used to be done. This
+	    // will soon be phased out, but is kept for replicability
+	    // of results for this version
+	    int hL = forms[headIndex].length();
+	    int cL = forms[childIndex].length();
+	    if (hL > 5 || cL > 5) {
+		fv = addOldMSTStemFeatures(instance.lemmas[headIndex], pos[headIndex],
+					   instance.lemmas[childIndex], pos[childIndex],
+					   attDist, hL, cL, fv);
 	    }
-	    if(hL > 5) {
-	    	fv = add("SC="+cPos+attDist,fv);
-	    	fv = add("SE="+cP+attDist,fv);
-	    	fv = add("SH="+hLemma+" "+headP+attDist,fv);
-	    	fv = add("SJ="+hLemma+attDist,fv); //this
-	    		
-	    	fv = add("SCC="+cPos,fv);
-	    	fv = add("SEE="+cP,fv);
-	    	fv = add("SHH="+hLemma+" "+headP,fv);
-	    	fv = add("SJJ="+hLemma,fv); //this
-	    }
-	}
+	}				       
 		
 	return fv;
 		
@@ -774,6 +723,54 @@ public class DependencyPipe {
 	return null;
     }
 		
+    /**
+     * Get features for stems the old way. The only way this differs
+     * from calling addTwoFactorFeatures() is that it checks the
+     * lengths of the full lexical items are greater than 5 before
+     * adding features.
+     *
+     */
+    private final FeatureVector 
+	addOldMSTStemFeatures(String hLemma, String headP, 
+			      String cLemma, String childP, String attDist, 
+			      int hL, int cL, FeatureVector fv) {
 
+	String all = hLemma + " " + headP + " " + cLemma + " " + childP;
+	String hPos = headP + " " + cLemma + " " + childP;
+	String cPos = hLemma + " " + headP + " " + childP;
+	String hP = headP + " " + cLemma;
+	String cP = hLemma + " " + childP;
+	String oPos = headP + " " + childP;
+	String oLex = hLemma + " " + cLemma;
+	
+	fv = add("SA="+all+attDist,fv); //this
+	fv = add("SF="+oLex+attDist,fv); //this
+	fv = add("SAA="+all,fv); //this
+	fv = add("SFF="+oLex,fv); //this
+	
+	if(cL > 5) {
+	    fv = add("SB="+hPos+attDist,fv);
+	    fv = add("SD="+hP+attDist,fv);
+	    fv = add("SK="+cLemma+" "+childP+attDist,fv);
+	    fv = add("SM="+cLemma+attDist,fv); //this
+	    fv = add("SBB="+hPos,fv);
+	    fv = add("SDD="+hP,fv);
+	    fv = add("SKK="+cLemma+" "+childP,fv);
+	    fv = add("SMM="+cLemma,fv); //this
+	}
+	if(hL > 5) {
+	    fv = add("SC="+cPos+attDist,fv);
+	    fv = add("SE="+cP+attDist,fv);
+	    fv = add("SH="+hLemma+" "+headP+attDist,fv);
+	    fv = add("SJ="+hLemma+attDist,fv); //this
+	    
+	    fv = add("SCC="+cPos,fv);
+	    fv = add("SEE="+cP,fv);
+	    fv = add("SHH="+hLemma+" "+headP,fv);
+	    fv = add("SJJ="+hLemma,fv); //this
+	}
+
+	return fv;
+    }
 		
 }
