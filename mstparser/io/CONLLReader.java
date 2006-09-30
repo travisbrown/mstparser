@@ -26,11 +26,11 @@ public class CONLLReader extends DependencyReader {
 	    return null;
 	}
 
-
 	String[] forms = new String[length+1];
 	String[] lemmas = new String[length+1];
 	String[] cpos = new String[length+1];
 	String[] pos = new String[length+1];
+	String[][] feats = new String[length+1][];
 	String[] deprels = new String[length+1];
 	int[] heads = new int[length+1];
 
@@ -38,6 +38,8 @@ public class CONLLReader extends DependencyReader {
 	lemmas[0] = "<root-LEMMA>";
 	cpos[0] = "<root-CPOS>";
 	pos[0] = "<root-POS>";
+	String[] rootFeat = {"<root-XFACT>"};
+	feats[0] = rootFeat;
 	deprels[0] = "<no-type>";
 	heads[0] = -1;
 
@@ -47,11 +49,13 @@ public class CONLLReader extends DependencyReader {
 	    lemmas[i+1] = normalize(info[2]);
 	    cpos[i+1] = info[3];
 	    pos[i+1] = info[4];
+	    feats[i+1] = info[5].split("|");
 	    deprels[i+1] = labeled ? info[7] : "<no-type>";
 	    heads[i+1] = Integer.parseInt(info[6]);
 	}
 
-	return new DependencyInstance(forms, lemmas, cpos, pos, deprels, heads);
+
+	return new DependencyInstance(forms, lemmas, cpos, pos, feats, deprels, heads);
 
     }
 

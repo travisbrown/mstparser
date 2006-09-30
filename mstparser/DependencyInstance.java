@@ -29,7 +29,7 @@ public class DependencyInstance implements Serializable {
     public String[] postags;
 
     // FEATURES: some features associated with the elements separated by "|", e.g. "PAST|3P"
-    public String[] feats;
+    public String[][] feats;
 
     // HEAD: the IDs of the heads for each element
     public int[] heads;
@@ -69,10 +69,11 @@ public class DependencyInstance implements Serializable {
     }
 
     public DependencyInstance(String[] forms, String[] lemmas, String[] cpostags, 
-			      String[] postags, String[] labs, int[] heads) {
+			      String[] postags, String[][] feats, String[] labs, int[] heads) {
 	this(forms, postags, labs, heads);
 	this.lemmas = lemmas;
 	this.cpostags = cpostags;
+	this.feats = feats;
     }
 
     public void setFeatureVector (FeatureVector fv) {

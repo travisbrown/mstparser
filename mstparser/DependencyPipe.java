@@ -245,7 +245,7 @@ public class DependencyPipe {
 		
 	String attDist = "&"+att+"&"+distBool;
 
-	fv = addLinearFeatures("WORD", forms, small, large, attDist, fv);
+	//fv = addLinearFeatures("WORD", forms, small, large, attDist, fv);
 	fv = addLinearFeatures("LEMMA", instance.forms, small, large, attDist, fv);
 	fv = addLinearFeatures("POS", pos, small, large, attDist, fv);
 	fv = addLinearFeatures("CPOS", posA, small, large, attDist, fv);
@@ -279,6 +279,14 @@ public class DependencyPipe {
 	    fv = addTwoFactorFeatures("HCD", instance.lemmas[headIndex], posA[headIndex], 
 				      instance.lemmas[childIndex], posA[childIndex], 
 				      attDist, fv);
+
+	    for (int i=0; i<instance.feats[headIndex].length; i++) {
+	    	for (int j=0; j<instance.feats[childIndex].length; j++) {
+	    	    fv = addTwoFactorFeatures("HF"+i+"*"+j, pos[headIndex], instance.feats[headIndex][i],
+	    				      pos[childIndex], instance.feats[childIndex][j], 
+	    				      attDist, fv);
+	    	}
+	    }
 
 	} else {
 	    // Pick up stem features the way they used to be done. This

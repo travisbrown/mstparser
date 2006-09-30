@@ -59,6 +59,7 @@ public class MSTReader extends DependencyReader {
 	    lemmas[i] = formLength > 5 ? forms_new[i].substring(0,5) : forms_new[i];
 	}
 	instance.lemmas = lemmas;
+	instance.feats = new String[0][0];
 
 	return instance;
     }
