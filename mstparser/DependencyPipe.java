@@ -278,20 +278,18 @@ public class DependencyPipe {
 				      attDist, fv);
 
 	    for (int i=0; i<instance.feats[headIndex].length; i++) {
-	    	for (int j=0; j<instance.feats[childIndex].length; j++) {
-	    	    fv = addTwoFactorFeatures("FF"+i+"*"+j, 
-					      instance.forms[headIndex], 
-					      instance.feats[headIndex][i],
-	    				      instance.forms[childIndex], 
-					      instance.feats[childIndex][j], 
-	    				      attDist, fv);
-	    	    fv = addTwoFactorFeatures("LF"+i+"*"+j, 
-					      instance.lemmas[headIndex], 
-					      instance.feats[headIndex][i],
-	    				      instance.lemmas[childIndex], 
-					      instance.feats[childIndex][j], 
-	    				      attDist, fv);
-	    	}
+		fv = addTwoFactorFeatures("FF"+i, 
+					  instance.forms[headIndex], 
+					  instance.feats[headIndex][i],
+					  instance.forms[childIndex], 
+					  instance.feats[childIndex][i], 
+					  attDist, fv);
+		fv = addTwoFactorFeatures("LF"+i, 
+					  instance.lemmas[headIndex], 
+					  instance.feats[headIndex][i],
+					  instance.lemmas[childIndex], 
+					  instance.feats[childIndex][i], 
+					  attDist, fv);
 	    }
 
 	} else {
