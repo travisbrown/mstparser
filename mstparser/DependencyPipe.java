@@ -227,7 +227,6 @@ public class DependencyPipe {
 					 boolean attR,
 					 FeatureVector fv) {
 
-
 	String[] forms = instance.forms;
 	String[] pos = instance.postags;
 	String[] posA = instance.cpostags;
@@ -245,13 +244,11 @@ public class DependencyPipe {
 		
 	String attDist = "&"+att+"&"+distBool;
 
-	//fv = addLinearFeatures("WORD", forms, small, large, attDist, fv);
-	fv = addLinearFeatures("LEMMA", instance.forms, small, large, attDist, fv);
+	fv = addLinearFeatures("WORD", forms, small, large, attDist, fv);
+	fv = addLinearFeatures("LEMMA", instance.lemmas, small, large, attDist, fv);
 	fv = addLinearFeatures("POS", pos, small, large, attDist, fv);
 	fv = addLinearFeatures("CPOS", posA, small, large, attDist, fv);
-
-	
-	
+		
 	//////////////////////////////////////////////////////////////////////
 	
 	int headIndex = small;
@@ -282,8 +279,17 @@ public class DependencyPipe {
 
 	    for (int i=0; i<instance.feats[headIndex].length; i++) {
 	    	for (int j=0; j<instance.feats[childIndex].length; j++) {
-	    	    fv = addTwoFactorFeatures("HF"+i+"*"+j, pos[headIndex], instance.feats[headIndex][i],
-	    				      pos[childIndex], instance.feats[childIndex][j], 
+	    	    fv = addTwoFactorFeatures("FF"+i+"*"+j, 
+					      instance.forms[headIndex], 
+					      instance.feats[headIndex][i],
+	    				      instance.forms[childIndex], 
+					      instance.feats[childIndex][j], 
+	    				      attDist, fv);
+	    	    fv = addTwoFactorFeatures("LF"+i+"*"+j, 
+					      instance.lemmas[headIndex], 
+					      instance.feats[headIndex][i],
+	    				      instance.lemmas[childIndex], 
+					      instance.feats[childIndex][j], 
 	    				      attDist, fv);
 	    	}
 	    }
