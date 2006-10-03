@@ -277,6 +277,9 @@ public class DependencyPipe {
 				      instance.lemmas[childIndex], posA[childIndex], 
 				      attDist, fv);
 
+	    // Use this if your extra feature list has the same length
+	    // for all items.
+	    //
 	    for (int i=0; i<instance.feats[headIndex].length; i++) {
 		fv = addTwoFactorFeatures("FF"+i, 
 					  instance.forms[headIndex], 
@@ -291,6 +294,27 @@ public class DependencyPipe {
 					  instance.feats[childIndex][i], 
 					  attDist, fv);
 	    }
+
+	    // Use this if your extra feature lists can have different
+	    // lengths for each item. For example, nouns might have a
+	    // different number of morphological features than verbs.
+	    //
+	    //for (int i=0; i<instance.feats[headIndex].length; i++) {
+	    //	for (int j=0; j<instance.feats[childIndex].length; j++) {
+	    //	    fv = addTwoFactorFeatures("FF"+i+"*"+j, 
+	    //				      instance.forms[headIndex], 
+	    //				      instance.feats[headIndex][i],
+	    //				      instance.forms[childIndex], 
+	    //				      instance.feats[childIndex][j], 
+	    //				      attDist, fv);
+	    //	    fv = addTwoFactorFeatures("LF"+i+"*"+j, 
+	    //				      instance.lemmas[headIndex], 
+	    //				      instance.feats[headIndex][i],
+	    //				      instance.lemmas[childIndex], 
+	    //				      instance.feats[childIndex][j], 
+	    //				      attDist, fv);
+	    //	}
+	    //}
 
 	} else {
 	    // Pick up stem features the way they used to be done. This
