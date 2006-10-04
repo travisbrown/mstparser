@@ -293,6 +293,28 @@ public class DependencyPipe {
 					  instance.lemmas[childIndex], 
 					  instance.feats[childIndex][i], 
 					  attDist, fv);
+		fv = addTwoFactorFeatures("PF"+i, 
+					  pos[headIndex], 
+					  instance.feats[headIndex][i],
+					  pos[childIndex], 
+					  instance.feats[childIndex][i], 
+					  attDist, fv);
+		fv = addTwoFactorFeatures("CPF"+i, 
+					  posA[headIndex], 
+					  instance.feats[headIndex][i],
+					  posA[childIndex], 
+					  instance.feats[childIndex][i], 
+					  attDist, fv);
+
+		for (int j=i+1; j<instance.feats[headIndex].length; j++) {
+
+		    fv = addTwoFactorFeatures("CPF"+i, 
+					      instance.feats[headIndex][i],
+					      instance.feats[headIndex][j],
+					      instance.feats[childIndex][i], 
+					      instance.feats[childIndex][j], 
+					      attDist, fv);
+		}
 	    }
 
 	    // Use this if your extra feature lists can have different
