@@ -244,7 +244,7 @@ public class DependencyPipe {
 		
 	String attDist = "&"+att+"&"+distBool;
 
-	fv = addLinearFeatures("WORD", forms, small, large, attDist, fv);
+	//fv = addLinearFeatures("WORD", forms, small, large, attDist, fv);
 	//fv = addLinearFeatures("LEMMA", instance.lemmas, small, large, attDist, fv);
 	fv = addLinearFeatures("POS", pos, small, large, attDist, fv);
 	fv = addLinearFeatures("CPOS", posA, small, large, attDist, fv);
