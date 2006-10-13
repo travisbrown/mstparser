@@ -277,45 +277,45 @@ public class DependencyPipe {
 				      instance.lemmas[childIndex], posA[childIndex], 
 				      attDist, fv);
 
-	     Use this if your extra feature list has the same length
-	     for all items.
-	    
-	    for (int i=0; i<instance.feats[headIndex].length; i++) {
-	    	fv = addTwoFactorFeatures("FF"+i, 
-	    				  instance.forms[headIndex], 
-	    				  instance.feats[headIndex][i],
-	    				  instance.forms[childIndex], 
-	    				  instance.feats[childIndex][i], 
-	    				  attDist, fv);
-	    	fv = addTwoFactorFeatures("LF"+i, 
-	    				  instance.lemmas[headIndex], 
-	    				  instance.feats[headIndex][i],
-	    				  instance.lemmas[childIndex], 
-	    				  instance.feats[childIndex][i], 
-	    				  attDist, fv);
-	    	fv = addTwoFactorFeatures("PF"+i, 
-	    				  pos[headIndex], 
-	    				  instance.feats[headIndex][i],
-	    				  pos[childIndex], 
-	    				  instance.feats[childIndex][i], 
-	    				  attDist, fv);
-	    	fv = addTwoFactorFeatures("CPF"+i, 
-	    				  posA[headIndex], 
-	    				  instance.feats[headIndex][i],
-	    				  posA[childIndex], 
-	    				  instance.feats[childIndex][i], 
-	    				  attDist, fv);
-	    
-	    	for (int j=i+1; j<instance.feats[headIndex].length; j++) {
-	    
-	    	    fv = addTwoFactorFeatures("CPF"+i, 
-	    				      instance.feats[headIndex][i],
-	    				      instance.feats[headIndex][j],
-	    				      instance.feats[childIndex][i], 
-	    				      instance.feats[childIndex][j], 
-	    				      attDist, fv);
-	    	}
-	    }
+	    // Use this if your extra feature list has the same length
+	    // for all items.
+	    //
+	    //for (int i=0; i<instance.feats[headIndex].length; i++) {
+	    //	fv = addTwoFactorFeatures("FF"+i, 
+	    //				  instance.forms[headIndex], 
+	    //				  instance.feats[headIndex][i],
+	    //				  instance.forms[childIndex], 
+	    //				  instance.feats[childIndex][i], 
+	    //				  attDist, fv);
+	    //	fv = addTwoFactorFeatures("LF"+i, 
+	    //				  instance.lemmas[headIndex], 
+	    //				  instance.feats[headIndex][i],
+	    //				  instance.lemmas[childIndex], 
+	    //				  instance.feats[childIndex][i], 
+	    //				  attDist, fv);
+	    //	fv = addTwoFactorFeatures("PF"+i, 
+	    //				  pos[headIndex], 
+	    //				  instance.feats[headIndex][i],
+	    //				  pos[childIndex], 
+	    //				  instance.feats[childIndex][i], 
+	    //				  attDist, fv);
+	    //	fv = addTwoFactorFeatures("CPF"+i, 
+	    //				  posA[headIndex], 
+	    //				  instance.feats[headIndex][i],
+	    //				  posA[childIndex], 
+	    //				  instance.feats[childIndex][i], 
+	    //				  attDist, fv);
+	    //
+	    //	for (int j=i+1; j<instance.feats[headIndex].length; j++) {
+	    //
+	    //	    fv = addTwoFactorFeatures("CPF"+i, 
+	    //				      instance.feats[headIndex][i],
+	    //				      instance.feats[headIndex][j],
+	    //				      instance.feats[childIndex][i], 
+	    //				      instance.feats[childIndex][j], 
+	    //				      attDist, fv);
+	    //	}
+	    //}
 
 	    // Use this if your extra feature lists can have different
 	    // lengths for each item. For example, nouns might have a
