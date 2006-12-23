@@ -3,7 +3,7 @@ v0.4.0
 
 - Cleaned up Pipes considerably; eg, Pipe2O doesn't replicate so much
   code from Pipe. Many of the createFeatureVector methods were renamed
-  to things like addCoreFeatures
+  to things like addCoreFeatures. (JMB)
 
 - If one uses MST format, the creation of posA and the
   5-character-substring features now are put into dependency instances
@@ -11,7 +11,7 @@ v0.4.0
   in the feature extraction code, rather than creating posA etc on the
   fly, it just references those fields in the dependency
   instance. That way, if you use conll format, you get to use lemma
-  and course tag values supplied by the annotations. 
+  and course tag values supplied by the annotations. (JMB)
 
 - Can utilize the FEAT1|FEAT2|...|FEATN field of the CONLL format to
   allow abitrary features. See addCoreFeatures() in the DependencyPipe
