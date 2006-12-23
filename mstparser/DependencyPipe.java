@@ -256,7 +256,7 @@ public class DependencyPipe {
 	if (!attR) {
 	    headIndex = large;
 	    childIndex = small;
-	}	
+	}
 
 	fv = addTwoObsFeatures("HC", forms[headIndex], pos[headIndex], 
 				  forms[childIndex], pos[childIndex], attDist, fv);
