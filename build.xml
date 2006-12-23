@@ -9,8 +9,8 @@
     <tstamp/>
     <property name="Name" value="MSTParser"/>
     <property name="name" value="mstparser"/>
-    <property name="year" value="2006"/>
-    <property name="version" value="0.4.0"/>
+    <property name="year" value="2007"/>
+    <property name="version" value="0.5.0"/>
 
     <echo message="----------- ${Name} ${version} [${year}] ------------"/>
 
@@ -108,7 +108,7 @@
   <target name="release" depends="clean,cleandocs">
     <tar tarfile="${name}-${version}-src.tar"
           basedir="../"
-          includes="${Name}/**"
+          includes="${name}/**"
           excludes="**/CVS **/*forest testbed/my*" />
     <gzip src="${name}-${version}-src.tar" 
           zipfile="../${name}-${version}-src.tgz" />
