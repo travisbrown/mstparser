@@ -10,7 +10,7 @@
     <property name="Name" value="MSTParser"/>
     <property name="name" value="mstparser"/>
     <property name="year" value="2006"/>
-    <property name="version" value="0.2.5"/>
+    <property name="version" value="0.4.0"/>
 
     <echo message="----------- ${Name} ${version} [${year}] ------------"/>
 

@@ -1,15 +1,20 @@
 -------------------------
-MSTParser version 0.2.1
+MSTParser version 0.4.0
 -------------------------
 
 This is the main README. See ALT_README for some extra utilities and
-an alternative build process to the one described in this README.
+an alternative build process to the one described in this README. The
+package has been modified by Jason Baldridge -- this version should
+produce the same results as Ryan McDonald's previous releases, but it
+has been made more flexible and configurable in the input formats it
+accepts (both MST and CoNLL) and in the way features are declared (see
+the DependencyPipe class).
 
 -------------------------
 
 
-The following package contains a java implementation of the dependency parsers
-described in:
+The following package contains a java implementation of the dependency
+parsers described in:
 
 Non-Projective Dependency Parsing using Spanning Tree Algorithms
 R. McDonald, F. Pereira, K. Ribarov and J. Hajic
@@ -219,7 +224,7 @@ format:FORMAT
 - FORMAT is either MST or CONLL
 - Default is CONLL
 - Specifies whether the input/output format. MST is the format used by
-  MSTParser until this version (0.2). CONLL is the format used in the
+  MSTParser until version 0.2.1. CONLL is the format used in the
   CONLL-X shared task (see http://nextens.uvt.nl/~conll/).
 
 ------------------------------------------------
