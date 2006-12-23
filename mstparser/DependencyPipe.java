@@ -258,22 +258,22 @@ public class DependencyPipe {
 	    childIndex = small;
 	}	
 
-	fv = addTwoFactorFeatures("HC", forms[headIndex], pos[headIndex], 
+	fv = addTwoObsFeatures("HC", forms[headIndex], pos[headIndex], 
 				  forms[childIndex], pos[childIndex], attDist, fv);
 
 	if (isCONLL) {
-	    fv = addTwoFactorFeatures("HCA", forms[headIndex], posA[headIndex], 
+	    fv = addTwoObsFeatures("HCA", forms[headIndex], posA[headIndex], 
 				      forms[childIndex], posA[childIndex], attDist, fv);
 
-	    fv = addTwoFactorFeatures("HCB", forms[headIndex], instance.lemmas[headIndex],
+	    fv = addTwoObsFeatures("HCB", forms[headIndex], instance.lemmas[headIndex],
 				      forms[childIndex], instance.lemmas[childIndex], 
 				      attDist, fv);
 
-	    fv = addTwoFactorFeatures("HCC", instance.lemmas[headIndex], pos[headIndex], 
+	    fv = addTwoObsFeatures("HCC", instance.lemmas[headIndex], pos[headIndex], 
 				      instance.lemmas[childIndex], pos[childIndex], 
 				      attDist, fv);
 
-	    fv = addTwoFactorFeatures("HCD", instance.lemmas[headIndex], posA[headIndex], 
+	    fv = addTwoObsFeatures("HCD", instance.lemmas[headIndex], posA[headIndex], 
 				      instance.lemmas[childIndex], posA[childIndex], 
 				      attDist, fv);
 
@@ -281,25 +281,25 @@ public class DependencyPipe {
 	    // for all items.
 	    //
 	    //for (int i=0; i<instance.feats[headIndex].length; i++) {
-	    //	fv = addTwoFactorFeatures("FF"+i, 
+	    //	fv = addTwoObsFeatures("FF"+i, 
 	    //				  instance.forms[headIndex], 
 	    //				  instance.feats[headIndex][i],
 	    //				  instance.forms[childIndex], 
 	    //				  instance.feats[childIndex][i], 
 	    //				  attDist, fv);
-	    //	fv = addTwoFactorFeatures("LF"+i, 
+	    //	fv = addTwoObsFeatures("LF"+i, 
 	    //				  instance.lemmas[headIndex], 
 	    //				  instance.feats[headIndex][i],
 	    //				  instance.lemmas[childIndex], 
 	    //				  instance.feats[childIndex][i], 
 	    //				  attDist, fv);
-	    //	fv = addTwoFactorFeatures("PF"+i, 
+	    //	fv = addTwoObsFeatures("PF"+i, 
 	    //				  pos[headIndex], 
 	    //				  instance.feats[headIndex][i],
 	    //				  pos[childIndex], 
 	    //				  instance.feats[childIndex][i], 
 	    //				  attDist, fv);
-	    //	fv = addTwoFactorFeatures("CPF"+i, 
+	    //	fv = addTwoObsFeatures("CPF"+i, 
 	    //				  posA[headIndex], 
 	    //				  instance.feats[headIndex][i],
 	    //				  posA[childIndex], 
@@ -308,7 +308,7 @@ public class DependencyPipe {
 	    //
 	    //	for (int j=i+1; j<instance.feats[headIndex].length; j++) {
 	    //
-	    //	    fv = addTwoFactorFeatures("CPF"+i, 
+	    //	    fv = addTwoObsFeatures("CPF"+i, 
 	    //				      instance.feats[headIndex][i],
 	    //				      instance.feats[headIndex][j],
 	    //				      instance.feats[childIndex][i], 
@@ -323,13 +323,13 @@ public class DependencyPipe {
 	    //
 	    for (int i=0; i<instance.feats[headIndex].length; i++) {
 	    	for (int j=0; j<instance.feats[childIndex].length; j++) {
-	    	    fv = addTwoFactorFeatures("FF"+i+"*"+j, 
+	    	    fv = addTwoObsFeatures("FF"+i+"*"+j, 
 	    				      instance.forms[headIndex], 
 	    				      instance.feats[headIndex][i],
 	    				      instance.forms[childIndex], 
 	    				      instance.feats[childIndex][j], 
 	    				      attDist, fv);
-	    	    fv = addTwoFactorFeatures("LF"+i+"*"+j, 
+	    	    fv = addTwoObsFeatures("LF"+i+"*"+j, 
 	    				      instance.lemmas[headIndex], 
 	    				      instance.feats[headIndex][i],
 	    				      instance.lemmas[childIndex], 
@@ -355,29 +355,29 @@ public class DependencyPipe {
 		
     }
  
-    private final FeatureVector addLinearFeatures(String type, String[] factorVals, 
+    private final FeatureVector addLinearFeatures(String type, String[] obsVals, 
 						  int first, int second,
 						  String attachDistance,
 						  FeatureVector fv) {
 	
-	String pLeft = first > 0 ? factorVals[first-1] : "STR";
-	String pRight = second < factorVals.length-1 ? factorVals[second+1] : "END";
-	String pLeftRight = first < second-1 ? factorVals[first+1] : "MID";
-	String pRightLeft = second > first+1 ? factorVals[second-1] : "MID";
+	String pLeft = first > 0 ? obsVals[first-1] : "STR";
+	String pRight = second < obsVals.length-1 ? obsVals[second+1] : "END";
+	String pLeftRight = first < second-1 ? obsVals[first+1] : "MID";
+	String pRightLeft = second > first+1 ? obsVals[second-1] : "MID";
 
 	// feature posR posMid posL
 	StringBuilder featPos = 
-	    new StringBuilder(type+"PC="+factorVals[first]+" "+factorVals[second]);
+	    new StringBuilder(type+"PC="+obsVals[first]+" "+obsVals[second]);
 
 	for(int i = first+1; i < second; i++) {
-	    String allPos = featPos.toString() + ' ' + factorVals[i];
+	    String allPos = featPos.toString() + ' ' + obsVals[i];
 	    fv = add(allPos, fv);
 	    fv = add(allPos+attachDistance, fv);
 
 	}
 
-	fv = addCorePosFeatures(type+"PT", pLeft, factorVals[first], pLeftRight, 
-				pRightLeft, factorVals[second], pRight, attachDistance, fv);
+	fv = addCorePosFeatures(type+"PT", pLeft, obsVals[first], pLeftRight, 
+				pRightLeft, obsVals[second], pRight, attachDistance, fv);
 
 	return fv;
 
@@ -468,15 +468,15 @@ public class DependencyPipe {
 
 
     /**
-     * Add features for two items, each with two factors, e.g. head,
+     * Add features for two items, each with two observations, e.g. head,
      * head pos, child, and child pos.
      *
      * The use of StringBuilders is not yet as efficient as it could
      * be, but this is a start. (And it abstracts the logic so we can
      * add other features more easily based on other items and
-     * factors.)
+     * observations.)
      **/
-    private final FeatureVector addTwoFactorFeatures(String prefix, 
+    private final FeatureVector addTwoObsFeatures(String prefix, 
 						     String item1F1, String item1F2, 
 						     String item2F1, String item2F2, 
 						     String attachDistance,
@@ -786,7 +786,7 @@ public class DependencyPipe {
 		
     /**
      * Get features for stems the old way. The only way this differs
-     * from calling addTwoFactorFeatures() is that it checks the
+     * from calling addTwoObsFeatures() is that it checks the
      * lengths of the full lexical items are greater than 5 before
      * adding features.
      *
