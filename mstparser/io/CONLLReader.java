@@ -58,20 +58,16 @@ public class CONLLReader extends DependencyReader {
 	for (int i = 0; i< feats[1].length; i++)
 	    feats[0][i] = "<root-feat>"+i;
 
-	RelationalFeature rf = null;
-	if (line.startsWith("*")) {
-
-	    rf = new RelationalFeature(length, line, inputReader);
-
-	    inputReader.readLine(); // eat remaining newline
-
-	    return new DependencyInstance(forms, lemmas, cpos, pos, feats, deprels, heads, rf);
-
-	} else {
-
-	    return new DependencyInstance(forms, lemmas, cpos, pos, feats, deprels, heads);
-
+	ArrayList<RelationalFeature> rfeats = new ArrayList<RelationalFeature>();
+	while (line != null && !line.equals("")) {
+	    rfeats.add(new RelationalFeature(length, line, inputReader));
+	    line = inputReader.readLine();
 	}
+
+	RelationalFeature[] rfeatsList = new RelationalFeature[rfeats.size()];
+	rfeats.toArray(rfeatsList);
+
+	return new DependencyInstance(forms, lemmas, cpos, pos, feats, deprels, heads, rfeatsList);
 
     }
 

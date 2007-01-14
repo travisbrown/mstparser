@@ -244,8 +244,8 @@ public class DependencyPipe {
 		
 	String attDist = "&"+att+"&"+distBool;
 
-	//fv = addLinearFeatures("WORD", forms, small, large, attDist, fv);
-	//fv = addLinearFeatures("LEMMA", instance.lemmas, small, large, attDist, fv);
+	fv = addLinearFeatures("WORD", forms, small, large, attDist, fv);
+	fv = addLinearFeatures("LEMMA", instance.lemmas, small, large, attDist, fv);
 	fv = addLinearFeatures("POS", pos, small, large, attDist, fv);
 	fv = addLinearFeatures("CPOS", posA, small, large, attDist, fv);
 		
@@ -278,7 +278,8 @@ public class DependencyPipe {
 				      attDist, fv);
 
 	    // Test out relational features
-	    fv = add(instance.relFeat.getFeature(headIndex, childIndex), fv);
+	    for (int rf_index=0; rf_index<instance.relFeats.length; rf_index++)
+		fv = add(instance.relFeats[rf_index].getFeature(headIndex, childIndex), fv);
 
 	    // Use this if your extra feature list has the same length
 	    // for all items.
