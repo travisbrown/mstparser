@@ -277,6 +277,9 @@ public class DependencyPipe {
 				      instance.lemmas[childIndex], posA[childIndex], 
 				      attDist, fv);
 
+	    // Test out relational features
+	    fv = add(instance.relFeat.getFeature(headIndex, childIndex), fv);
+
 	    // Use this if your extra feature list has the same length
 	    // for all items.
 	    //
@@ -321,22 +324,22 @@ public class DependencyPipe {
 	    // lengths for each item. For example, nouns might have a
 	    // different number of morphological features than verbs.
 	    //
-	    for (int i=0; i<instance.feats[headIndex].length; i++) {
-	    	for (int j=0; j<instance.feats[childIndex].length; j++) {
-	    	    fv = addTwoObsFeatures("FF"+i+"*"+j, 
-	    				      instance.forms[headIndex], 
-	    				      instance.feats[headIndex][i],
-	    				      instance.forms[childIndex], 
-	    				      instance.feats[childIndex][j], 
-	    				      attDist, fv);
-	    	    fv = addTwoObsFeatures("LF"+i+"*"+j, 
-	    				      instance.lemmas[headIndex], 
-	    				      instance.feats[headIndex][i],
-	    				      instance.lemmas[childIndex], 
-	    				      instance.feats[childIndex][j], 
-	    				      attDist, fv);
-	    	}
-	    }
+	    //for (int i=0; i<instance.feats[headIndex].length; i++) {
+	    //	for (int j=0; j<instance.feats[childIndex].length; j++) {
+	    //	    fv = addTwoObsFeatures("FF"+i+"*"+j, 
+	    //				      instance.forms[headIndex], 
+	    //				      instance.feats[headIndex][i],
+	    //				      instance.forms[childIndex], 
+	    //				      instance.feats[childIndex][j], 
+	    //				      attDist, fv);
+	    //	    fv = addTwoObsFeatures("LF"+i+"*"+j, 
+	    //				      instance.lemmas[headIndex], 
+	    //				      instance.feats[headIndex][i],
+	    //				      instance.lemmas[childIndex], 
+	    //				      instance.feats[childIndex][j], 
+	    //				      attDist, fv);
+	    //	}
+	    //}
 
 	} else {
 	    // Pick up stem features the way they used to be done. This

@@ -1,6 +1,7 @@
 package mstparser.io;
 
 import mstparser.DependencyInstance;
+import mstparser.RelationalFeature;
 import mstparser.Util;
 
 import java.io.*;
@@ -14,9 +15,10 @@ public class CONLLReader extends DependencyReader {
 	ArrayList<String[]> lineList = new ArrayList<String[]>();
 
 	String line = inputReader.readLine();
-	while (line != null && !line.equals("")) {
+	while (line != null && !line.equals("") && !line.startsWith("*")) {
 	    lineList.add(line.split("\t"));
 	    line = inputReader.readLine();
+	    //System.out.println("## "+line);
 	}
 
 	int length = lineList.size();
@@ -56,7 +58,20 @@ public class CONLLReader extends DependencyReader {
 	for (int i = 0; i< feats[1].length; i++)
 	    feats[0][i] = "<root-feat>"+i;
 
-	return new DependencyInstance(forms, lemmas, cpos, pos, feats, deprels, heads);
+	RelationalFeature rf = null;
+	if (line.startsWith("*")) {
+
+	    rf = new RelationalFeature(length, line, inputReader);
+
+	    inputReader.readLine(); // eat remaining newline
+
+	    return new DependencyInstance(forms, lemmas, cpos, pos, feats, deprels, heads, rf);
+
+	} else {
+
+	    return new DependencyInstance(forms, lemmas, cpos, pos, feats, deprels, heads);
+
+	}
 
     }
 

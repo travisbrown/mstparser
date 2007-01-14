@@ -37,6 +37,9 @@ public class DependencyInstance implements Serializable {
     // DEPREL: the dependency relations, e.g. "SUBJ"
     public String[] deprels;
 
+    // RELATIONAL FEATURE: a relational feature that holds between items
+    public RelationalFeature relFeat;
+
     public DependencyInstance() {}
 
     public DependencyInstance(DependencyInstance source) {
@@ -76,6 +79,13 @@ public class DependencyInstance implements Serializable {
 	this.feats = feats;
     }
 
+    public DependencyInstance(String[] forms, String[] lemmas, String[] cpostags, 
+			      String[] postags, String[][] feats, String[] labs, int[] heads,
+			      RelationalFeature relFeat) {
+	this(forms, lemmas, cpostags, postags, feats, labs, heads);
+	this.relFeat = relFeat;
+    }
+
     public void setFeatureVector (FeatureVector fv) {
 	this.fv = fv;
     }
@@ -99,6 +109,7 @@ public class DependencyInstance implements Serializable {
 	out.writeObject(heads);
 	out.writeObject(deprels);
 	out.writeObject(actParseTree);
+	out.writeObject(relFeat);
     }
 
 
@@ -109,6 +120,7 @@ public class DependencyInstance implements Serializable {
 	heads = (int[])in.readObject();
 	deprels = (String[])in.readObject();
 	actParseTree = (String)in.readObject();
+	relFeat = (RelationalFeature)in.readObject();
     }
 
 }
