@@ -278,8 +278,8 @@ public class DependencyPipe {
 				      attDist, fv);
 
 	    // Test out relational features
-	    for (int rf_index=0; rf_index<instance.relFeats.length; rf_index++)
-		fv = add(instance.relFeats[rf_index].getFeature(headIndex, childIndex), fv);
+	    //for (int rf_index=0; rf_index<instance.relFeats.length; rf_index++)
+	    //fv = add(instance.relFeats[rf_index].getFeature(headIndex, childIndex), fv);
 
 	    // Use this if your extra feature list has the same length
 	    // for all items.
