@@ -1,3 +1,3 @@
 #!/bin/sh
 . mst-env
-$JAVA_CMD mstparser.DependencyParser $@
+$JAVA_CMD -Xrunhprof mstparser.DependencyParser $@
