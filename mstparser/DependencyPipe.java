@@ -248,7 +248,6 @@ public class DependencyPipe {
 	String attDist = "&"+att+"&"+distBool;
 
 	fv = addLinearFeatures("WORD", forms, small, large, attDist, fv);
-	//fv = addLinearFeatures("LEMMA", instance.lemmas, small, large, attDist, fv);
 	fv = addLinearFeatures("POS", pos, small, large, attDist, fv);
 	fv = addLinearFeatures("CPOS", posA, small, large, attDist, fv);
 		
@@ -265,6 +264,9 @@ public class DependencyPipe {
 				  forms[childIndex], pos[childIndex], attDist, fv);
 
 	if (isCONLL) {
+
+	    fv = addLinearFeatures("LEMMA", instance.lemmas, small, large, attDist, fv);
+
 	    fv = addTwoObsFeatures("HCA", forms[headIndex], posA[headIndex], 
 				      forms[childIndex], posA[childIndex], attDist, fv);
 
