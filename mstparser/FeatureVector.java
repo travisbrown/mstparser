@@ -34,7 +34,7 @@ import java.util.*;
  * @version $Id$
  * @see mstparser.Feature
  */
-public class FeatureVector extends TLinkedList {
+public final class FeatureVector extends TLinkedList {
     private FeatureVector subfv1 = null;
     private FeatureVector subfv2 = null;
     private boolean negateSecondSubFV = false;
@@ -87,50 +87,46 @@ public class FeatureVector extends TLinkedList {
     }
 
 
-    public FeatureVector cat(FeatureVector fl2) {
+    public final FeatureVector cat(FeatureVector fl2) {
 	return new FeatureVector(this, fl2);
     }
 
     // fv1 - fv2
     public FeatureVector getDistVector(FeatureVector fl2) {
-	//return new FeatureVector(this, fl2, true);
-	FeatureVector nfv = new FeatureVector(this);
-	fl2.addNegativeFeatures(nfv);
-	return nfv;
+	return new FeatureVector(this, fl2, true);
     }
 
-    private void addNegativeFeatures (FeatureVector fv) {
-	if (null != subfv1) {
-	    subfv1.addNegativeFeatures(fv);
-
-	    if (null != subfv2)
-		subfv2.addNegativeFeatures(fv);
-	}
-
-	ListIterator it = listIterator();
-	while (it.hasNext())
-	    fv.add(((Feature)it.next()).negation());
+    public final double getScore(double[] parameters) {
+	return getScore(parameters, false);
     }
 
-    public double getScore(double[] parameters) {
+    private final double getScore(double[] parameters, boolean negate) {
 	double score = 0.0;
 
 	if (null != subfv1) {
-	    score += subfv1.getScore(parameters);
+	    score += subfv1.getScore(parameters, negate);
 
 	    if (null != subfv2) {
-		double fv2score = subfv2.getScore(parameters);
-		if (negateSecondSubFV)
-		    score -= fv2score;
-		else
-		    score += fv2score;
+		if (negate) {
+		    score += subfv2.getScore(parameters, !negateSecondSubFV);
+		} else {
+		    score += subfv2.getScore(parameters, negateSecondSubFV);
+		}
 	    }
 	}
 
 	ListIterator it = listIterator();
-	while (it.hasNext()) {
-	    Feature f = (Feature)it.next();
-            score += parameters[f.index]*f.value;
+
+	if (negate) {
+	    while (it.hasNext()) {
+		Feature f = (Feature)it.next();
+		score -= parameters[f.index]*f.value;
+	    }
+	} else {
+	    while (it.hasNext()) {
+		Feature f = (Feature)it.next();
+		score += parameters[f.index]*f.value;
+	    }
 	}
 
 	return score;
@@ -146,8 +142,13 @@ public class FeatureVector extends TLinkedList {
 	if (null != subfv1) {
 	    subfv1.update(parameters, total, alpha_k, upd, negate);
 
-	    if (null != subfv2)
-		subfv2.update(parameters, total, alpha_k, upd, negateSecondSubFV);
+	    if (null != subfv2) {
+		if (negate) {
+		    subfv2.update(parameters, total, alpha_k, upd, !negateSecondSubFV);
+		} else {
+		    subfv2.update(parameters, total, alpha_k, upd, negateSecondSubFV);
+		}
+	    }
 	}
 
 
@@ -177,7 +178,7 @@ public class FeatureVector extends TLinkedList {
 	hm1.compact();
 
 	TIntDoubleHashMap hm2 = new TIntDoubleHashMap(fl2.size());
-	fl2.addFeaturesToMap(hm2, negateSecondSubFV);
+	fl2.addFeaturesToMap(hm2, false);
 	hm2.compact();
 
 	int[] keys = hm1.keys();
@@ -192,17 +193,22 @@ public class FeatureVector extends TLinkedList {
 
     private void addFeaturesToMap(TIntDoubleHashMap map, boolean negate) {
 	if (null != subfv1) {
-	    subfv1.addFeaturesToMap(map, false);
+	    subfv1.addFeaturesToMap(map, negate);
 
-	    if (null != subfv2)
-		subfv2.addFeaturesToMap(map, negateSecondSubFV);
+	    if (null != subfv2) {
+		if (negate) {
+		    subfv2.addFeaturesToMap(map, !negateSecondSubFV);
+		} else {
+		    subfv2.addFeaturesToMap(map, negateSecondSubFV);
+		}
+	    }
 	}
 
 	ListIterator it = listIterator();
 	if (negate) {
 	    while (it.hasNext()) {
 		Feature f = (Feature)it.next();
-		if (!map.adjustValue(f.index, f.value))
+		if (!map.adjustValue(f.index, -f.value))
 		    map.put(f.index, -f.value);
 	    }
 	} else {
@@ -216,12 +222,21 @@ public class FeatureVector extends TLinkedList {
 
 
     public final String toString() {
-	//StringBuilder sb = new StringBuilder();
-	//ListIterator it = listIterator();
-	//while (it.hasNext())
-	//    sb.append(it.next().toString()).append(' ');
-	//return sb.toString();
-	return "TBA";
+	StringBuilder sb = new StringBuilder();
+	toString(sb);
+	return sb.toString();
+    }
+
+    private final void toString(StringBuilder sb) {
+	if (null != subfv1) {
+	    subfv1.toString(sb);
+
+	    if (null != subfv2)
+		subfv2.toString(sb);
+	}
+	ListIterator it = listIterator();
+	while (it.hasNext())
+	    sb.append(it.next().toString()).append(' ');
     }
 
 }
