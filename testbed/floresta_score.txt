@@ -1,6 +1,6 @@
 Tokens: 4389
-Correct: 3487
-Unlabeled Accuracy: 0.7944862155388471
-Unlabeled Complete Correct: 0.175
-Labeled Accuracy: 0.735019366598314
-Labeled Complete Correct: 0.125
+Correct: 3488
+Unlabeled Accuracy: 0.7947140578719526
+Unlabeled Complete Correct: 0.185
+Labeled Accuracy: 0.7363864205969469
+Labeled Complete Correct: 0.13
