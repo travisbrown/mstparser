@@ -1,8 +1,39 @@
+///////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2007 University of Texas at Austin and (C) 2005
+// University of Pennsylvania and Copyright (C) 2002, 2003 University
+// of Massachusetts Amherst, Department of Computer Science.
+//
+// This software is licensed under the terms of the Common Public
+// License, Version 1.0 or (at your option) any subsequent version.
+// 
+// The license is approved by the Open Source Initiative, and is
+// available from their website at http://www.opensource.org.
+///////////////////////////////////////////////////////////////////////////////
+
 package mstparser;
 
 import gnu.trove.*;
 import java.util.*;
 
+
+
+/**
+ * A <tt>FeatureVector</tt> that can hold up to two
+ * <tt>FeatureVector</tt> instances inside it, which allows for a very
+ * quick concatenation operation.
+ *
+ * <p>Also, in order to avoid copies, the second of these internal
+ * <tt>FeatureVector</tt> instances can be negated, so that it has the
+ * effect of subtracting any values rather than adding them.
+ *
+ * <p>
+ * Created: Sat Nov 10 15:25:10 2001
+ * </p>
+ *
+ * @author Jason Baldridge
+ * @version $Id$
+ * @see mstparser.Feature
+ */
 public class FeatureVector extends TLinkedList {
     private FeatureVector subfv1 = null;
     private FeatureVector subfv2 = null;
