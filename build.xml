@@ -1,5 +1,5 @@
 <!-- $Id$ -->
-<!-- Copyright (C) 2006 Ryan McDonald -->
+<!-- Copyright (C) 2007 Ryan McDonald -->
 <project default="compile" basedir=".">
 
   <!-- =================================================================== -->
@@ -10,7 +10,7 @@
     <property name="Name" value="MSTParser"/>
     <property name="name" value="mstparser"/>
     <property name="year" value="2007"/>
-    <property name="version" value="0.5.0"/>
+    <property name="version" value="0.4.2"/>
 
     <echo message="----------- ${Name} ${version} [${year}] ------------"/>
 
@@ -146,7 +146,7 @@
              noindex="false"
              windowtitle="${name}"
              doctitle="The ${Name} API v${version}"
-             bottom="Copyright &#169; ${year} Ryan McDonald. All Rights Reserved."
+             bottom="Copyright &#169; ${year} Ryan McDonald and Jason Baldridge. All Rights Reserved."
     />
   </target>
 
