@@ -283,8 +283,15 @@ public class DependencyPipe {
 				      attDist, fv);
 
 	    // Test out relational features
-	    //for (int rf_index=0; rf_index<instance.relFeats.length; rf_index++)
-	    //fv = add(instance.relFeats[rf_index].getFeature(headIndex, childIndex), fv);
+	    for (int rf_index=0; rf_index<instance.relFeats.length; rf_index++) {
+		String headToChild = instance.relFeats[rf_index].getFeature(headIndex, childIndex);
+		fv = add("H2C="+headToChild, fv);
+		fv = add("RF-H2C-F="+forms[headIndex]+" "+forms[childIndex]+" "+headToChild, fv);
+		fv = add("RF-H2C-L="+instance.lemmas[headIndex]+" "+instance.lemmas[childIndex]+" "+headToChild, fv);
+		fv = add("RF-H2C-P="+pos[headIndex]+" "+pos[childIndex]+" "+headToChild, fv);
+		fv = add("RF-H2C-PA="+posA[headIndex]+" "+posA[childIndex]+" "+headToChild, fv);
+
+	    }
 
 	    // Use this if your extra feature list has the same length
 	    // for all items.
