@@ -178,14 +178,16 @@ public class DependencyPipe {
     public final FeatureVector add(String feat, FeatureVector fv) {
 	int num = dataAlphabet.lookupIndex(feat);
 	if(num >= 0)
-	    fv = new FeatureVector(num, 1.0, fv);
+	    fv.add(num, 1.0);
+	//fv = new FeatureVector(num, 1.0, fv);
 	return fv;
     }
 
     public final FeatureVector add(String feat, double val, FeatureVector fv) {
 	int num = dataAlphabet.lookupIndex(feat);
 	if(num >= 0)
-	    fv = new FeatureVector(num, val, fv);
+	    fv.add(num, val);
+	    //fv = new FeatureVector(num, val, fv);
 	return fv;
     }
 

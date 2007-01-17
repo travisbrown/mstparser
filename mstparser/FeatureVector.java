@@ -3,138 +3,194 @@ package mstparser;
 import gnu.trove.*;
 import java.util.*;
 
-public class FeatureVector {
+public class FeatureVector extends TLinkedList {
+    private FeatureVector subfv1 = null;
+    private FeatureVector subfv2 = null;
+    private boolean negateSecondSubFV = false;
 
-    public int index;
-    public double value;
-    public FeatureVector next;
-	
+    public FeatureVector () {}
 
-    public FeatureVector(int[] keys) {
-	if (keys.length == 0) {
-	    index = -1;
-	    value = -1.0;
-	    next = null;
-	}
-	else {
-	    FeatureVector result = new FeatureVector();
-	    for (int i=0; i<keys.length-1; i++)
-		result = new FeatureVector(keys[i],1.0,result);
-
-	    index = keys[keys.length-1];
-	    value = 1.0;
-	    next = result;
-	}
+    public FeatureVector (FeatureVector fv1) {
+	subfv1 = fv1;
     }
 
-    public FeatureVector() {
-	index = -1;
-	value = -1.0;
-	next = null;
+    public FeatureVector (FeatureVector fv1, FeatureVector fv2) {
+	subfv1 = fv1;
+	subfv2 = fv2;
     }
-    
-    public FeatureVector(int i, double v, FeatureVector n) {
-	index = i;
-	value = v;
-	next = n;
+
+    public FeatureVector (FeatureVector fv1, FeatureVector fv2, boolean negSecond) {
+	subfv1 = fv1;
+	subfv2 = fv2;
+	negateSecondSubFV = negSecond;
     }
+
+    public FeatureVector (int[] keys) {
+	for (int i=0; i<keys.length; i++)
+	    add(new Feature(keys[i],1.0));
+    }
+
+    public void add(int index, double value) {
+	add(new Feature(index, value));
+    }
+
 
     public int[] keys() {
 	TIntArrayList keys = new TIntArrayList();
-	for(FeatureVector curr = this; curr.next != null; curr = curr.next) {
-	    if(curr.index < 0)
-		continue;
-	    keys.add(curr.index);
-	}
+	addKeysToList(keys);
 	return keys.toNativeArray();
     }
 
-    public FeatureVector cat(FeatureVector fv2) {
-	FeatureVector result = new FeatureVector();
-	for(FeatureVector curr = this; curr.next != null; curr = curr.next) {
-	    if(curr.index < 0)
-		continue;
-	    result = new FeatureVector(curr.index,curr.value,result);
+    private void addKeysToList(TIntArrayList keys) {
+	if (null != subfv1) {
+	    subfv1.addKeysToList(keys);
+
+	    if (null != subfv2)
+		subfv2.addKeysToList(keys);
 	}
-	for(FeatureVector curr = fv2; curr.next != null; curr = curr.next) {
-	    if(curr.index < 0)
-		continue;
-	    result = new FeatureVector(curr.index,curr.value,result);
-	}
-	return result;
-		
+
+	ListIterator it = listIterator();
+	while (it.hasNext())
+	    keys.add(((Feature)it.next()).index);
+
+    }
+
+
+    public FeatureVector cat(FeatureVector fl2) {
+	return new FeatureVector(this, fl2);
     }
 
     // fv1 - fv2
-    public FeatureVector getDistVector(FeatureVector fv2) {
-	FeatureVector result = new FeatureVector();
-	for(FeatureVector curr = this; curr.next != null; curr = curr.next) {
-	    if(curr.index < 0)
-		continue;
-	    result = new FeatureVector(curr.index,curr.value,result);
-	}
-	for(FeatureVector curr = fv2; curr.next != null; curr = curr.next) {
-	    if(curr.index < 0)
-		continue;
-	    result = new FeatureVector(curr.index,-curr.value,result);
-	}
-	return result;
+    public FeatureVector getDistVector(FeatureVector fl2) {
+	//return new FeatureVector(this, fl2, true);
+	FeatureVector nfv = new FeatureVector(this);
+	fl2.addNegativeFeatures(nfv);
+	return nfv;
     }
-	
-    public double dotProduct(FeatureVector fv2) {
-	double result = 0.0;
-	TIntDoubleHashMap hm1 = new TIntDoubleHashMap();
-	TIntDoubleHashMap hm2 = new TIntDoubleHashMap();
 
-	for(FeatureVector curr = this; curr.next != null; curr = curr.next) {
-	    if(curr.index < 0)
-		continue;
-	    hm1.put(curr.index,hm1.get(curr.index)+curr.value);
+    private void addNegativeFeatures (FeatureVector fv) {
+	if (null != subfv1) {
+	    subfv1.addNegativeFeatures(fv);
+
+	    if (null != subfv2)
+		subfv2.addNegativeFeatures(fv);
 	}
-	for(FeatureVector curr = fv2; curr.next != null; curr = curr.next) {
-	    if(curr.index < 0)
-		continue;
-	    hm2.put(curr.index,hm2.get(curr.index)+curr.value);
+
+	ListIterator it = listIterator();
+	while (it.hasNext())
+	    fv.add(((Feature)it.next()).negation());
+    }
+
+    public double getScore(double[] parameters) {
+	double score = 0.0;
+
+	if (null != subfv1) {
+	    score += subfv1.getScore(parameters);
+
+	    if (null != subfv2) {
+		double fv2score = subfv2.getScore(parameters);
+		if (negateSecondSubFV)
+		    score -= fv2score;
+		else
+		    score += fv2score;
+	    }
 	}
+
+	ListIterator it = listIterator();
+	while (it.hasNext()) {
+	    Feature f = (Feature)it.next();
+            score += parameters[f.index]*f.value;
+	}
+
+	return score;
+    }
+
+    public void update(double[] parameters, double[] total, double alpha_k, double upd) {
+	update(parameters, total, alpha_k, upd, false);
+    }
+
+    private final void update(double[] parameters, double[] total, 
+			      double alpha_k, double upd, boolean negate) {
+
+	if (null != subfv1) {
+	    subfv1.update(parameters, total, alpha_k, upd, negate);
+
+	    if (null != subfv2)
+		subfv2.update(parameters, total, alpha_k, upd, negateSecondSubFV);
+	}
+
+
+	ListIterator it = listIterator();
+
+	if (negate) {
+	    while (it.hasNext()) {
+		Feature f = (Feature)it.next();
+		parameters[f.index] -= alpha_k*f.value;
+		total[f.index] -= upd*alpha_k*f.value;
+	    }
+	} else {
+	    while (it.hasNext()) {
+		Feature f = (Feature)it.next();
+		parameters[f.index] += alpha_k*f.value;
+		total[f.index] += upd*alpha_k*f.value;
+	    }
+	}
+
+    }
+
+	
+    public double dotProduct(FeatureVector fl2) {
+
+	TIntDoubleHashMap hm1 = new TIntDoubleHashMap(this.size());
+	addFeaturesToMap(hm1, false);
+	hm1.compact();
+
+	TIntDoubleHashMap hm2 = new TIntDoubleHashMap(fl2.size());
+	fl2.addFeaturesToMap(hm2, negateSecondSubFV);
+	hm2.compact();
 
 	int[] keys = hm1.keys();
 
-	for(int i = 0; i < keys.length; i++) {
-	    double v1 = hm1.get(keys[i]);
-	    double v2 = hm2.get(keys[i]);
-	    result += v1*v2;
-	}
+	double result = 0.0;
+	for(int i = 0; i < keys.length; i++)
+	    result += hm1.get(keys[i])*hm2.get(keys[i]);
 		
 	return result;
 		
     }
 
-    public int sum() {
-	if(next == null)
-	    return index >= 0 ? 1 : 0;
-	return (index >= 0 ? 1 : 0) + next.sum();
-    }
+    private void addFeaturesToMap(TIntDoubleHashMap map, boolean negate) {
+	if (null != subfv1) {
+	    subfv1.addFeaturesToMap(map, false);
 
-    public void sort() {
-	int[] feats = new int[sum()];
-	int j = 0;
-	for(FeatureVector curr = this; curr.next != null; curr = curr.next) {
-	    if(curr.index < 0)
-		continue;
-	    feats[j] = curr.index;
-	    j++;
+	    if (null != subfv2)
+		subfv2.addFeaturesToMap(map, negateSecondSubFV);
 	}
-	Arrays.sort(feats);
-	FeatureVector result = new FeatureVector();
-	for(int i = feats.length-1; i >= 0; i--)
-	    result = new FeatureVector(feats[i],1.0,result);
-	this.index = result.index; this.value = result.value; this.next = result.next;
+
+	ListIterator it = listIterator();
+	if (negate) {
+	    while (it.hasNext()) {
+		Feature f = (Feature)it.next();
+		if (!map.adjustValue(f.index, f.value))
+		    map.put(f.index, -f.value);
+	    }
+	} else {
+	    while (it.hasNext()) {
+		Feature f = (Feature)it.next();
+		if (!map.adjustValue(f.index, f.value))
+		    map.put(f.index, f.value);
+	    }
+	}
     }
 
-    public String toString() {
-	if(next == null)
-	    return ""+index;
-	return index + " " + next.toString();
+
+    public final String toString() {
+	//StringBuilder sb = new StringBuilder();
+	//ListIterator it = listIterator();
+	//while (it.hasNext())
+	//    sb.append(it.next().toString()).append(' ');
+	//return sb.toString();
+	return "TBA";
     }
 
 }

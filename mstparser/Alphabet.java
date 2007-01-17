@@ -53,8 +53,6 @@ public class Alphabet implements Serializable
 	    numEntries++;
 	}
 	
-	//System.out.println(entry + " :: " + ret);
-
 	return ret;
     }
 

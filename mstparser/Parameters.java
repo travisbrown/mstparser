@@ -2,6 +2,7 @@ package mstparser;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.ListIterator;
 import gnu.trove.*;
 
 public class Parameters {
@@ -60,25 +61,26 @@ public class Parameters {
 	int res = 0;
 	for(int k = 0; k < K; k++) {
 	    fv = dist[k];
-	    
-	    for(FeatureVector curr = fv; curr.index >= 0; curr = curr.next) {
-                if(curr.index < 0)
-                    continue;
-                parameters[curr.index] += alpha[k]*curr.value;
-                total[curr.index] += upd*alpha[k]*curr.value;
-            }
+
+	    fv.update(parameters, total, alpha[k], upd);
+
+	    //for(FeatureVector curr = fv; curr.index >= 0; curr = curr.next) {
+            //    if(curr.index < 0)
+            //        continue;
+            //    parameters[curr.index] += alpha[k]*curr.value;
+            //    total[curr.index] += upd*alpha[k]*curr.value;
+            //}
 	    
 	}
 
     }
 
     public double getScore(FeatureVector fv) {
-	double score = 0.0;
-
-	for(FeatureVector curr = fv; curr.index >= 0; curr = curr.next)
-            score += parameters[curr.index]*curr.value;
-
-	return score;
+	return fv.getScore(parameters);
+	//double score = 0.0;
+	//for(FeatureVector curr = fv; curr.index >= 0; curr = curr.next)
+        //    score += parameters[curr.index]*curr.value;
+	//return score;
     }
 
     private double[] hildreth(FeatureVector[] a, double[] b) {
