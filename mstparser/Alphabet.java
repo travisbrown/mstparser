@@ -47,10 +47,6 @@ public class Alphabet implements Serializable
 
 	int ret = map.get(entry);
 
-	// Trove used to return -1 when a map didn't have an entry,
-	// now it returns 0. (The following line used to have the
-	// condition "ret == -1".) (JMB, 16-JAN-07)
-	//if (ret == 0 && !growthStopped && addIfNotPresent) {
 	if (ret == -1 && !growthStopped) {
 	    ret = numEntries;
 	    map.put (entry, ret);
