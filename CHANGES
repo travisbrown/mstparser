@@ -1,8 +1,15 @@
 -----------------------------------------------------------------------
 v0.5.0
 
+- Updated to Trove v1.1b5. Changed default return value of
+  TObjectIntHashMap to be -1 rather than 0. (Note: I tried to update
+  to v2.0a2, but the test suites broke with that version. Attempts to
+  sort out the problem were unsuccessful, so V1.1b5 will just have to do
+  for now.) (JMB, 16-JAN-07)
 
-
+- Removed addIfNotPresent boolean from lookupIndex in Alphabet since
+  it isn't used in MSTParser and it incurs an extra method call and
+  boolean check on a very common method. (JMB, 16-JAN-07)
 
 
 -----------------------------------------------------------------------

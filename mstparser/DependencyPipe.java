@@ -30,6 +30,7 @@ public class DependencyPipe {
     public DependencyPipe(boolean createForest, String format) throws IOException {
 	dataAlphabet = new Alphabet();
 	typeAlphabet = new Alphabet();
+
 	this.createForest = createForest;
 	this.format = format;
 	if (!format.equals("CONLL"))
@@ -161,14 +162,14 @@ public class DependencyPipe {
     public void closeAlphabets() {
 	dataAlphabet.stopGrowth();
 	typeAlphabet.stopGrowth();
-		
+
 	types = new String[typeAlphabet.size()];
 	Object[] keys = typeAlphabet.toArray();
 	for(int i = 0; i < keys.length; i++) {
 	    int indx = typeAlphabet.lookupIndex(keys[i]);
 	    types[indx] = (String)keys[i];
 	}
-				
+
 	KBestParseForest.rootType = typeAlphabet.lookupIndex("<root-type>");
     }
 

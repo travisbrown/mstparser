@@ -27,6 +27,8 @@ public class Alphabet implements Serializable
     public Alphabet (int capacity)
     {
 	this.map = new gnu.trove.TObjectIntHashMap (capacity);
+	//this.map.setDefaultValue(-1);
+
 	numEntries = 0;
     }
 
@@ -37,24 +39,29 @@ public class Alphabet implements Serializable
 
 	
     /** Return -1 if entry isn't present. */
-    public int lookupIndex (Object entry, boolean addIfNotPresent)
+    public int lookupIndex (Object entry)
     {
-	if (entry == null)
+	if (entry == null) {
 	    throw new IllegalArgumentException ("Can't lookup \"null\" in an Alphabet.");
+	}
+
 	int ret = map.get(entry);
-	if (ret == -1 && !growthStopped && addIfNotPresent) {
+
+	// Trove used to return -1 when a map didn't have an entry,
+	// now it returns 0. (The following line used to have the
+	// condition "ret == -1".) (JMB, 16-JAN-07)
+	//if (ret == 0 && !growthStopped && addIfNotPresent) {
+	if (ret == -1 && !growthStopped) {
 	    ret = numEntries;
 	    map.put (entry, ret);
 	    numEntries++;
 	}
+	
+	//System.out.println(entry + " :: " + ret);
+
 	return ret;
     }
 
-    public int lookupIndex (Object entry)
-    {
-	return lookupIndex (entry, true);
-    }
-	
     public Object[] toArray () {
 	return map.keys();
     }
@@ -94,12 +101,6 @@ public class Alphabet implements Serializable
     private void writeObject (ObjectOutputStream out) throws IOException {
 	out.writeInt (CURRENT_SERIAL_VERSION);
 	out.writeInt (numEntries);
-	/*
-	Object[] keys = map.keys();
-	for(int i = 0; i < keys.length; i++) {
-	    out.writeObject(keys[i]); out.writeInt(map.get(keys[i]));
-	}
-	*/
 	out.writeObject(map);
 	out.writeBoolean (growthStopped);
     }
@@ -107,12 +108,6 @@ public class Alphabet implements Serializable
     private void readObject (ObjectInputStream in) throws IOException, ClassNotFoundException {
 	int version = in.readInt ();
 	numEntries = in.readInt();
-	/*
-	map =  new gnu.trove.TObjectIntHashMap(numEntries);
-	for(int i = 0; i < keys.length; i++) {
-	    map.put(in.readObject(),in.readInt());
-	}
-	*/
 	map = (gnu.trove.TObjectIntHashMap)in.readObject();
 	growthStopped = in.readBoolean();
     }
