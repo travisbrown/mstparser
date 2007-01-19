@@ -204,14 +204,14 @@ public class DependencyPipe {
 	    int small = i < heads[i] ? i : heads[i];
 	    int large = i > heads[i] ? i : heads[i];
 	    boolean attR = i < heads[i] ? false : true;
-	    fv = addCoreFeatures(instance,small,large,attR,fv);
+	    addCoreFeatures(instance,small,large,attR,fv);
 	    if(labeled) {
-		fv = addLabeledFeatures(instance,i,labs[i],attR,true,fv);
-		fv = addLabeledFeatures(instance,heads[i],labs[i],attR,false,fv);
+		addLabeledFeatures(instance,i,labs[i],attR,true,fv);
+		addLabeledFeatures(instance,heads[i],labs[i],attR,false,fv);
 	    }
 	}
 
-	fv = addExtendedFeatures(instance, fv);
+	addExtendedFeatures(instance, fv);
 
 	return fv;
     }
@@ -245,9 +245,9 @@ public class DependencyPipe {
 		
 	String attDist = "&"+att+"&"+distBool;
 
-	fv = addLinearFeatures("WORD", forms, small, large, attDist, fv);
-	fv = addLinearFeatures("POS", pos, small, large, attDist, fv);
-	fv = addLinearFeatures("CPOS", posA, small, large, attDist, fv);
+	addLinearFeatures("WORD", forms, small, large, attDist, fv);
+	addLinearFeatures("POS", pos, small, large, attDist, fv);
+	addLinearFeatures("CPOS", posA, small, large, attDist, fv);
 		
 	//////////////////////////////////////////////////////////////////////
 	
@@ -258,76 +258,88 @@ public class DependencyPipe {
 	    childIndex = small;
 	}
 
-	fv = addTwoObsFeatures("HC", forms[headIndex], pos[headIndex], 
+	addTwoObsFeatures("HC", forms[headIndex], pos[headIndex], 
 				  forms[childIndex], pos[childIndex], attDist, fv);
 
 	if (isCONLL) {
 
-	    fv = addLinearFeatures("LEMMA", instance.lemmas, small, large, attDist, fv);
+	    addLinearFeatures("LEMMA", instance.lemmas, small, large, attDist, fv);
 
-	    fv = addTwoObsFeatures("HCA", forms[headIndex], posA[headIndex], 
-				      forms[childIndex], posA[childIndex], attDist, fv);
+	    addTwoObsFeatures("HCB", forms[headIndex], instance.lemmas[headIndex],
+			      forms[childIndex], instance.lemmas[childIndex], 
+			      attDist, fv);
 
-	    fv = addTwoObsFeatures("HCB", forms[headIndex], instance.lemmas[headIndex],
-				      forms[childIndex], instance.lemmas[childIndex], 
-				      attDist, fv);
+	    addTwoObsFeatures("HCA", forms[headIndex], posA[headIndex], 
+			      forms[childIndex], posA[childIndex], attDist, fv);
+	    
+	    addTwoObsFeatures("HCC", instance.lemmas[headIndex], pos[headIndex], 
+			      instance.lemmas[childIndex], pos[childIndex], 
+			      attDist, fv);
 
-	    fv = addTwoObsFeatures("HCC", instance.lemmas[headIndex], pos[headIndex], 
-				      instance.lemmas[childIndex], pos[childIndex], 
-				      attDist, fv);
+	    addTwoObsFeatures("HCD", instance.lemmas[headIndex], posA[headIndex], 
+			      instance.lemmas[childIndex], posA[childIndex], 
+			      attDist, fv);
 
-	    fv = addTwoObsFeatures("HCD", instance.lemmas[headIndex], posA[headIndex], 
-				      instance.lemmas[childIndex], posA[childIndex], 
-				      attDist, fv);
+	    addTwoObsFeatures("HCD", pos[headIndex], posA[headIndex], 
+			      pos[childIndex], posA[childIndex], 
+			      attDist, fv);
 
 	    // Test out relational features
 	    //for (int rf_index=0; rf_index<instance.relFeats.length; rf_index++) {
 	    //	String headToChild = "RF"+rf_index"+instance.relFeats[rf_index].getFeature(headIndex, childIndex);
-	    //	fv = add("H2C="+headToChild, fv);
-	    //	fv = add("RF-H2C-F="+forms[headIndex]+" "+forms[childIndex]+" "+headToChild, fv);
-	    //	fv = add("RF-H2C-L="+instance.lemmas[headIndex]+" "+instance.lemmas[childIndex]+" "+headToChild, fv);
-	    //	fv = add("RF-H2C-P="+pos[headIndex]+" "+pos[childIndex]+" "+headToChild, fv);
-	    //	fv = add("RF-H2C-PA="+posA[headIndex]+" "+posA[childIndex]+" "+headToChild, fv);
+	    //	add("H2C="+headToChild, fv);
+	    //	add("RF-H2C-F="+forms[headIndex]+" "+forms[childIndex]+" "+headToChild, fv);
+	    //	add("RF-H2C-L="+instance.lemmas[headIndex]+" "+instance.lemmas[childIndex]+" "+headToChild, fv);
+	    //	add("RF-H2C-P="+pos[headIndex]+" "+pos[childIndex]+" "+headToChild, fv);
+	    //	add("RF-H2C-PA="+posA[headIndex]+" "+posA[childIndex]+" "+headToChild, fv);
 	    //
 	    //}
 
 	    // Use this if your extra feature list has the same length
 	    // for all items.
 	    //
-	    for (int i=0; i<instance.feats[headIndex].length; i++) {
-	    	fv = addTwoObsFeatures("FF"+i, 
-	    				  instance.forms[headIndex], 
-	    				  instance.feats[headIndex][i],
-	    				  instance.forms[childIndex], 
-	    				  instance.feats[childIndex][i], 
-	    				  attDist, fv);
-	    	fv = addTwoObsFeatures("LF"+i, 
-	    				  instance.lemmas[headIndex], 
-	    				  instance.feats[headIndex][i],
-	    				  instance.lemmas[childIndex], 
-	    				  instance.feats[childIndex][i], 
-	    				  attDist, fv);
-	    	fv = addTwoObsFeatures("PF"+i, 
-	    				  pos[headIndex], 
-	    				  instance.feats[headIndex][i],
-	    				  pos[childIndex], 
-	    				  instance.feats[childIndex][i], 
-	    				  attDist, fv);
-	    	fv = addTwoObsFeatures("CPF"+i, 
-	    				  posA[headIndex], 
-	    				  instance.feats[headIndex][i],
-	    				  posA[childIndex], 
-	    				  instance.feats[childIndex][i], 
-	    				  attDist, fv);
+	    for (int i=0; i<instance.feats.length; i++) {
+		
+		addLinearFeatures("F"+i, instance.feats[i], small, large, attDist, fv);
+
+	    	addTwoObsFeatures("FF"+i, 
+				  instance.forms[headIndex], 
+				  instance.feats[i][headIndex],
+				  instance.forms[childIndex], 
+				  instance.feats[i][childIndex],
+				  attDist, fv);
 	    
-	    	for (int j=i+1; j<instance.feats[headIndex].length; j++) {
+	    	addTwoObsFeatures("LF"+i, 
+				  instance.lemmas[headIndex], 
+				  instance.feats[i][headIndex],
+				  instance.lemmas[childIndex], 
+				  instance.feats[i][childIndex],
+				  attDist, fv);
+
+	    	addTwoObsFeatures("PF"+i, 
+				  instance.postags[headIndex], 
+				  instance.feats[i][headIndex],
+				  instance.postags[childIndex], 
+				  instance.feats[i][childIndex],
+				  attDist, fv);
 	    
-	    	    fv = addTwoObsFeatures("CPF"+i, 
-	    				      instance.feats[headIndex][i],
-	    				      instance.feats[headIndex][j],
-	    				      instance.feats[childIndex][i], 
-	    				      instance.feats[childIndex][j], 
-	    				      attDist, fv);
+
+	    	addTwoObsFeatures("CPF"+i, 
+				  instance.cpostags[headIndex], 
+				  instance.feats[i][headIndex],
+				  instance.cpostags[childIndex], 
+				  instance.feats[i][childIndex],
+				  attDist, fv);
+	    
+
+	    	for (int j=i+1; j<instance.feats.length; j++) {
+	    
+	    	    addTwoObsFeatures("CPF"+i+"_"+j, 
+				      instance.feats[i][headIndex],
+				      instance.feats[j][headIndex],
+				      instance.feats[i][childIndex],
+				      instance.feats[j][childIndex],
+				      attDist, fv);
 	    	}
 	    }
 
@@ -337,13 +349,13 @@ public class DependencyPipe {
 	    //
 	    //for (int i=0; i<instance.feats[headIndex].length; i++) {
 	    //	for (int j=0; j<instance.feats[childIndex].length; j++) {
-	    //	    fv = addTwoObsFeatures("FF"+i+"*"+j, 
+	    //	    addTwoObsFeatures("FF"+i+"*"+j, 
 	    //				      instance.forms[headIndex], 
 	    //				      instance.feats[headIndex][i],
 	    //				      instance.forms[childIndex], 
 	    //				      instance.feats[childIndex][j], 
 	    //				      attDist, fv);
-	    //	    fv = addTwoObsFeatures("LF"+i+"*"+j, 
+	    //	    addTwoObsFeatures("LF"+i+"*"+j, 
 	    //				      instance.lemmas[headIndex], 
 	    //				      instance.feats[headIndex][i],
 	    //				      instance.lemmas[childIndex], 
@@ -359,7 +371,7 @@ public class DependencyPipe {
 	    int hL = forms[headIndex].length();
 	    int cL = forms[childIndex].length();
 	    if (hL > 5 || cL > 5) {
-		fv = addOldMSTStemFeatures(instance.lemmas[headIndex], pos[headIndex],
+		addOldMSTStemFeatures(instance.lemmas[headIndex], pos[headIndex],
 					   instance.lemmas[childIndex], pos[childIndex],
 					   attDist, hL, cL, fv);
 	    }
@@ -386,12 +398,12 @@ public class DependencyPipe {
 
 	for(int i = first+1; i < second; i++) {
 	    String allPos = featPos.toString() + ' ' + obsVals[i];
-	    fv = add(allPos, fv);
-	    fv = add(allPos+attachDistance, fv);
+	    add(allPos, fv);
+	    add(allPos+attachDistance, fv);
 
 	}
 
-	fv = addCorePosFeatures(type+"PT", pLeft, obsVals[first], pLeftRight, 
+	addCorePosFeatures(type+"PT", pLeft, obsVals[first], pLeftRight, 
 				pRightLeft, obsVals[second], pRight, attachDistance, fv);
 
 	return fv;
@@ -408,73 +420,73 @@ public class DependencyPipe {
 
 	// feature posL-1 posL posR posR+1
 
-	fv = add(prefix+"="+leftOf1+" "+one+" "+two+"*"+attachDistance, fv);
+	add(prefix+"="+leftOf1+" "+one+" "+two+"*"+attachDistance, fv);
 
 	StringBuilder feat = 
 	    new StringBuilder(prefix+"1="+leftOf1+" "+one+" "+two);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append(' ').append(rightOf2);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 
 	feat = new StringBuilder(prefix+"2="+leftOf1+" "+two+" "+rightOf2);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	
 	feat = new StringBuilder(prefix+"3="+leftOf1+" "+one+" "+rightOf2);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	
 	feat = new StringBuilder(prefix+"4="+one+" "+two+" "+rightOf2);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 
 	/////////////////////////////////////////////////////////////
 	prefix = "A"+prefix;
 
 	// feature posL posL+1 posR-1 posR
-	fv = add(prefix+"1="+one+" "+rightOf1+" "+leftOf2+"*"+attachDistance, fv);
+	add(prefix+"1="+one+" "+rightOf1+" "+leftOf2+"*"+attachDistance, fv);
 
 	feat = new StringBuilder(prefix+"1="+one+" "+rightOf1+" "+leftOf2);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append(' ').append(two);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 
 	feat = new StringBuilder(prefix+"2="+one+" "+rightOf1+" "+two);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	
 	feat = new StringBuilder(prefix+"3="+one+" "+leftOf2+" "+two);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	
 	feat = new StringBuilder(prefix+"4="+rightOf1+" "+leftOf2+" "+two);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 
 	///////////////////////////////////////////////////////////////
 	prefix = "B"+prefix;
 
 	//// feature posL-1 posL posR-1 posR
 	feat = new StringBuilder(prefix+"1="+leftOf1+" "+one+" "+leftOf2+" "+two);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 
 	//// feature posL posL+1 posR posR+1
 	feat = new StringBuilder(prefix+"2="+one+" "+rightOf1+" "+two+" "+rightOf2);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 
 	return fv;
 
@@ -498,70 +510,70 @@ public class DependencyPipe {
 						     FeatureVector fv) {
 
 	StringBuilder feat = new StringBuilder(prefix+"2FF1="+item1F1);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	
 	feat = new StringBuilder(prefix+"2FF1="+item1F1+" "+item1F2);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 
 	feat = new StringBuilder(prefix+"2FF1="+item1F1+" "+item1F2+" "+item2F2);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 
 	feat = new StringBuilder(prefix+"2FF1="+item1F1+" "+item1F2+" "+item2F2+" "+item2F1);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	
 	feat = new StringBuilder(prefix+"2FF2="+item1F1+" "+item2F1);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 
 	feat = new StringBuilder(prefix+"2FF3="+item1F1+" "+item2F2);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 
 
 	feat = new StringBuilder(prefix+"2FF4="+item1F2+" "+item2F1);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 
 	feat = new StringBuilder(prefix+"2FF4="+item1F2+" "+item2F1+" "+item2F2);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 
 	feat = new StringBuilder(prefix+"2FF5="+item1F2+" "+item2F2);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 
 	feat = new StringBuilder(prefix+"2FF6="+item2F1+" "+item2F2);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 
 	feat = new StringBuilder(prefix+"2FF7="+item1F2);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	
 	feat = new StringBuilder(prefix+"2FF8="+item2F1);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	
 	feat = new StringBuilder(prefix+"2FF9="+item2F2);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
-	fv = add(feat.toString(), fv);
+	add(feat.toString(), fv);
 	
 	return fv;
 
@@ -595,18 +607,18 @@ public class DependencyPipe {
 	String wPm1 = word > 0 ? pos[word-1] : "STR";
 	String wPp1 = word < pos.length-1 ? pos[word+1] : "END";
 
-	fv = add("NTS1="+type+"&"+att,fv);
-	fv = add("ANTS1="+type,fv);
+	add("NTS1="+type+"&"+att,fv);
+	add("ANTS1="+type,fv);
 	for(int i = 0; i < 2; i++) {
 	    String suff = i < 1 ? "&"+att : "";
 	    suff = "&"+type+suff;
 
-	    fv = add("NTH="+w+" "+wP+suff,fv);
-	    fv = add("NTI="+wP+suff,fv);
-	    fv = add("NTIA="+wPm1+" "+wP+suff,fv);
-	    fv = add("NTIB="+wP+" "+wPp1+suff,fv);
-	    fv = add("NTIC="+wPm1+" "+wP+" "+wPp1+suff,fv);
-	    fv = add("NTJ="+w+suff,fv); //this
+	    add("NTH="+w+" "+wP+suff,fv);
+	    add("NTI="+wP+suff,fv);
+	    add("NTIA="+wPm1+" "+wP+suff,fv);
+	    add("NTIB="+wP+" "+wPp1+suff,fv);
+	    add("NTIC="+wPm1+" "+wP+" "+wPp1+suff,fv);
+	    add("NTJ="+w+suff,fv); //this
 
 	}
 		
@@ -819,31 +831,31 @@ public class DependencyPipe {
 	String oPos = headP + " " + childP;
 	String oLex = hLemma + " " + cLemma;
 	
-	fv = add("SA="+all+attDist,fv); //this
-	fv = add("SF="+oLex+attDist,fv); //this
-	fv = add("SAA="+all,fv); //this
-	fv = add("SFF="+oLex,fv); //this
+	add("SA="+all+attDist,fv); //this
+	add("SF="+oLex+attDist,fv); //this
+	add("SAA="+all,fv); //this
+	add("SFF="+oLex,fv); //this
 	
 	if(cL > 5) {
-	    fv = add("SB="+hPos+attDist,fv);
-	    fv = add("SD="+hP+attDist,fv);
-	    fv = add("SK="+cLemma+" "+childP+attDist,fv);
-	    fv = add("SM="+cLemma+attDist,fv); //this
-	    fv = add("SBB="+hPos,fv);
-	    fv = add("SDD="+hP,fv);
-	    fv = add("SKK="+cLemma+" "+childP,fv);
-	    fv = add("SMM="+cLemma,fv); //this
+	    add("SB="+hPos+attDist,fv);
+	    add("SD="+hP+attDist,fv);
+	    add("SK="+cLemma+" "+childP+attDist,fv);
+	    add("SM="+cLemma+attDist,fv); //this
+	    add("SBB="+hPos,fv);
+	    add("SDD="+hP,fv);
+	    add("SKK="+cLemma+" "+childP,fv);
+	    add("SMM="+cLemma,fv); //this
 	}
 	if(hL > 5) {
-	    fv = add("SC="+cPos+attDist,fv);
-	    fv = add("SE="+cP+attDist,fv);
-	    fv = add("SH="+hLemma+" "+headP+attDist,fv);
-	    fv = add("SJ="+hLemma+attDist,fv); //this
+	    add("SC="+cPos+attDist,fv);
+	    add("SE="+cP+attDist,fv);
+	    add("SH="+hLemma+" "+headP+attDist,fv);
+	    add("SJ="+hLemma+attDist,fv); //this
 	    
-	    fv = add("SCC="+cPos,fv);
-	    fv = add("SEE="+cP,fv);
-	    fv = add("SHH="+hLemma+" "+headP,fv);
-	    fv = add("SJJ="+hLemma,fv); //this
+	    add("SCC="+cPos,fv);
+	    add("SEE="+cP,fv);
+	    add("SHH="+hLemma+" "+headP,fv);
+	    add("SJJ="+hLemma,fv); //this
 	}
 
 	return fv;

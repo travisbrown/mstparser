@@ -301,7 +301,7 @@ public class DependencyParser {
 
 	    System.out.print("\tLoading model...");
 	    dp.loadModel(modelName);
-	    System.out.print("done.");
+	    System.out.println("done.");
 
 	    pipe.closeAlphabets();
 
