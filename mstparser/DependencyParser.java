@@ -43,24 +43,25 @@ public class DependencyParser {
     public void train(int[] instanceLengths, String trainfile, String train_forest) 
 	throws IOException {
 		
-	System.out.println("About to train");
-	System.out.println("Num Feats: " + pipe.dataAlphabet.size());
+	//System.out.print("About to train. ");
+	//System.out.print("Num Feats: " + pipe.dataAlphabet.size());
 		
 	int i = 0;
 	for(i = 0; i < numIters; i++) {
 			
-	    System.out.println("========================");
-	    System.out.println("Iteration: " + i);
-	    System.out.println("========================");
-	    System.out.print("Processed: ");
+	    System.out.print(" Iteration "+i);
+	    //System.out.println("========================");
+	    //System.out.println("Iteration: " + i);
+	    //System.out.println("========================");
+	    System.out.print("[");
 
 	    long start = System.currentTimeMillis();
 
 	    trainingIter(instanceLengths,trainfile,train_forest,i+1);
 
 	    long end = System.currentTimeMillis();
-	    System.out.println("Training iter took: " + (end-start));
-			
+	    //System.out.println("Training iter took: " + (end-start));
+	    System.out.println("|Time:"+(end-start)+"]");			
 	}
 
 	params.averageParams(i*instanceLengths.length);
@@ -77,8 +78,10 @@ public class DependencyParser {
 	int numInstances = instanceLengths.length;
 
 	for(int i = 0; i < numInstances; i++) {
-	    if((i+1) % 500 == 0)
-		System.out.println("  "+(i+1)+" instances");
+	    if((i+1) % 500 == 0) {
+		System.out.print((i+1)+",");
+		//System.out.println("  "+(i+1)+" instances");
+	    }
 
 	    int length = instanceLengths[i];
 
@@ -128,9 +131,11 @@ public class DependencyParser {
 	    params.updateParamsMIRA(inst,d,upd);
 
 	}
-	System.out.println("");
-	
-	System.out.println("  "+numInstances+" instances");
+
+	//System.out.println("");	
+	//System.out.println("  "+numInstances+" instances");
+
+	System.out.print(numInstances);
 		
 	in.close();
 
@@ -278,14 +283,14 @@ public class DependencyParser {
 	    
 	    int numFeats = pipe.dataAlphabet.size();
 	    int numTypes = pipe.typeAlphabet.size();
-	    System.out.println("Num Feats: " + numFeats);	
-	    System.out.println("Num Edge Labels: " + numTypes);
+	    System.out.print("Num Feats: " + numFeats);	
+	    System.out.println(".\tNum Edge Labels: " + numTypes);
 	    
 	    dp.train(instanceLengths,trainfile,trainforest);
 	    
-	    System.out.print("Saving model ... ");
+	    System.out.print("Saving model...");
 	    dp.saveModel(modelName);
-	    System.out.println("done.");
+	    System.out.print("done.");
 	    
 	}
 		
@@ -294,15 +299,17 @@ public class DependencyParser {
 
 	    DependencyParser dp = new DependencyParser(pipe);
 
-	    System.out.println("\nLoading model ... ");
+	    System.out.print("\tLoading model...");
 	    dp.loadModel(modelName);
-	    System.out.println("done.");
+	    System.out.print("done.");
 
 	    pipe.closeAlphabets();
 
 	    dp.outputParses(testfile,outfile);
 	}
 		
+	System.out.println();
+
 	if(eval) {
 	    System.out.println("\nEVALUATION PERFORMANCE:");
 	    DependencyEvaluator.evaluate(goldfile, outfile, format);

@@ -179,7 +179,6 @@ public class DependencyPipe {
 	int num = dataAlphabet.lookupIndex(feat);
 	if(num >= 0)
 	    fv.add(num, 1.0);
-	//fv = new FeatureVector(num, 1.0, fv);
 	return fv;
     }
 
@@ -187,7 +186,6 @@ public class DependencyPipe {
 	int num = dataAlphabet.lookupIndex(feat);
 	if(num >= 0)
 	    fv.add(num, val);
-	    //fv = new FeatureVector(num, val, fv);
 	return fv;
     }
 
@@ -283,76 +281,76 @@ public class DependencyPipe {
 				      attDist, fv);
 
 	    // Test out relational features
-	    for (int rf_index=0; rf_index<instance.relFeats.length; rf_index++) {
-		String headToChild = instance.relFeats[rf_index].getFeature(headIndex, childIndex);
-		fv = add("H2C="+headToChild, fv);
-		fv = add("RF-H2C-F="+forms[headIndex]+" "+forms[childIndex]+" "+headToChild, fv);
-		fv = add("RF-H2C-L="+instance.lemmas[headIndex]+" "+instance.lemmas[childIndex]+" "+headToChild, fv);
-		fv = add("RF-H2C-P="+pos[headIndex]+" "+pos[childIndex]+" "+headToChild, fv);
-		fv = add("RF-H2C-PA="+posA[headIndex]+" "+posA[childIndex]+" "+headToChild, fv);
-
-	    }
+	    //for (int rf_index=0; rf_index<instance.relFeats.length; rf_index++) {
+	    //	String headToChild = "RF"+rf_index"+instance.relFeats[rf_index].getFeature(headIndex, childIndex);
+	    //	fv = add("H2C="+headToChild, fv);
+	    //	fv = add("RF-H2C-F="+forms[headIndex]+" "+forms[childIndex]+" "+headToChild, fv);
+	    //	fv = add("RF-H2C-L="+instance.lemmas[headIndex]+" "+instance.lemmas[childIndex]+" "+headToChild, fv);
+	    //	fv = add("RF-H2C-P="+pos[headIndex]+" "+pos[childIndex]+" "+headToChild, fv);
+	    //	fv = add("RF-H2C-PA="+posA[headIndex]+" "+posA[childIndex]+" "+headToChild, fv);
+	    //
+	    //}
 
 	    // Use this if your extra feature list has the same length
 	    // for all items.
 	    //
-	    //for (int i=0; i<instance.feats[headIndex].length; i++) {
-	    //	fv = addTwoObsFeatures("FF"+i, 
-	    //				  instance.forms[headIndex], 
-	    //				  instance.feats[headIndex][i],
-	    //				  instance.forms[childIndex], 
-	    //				  instance.feats[childIndex][i], 
-	    //				  attDist, fv);
-	    //	fv = addTwoObsFeatures("LF"+i, 
-	    //				  instance.lemmas[headIndex], 
-	    //				  instance.feats[headIndex][i],
-	    //				  instance.lemmas[childIndex], 
-	    //				  instance.feats[childIndex][i], 
-	    //				  attDist, fv);
-	    //	fv = addTwoObsFeatures("PF"+i, 
-	    //				  pos[headIndex], 
-	    //				  instance.feats[headIndex][i],
-	    //				  pos[childIndex], 
-	    //				  instance.feats[childIndex][i], 
-	    //				  attDist, fv);
-	    //	fv = addTwoObsFeatures("CPF"+i, 
-	    //				  posA[headIndex], 
-	    //				  instance.feats[headIndex][i],
-	    //				  posA[childIndex], 
-	    //				  instance.feats[childIndex][i], 
-	    //				  attDist, fv);
-	    //
-	    //	for (int j=i+1; j<instance.feats[headIndex].length; j++) {
-	    //
-	    //	    fv = addTwoObsFeatures("CPF"+i, 
-	    //				      instance.feats[headIndex][i],
-	    //				      instance.feats[headIndex][j],
-	    //				      instance.feats[childIndex][i], 
-	    //				      instance.feats[childIndex][j], 
-	    //				      attDist, fv);
-	    //	}
-	    //}
+	    for (int i=0; i<instance.feats[headIndex].length; i++) {
+	    	fv = addTwoObsFeatures("FF"+i, 
+	    				  instance.forms[headIndex], 
+	    				  instance.feats[headIndex][i],
+	    				  instance.forms[childIndex], 
+	    				  instance.feats[childIndex][i], 
+	    				  attDist, fv);
+	    	fv = addTwoObsFeatures("LF"+i, 
+	    				  instance.lemmas[headIndex], 
+	    				  instance.feats[headIndex][i],
+	    				  instance.lemmas[childIndex], 
+	    				  instance.feats[childIndex][i], 
+	    				  attDist, fv);
+	    	fv = addTwoObsFeatures("PF"+i, 
+	    				  pos[headIndex], 
+	    				  instance.feats[headIndex][i],
+	    				  pos[childIndex], 
+	    				  instance.feats[childIndex][i], 
+	    				  attDist, fv);
+	    	fv = addTwoObsFeatures("CPF"+i, 
+	    				  posA[headIndex], 
+	    				  instance.feats[headIndex][i],
+	    				  posA[childIndex], 
+	    				  instance.feats[childIndex][i], 
+	    				  attDist, fv);
+	    
+	    	for (int j=i+1; j<instance.feats[headIndex].length; j++) {
+	    
+	    	    fv = addTwoObsFeatures("CPF"+i, 
+	    				      instance.feats[headIndex][i],
+	    				      instance.feats[headIndex][j],
+	    				      instance.feats[childIndex][i], 
+	    				      instance.feats[childIndex][j], 
+	    				      attDist, fv);
+	    	}
+	    }
 
 	    // Use this if your extra feature lists can have different
 	    // lengths for each item. For example, nouns might have a
 	    // different number of morphological features than verbs.
 	    //
-	    for (int i=0; i<instance.feats[headIndex].length; i++) {
-	    	for (int j=0; j<instance.feats[childIndex].length; j++) {
-	    	    fv = addTwoObsFeatures("FF"+i+"*"+j, 
-	    				      instance.forms[headIndex], 
-	    				      instance.feats[headIndex][i],
-	    				      instance.forms[childIndex], 
-	    				      instance.feats[childIndex][j], 
-	    				      attDist, fv);
-	    	    fv = addTwoObsFeatures("LF"+i+"*"+j, 
-	    				      instance.lemmas[headIndex], 
-	    				      instance.feats[headIndex][i],
-	    				      instance.lemmas[childIndex], 
-	    				      instance.feats[childIndex][j], 
-	    				      attDist, fv);
-	    	}
-	    }
+	    //for (int i=0; i<instance.feats[headIndex].length; i++) {
+	    //	for (int j=0; j<instance.feats[childIndex].length; j++) {
+	    //	    fv = addTwoObsFeatures("FF"+i+"*"+j, 
+	    //				      instance.forms[headIndex], 
+	    //				      instance.feats[headIndex][i],
+	    //				      instance.forms[childIndex], 
+	    //				      instance.feats[childIndex][j], 
+	    //				      attDist, fv);
+	    //	    fv = addTwoObsFeatures("LF"+i+"*"+j, 
+	    //				      instance.lemmas[headIndex], 
+	    //				      instance.feats[headIndex][i],
+	    //				      instance.lemmas[childIndex], 
+	    //				      instance.feats[childIndex][j], 
+	    //				      attDist, fv);
+	    //	}
+	    //}
 
 	} else {
 	    // Pick up stem features the way they used to be done. This
@@ -377,6 +375,7 @@ public class DependencyPipe {
 						  FeatureVector fv) {
 	
 	String pLeft = first > 0 ? obsVals[first-1] : "STR";
+	//System.out.println(type+" : "+ first + " : " + second + " : " + Arrays.toString(obsVals));
 	String pRight = second < obsVals.length-1 ? obsVals[second+1] : "END";
 	String pLeftRight = first < second-1 ? obsVals[first+1] : "MID";
 	String pRightLeft = second > first+1 ? obsVals[second-1] : "MID";
