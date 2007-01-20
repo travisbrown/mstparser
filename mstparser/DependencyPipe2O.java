@@ -16,8 +16,8 @@ public class DependencyPipe2O extends DependencyPipe {
     }
 
 			
-    protected FeatureVector addExtendedFeatures(DependencyInstance instance,
-						FeatureVector fv) {
+    protected void addExtendedFeatures(DependencyInstance instance,
+				       FeatureVector fv) {
 	    
 	final int instanceLength = instance.length();
 	int[] heads = instance.heads;
@@ -29,22 +29,20 @@ public class DependencyPipe2O extends DependencyPipe {
 	    int prev = i;
 	    for(int j = i+1; j < instanceLength; j++) {
 		if(heads[j] == i) {
-		    fv = addTripFeatures(instance,i,prev,j,fv);
-		    fv = addSiblingFeatures(instance,prev,j,prev==i,fv);
+		    addTripFeatures(instance,i,prev,j,fv);
+		    addSiblingFeatures(instance,prev,j,prev==i,fv);
 		    prev = j;
 		}
 	    }
 	    prev = i;
 	    for(int j = i-1; j >= 0; j--) {
 		if(heads[j] == i) {
-		    fv = addTripFeatures(instance,i,prev,j,fv);
-		    fv = addSiblingFeatures(instance,prev,j,prev==i,fv);
+		    addTripFeatures(instance,i,prev,j,fv);
+		    addSiblingFeatures(instance,prev,j,prev==i,fv);
 		    prev = j;
 		}
 	    }
 	}
-		
-	return fv;
     }
 
     public void fillFeatureVectors(DependencyInstance instance,
@@ -64,8 +62,8 @@ public class DependencyPipe2O extends DependencyPipe {
 	for(int w1 = 0; w1 < instanceLength; w1++) {
 	    for(int w2 = w1; w2 < instanceLength; w2++) {
 		for(int w3 = w2+1; w3 < instanceLength; w3++) {
-		    FeatureVector prodFV = addTripFeatures(instance,w1,w2,w3,
-							   new FeatureVector());
+		    FeatureVector prodFV = new FeatureVector();
+		    addTripFeatures(instance,w1,w2,w3,prodFV);
 		    double prodProb = params.getScore(prodFV);
 		    fvs_trips[w1][w2][w3] = prodFV;
 		    probs_trips[w1][w2][w3] = prodProb;
@@ -73,8 +71,8 @@ public class DependencyPipe2O extends DependencyPipe {
 	    }
 	    for(int w2 = w1; w2 >= 0; w2--) {
 		for(int w3 = w2-1; w3 >= 0; w3--) {
-		    FeatureVector prodFV = addTripFeatures(instance,w1,w2,w3,
-							   new FeatureVector());
+		    FeatureVector prodFV = new FeatureVector();
+		    addTripFeatures(instance,w1,w2,w3,prodFV);
 		    double prodProb = params.getScore(prodFV);
 		    fvs_trips[w1][w2][w3] = prodFV;
 		    probs_trips[w1][w2][w3] = prodProb;
@@ -86,8 +84,8 @@ public class DependencyPipe2O extends DependencyPipe {
 	    for(int w2 = 0; w2 < instanceLength; w2++) {
 		for(int wh = 0; wh < 2; wh++) {
 		    if(w1 != w2) {
-			FeatureVector prodFV = addSiblingFeatures(instance,w1,w2,wh == 0,
-								  new FeatureVector());
+			FeatureVector prodFV = new FeatureVector();
+			addSiblingFeatures(instance,w1,w2,wh == 0,prodFV);
 			double prodProb = params.getScore(prodFV);
 			fvs_sibs[w1][w2][wh] = prodFV;
 			probs_sibs[w1][w2][wh] = prodProb;
@@ -98,10 +96,10 @@ public class DependencyPipe2O extends DependencyPipe {
     }
 
 
-    private final FeatureVector addSiblingFeatures(DependencyInstance instance,
-						   int ch1, int ch2,
-						   boolean isST,
-						   FeatureVector fv) {
+    private final void addSiblingFeatures(DependencyInstance instance,
+					  int ch1, int ch2,
+					  boolean isST,
+					  FeatureVector fv) {
 
 	String[] forms = instance.forms;
 	String[] pos = instance.postags;
@@ -114,14 +112,14 @@ public class DependencyPipe2O extends DependencyPipe {
 	String ch1_word = isST ? "STWRD" : forms[ch1];
 	String ch2_word = forms[ch2];
 
-	fv = add("CH_PAIR="+ch1_pos+"_"+ch2_pos+"_"+dir,1.0,fv);
-	fv = add("CH_WPAIR="+ch1_word+"_"+ch2_word+"_"+dir,1.0,fv);
-	fv = add("CH_WPAIRA="+ch1_word+"_"+ch2_pos+"_"+dir,1.0,fv);
-	fv = add("CH_WPAIRB="+ch1_pos+"_"+ch2_word+"_"+dir,1.0,fv);
-	fv = add("ACH_PAIR="+ch1_pos+"_"+ch2_pos,1.0,fv);
-	fv = add("ACH_WPAIR="+ch1_word+"_"+ch2_word,1.0,fv);
-	fv = add("ACH_WPAIRA="+ch1_word+"_"+ch2_pos,1.0,fv);
-	fv = add("ACH_WPAIRB="+ch1_pos+"_"+ch2_word,1.0,fv);
+	add("CH_PAIR="+ch1_pos+"_"+ch2_pos+"_"+dir,1.0,fv);
+	add("CH_WPAIR="+ch1_word+"_"+ch2_word+"_"+dir,1.0,fv);
+	add("CH_WPAIRA="+ch1_word+"_"+ch2_pos+"_"+dir,1.0,fv);
+	add("CH_WPAIRB="+ch1_pos+"_"+ch2_word+"_"+dir,1.0,fv);
+	add("ACH_PAIR="+ch1_pos+"_"+ch2_pos,1.0,fv);
+	add("ACH_WPAIR="+ch1_word+"_"+ch2_word,1.0,fv);
+	add("ACH_WPAIRA="+ch1_word+"_"+ch2_pos,1.0,fv);
+	add("ACH_WPAIRB="+ch1_pos+"_"+ch2_word,1.0,fv);
 
 	int dist = Math.max(ch1,ch2)-Math.min(ch1,ch2);
 	String distBool = "0";
@@ -137,20 +135,18 @@ public class DependencyPipe2O extends DependencyPipe {
 	    distBool = "5";
 	if(dist > 10)
 	    distBool = "10";		
-	fv = add("SIB_PAIR_DIST="+distBool+"_"+dir,1.0,fv);
-	fv = add("ASIB_PAIR_DIST="+distBool,1.0,fv);
-	fv = add("CH_PAIR_DIST="+ch1_pos+"_"+ch2_pos+"_"+distBool+"_"+dir,1.0,fv);
-	fv = add("ACH_PAIR_DIST="+ch1_pos+"_"+ch2_pos+"_"+distBool,1.0,fv);
+	add("SIB_PAIR_DIST="+distBool+"_"+dir,1.0,fv);
+	add("ASIB_PAIR_DIST="+distBool,1.0,fv);
+	add("CH_PAIR_DIST="+ch1_pos+"_"+ch2_pos+"_"+distBool+"_"+dir,1.0,fv);
+	add("ACH_PAIR_DIST="+ch1_pos+"_"+ch2_pos+"_"+distBool,1.0,fv);
 				
-		
-	return fv;
     }
 
 
-    private final FeatureVector addTripFeatures(DependencyInstance instance,
-					 int par,
-					 int ch1, int ch2,
-					 FeatureVector fv) {
+    private final void addTripFeatures(DependencyInstance instance,
+				       int par,
+				       int ch1, int ch2,
+				       FeatureVector fv) {
 
 	String[] pos = instance.postags;
 		
@@ -162,10 +158,9 @@ public class DependencyPipe2O extends DependencyPipe {
 	String ch2_pos = pos[ch2];
 
 	String pTrip = par_pos+"_"+ch1_pos+"_"+ch2_pos;
-	fv = add("POS_TRIP="+pTrip+"_"+dir,1.0,fv);
-	fv = add("APOS_TRIP="+pTrip,1.0,fv);
+	add("POS_TRIP="+pTrip+"_"+dir,1.0,fv);
+	add("APOS_TRIP="+pTrip,1.0,fv);
 		
-	return fv;
     }
 	
 
@@ -182,15 +177,15 @@ public class DependencyPipe2O extends DependencyPipe {
 	for(int w1 = 0; w1 < instanceLength; w1++) {
 	    for(int w2 = w1; w2 < instanceLength; w2++) {
 		for(int w3 = w2+1; w3 < instanceLength; w3++) {
-		    FeatureVector prodFV = addTripFeatures(instance,w1,w2,w3,
-							   new FeatureVector());
+		    FeatureVector prodFV = new FeatureVector();
+		    addTripFeatures(instance,w1,w2,w3,prodFV);
 		    out.writeObject(prodFV.keys());
 		}
 	    }
 	    for(int w2 = w1; w2 >= 0; w2--) {
 		for(int w3 = w2-1; w3 >= 0; w3--) {
-		    FeatureVector prodFV = addTripFeatures(instance,w1,w2,w3,
-							   new FeatureVector());
+		    FeatureVector prodFV = new FeatureVector();
+		    addTripFeatures(instance,w1,w2,w3,prodFV);
 		    out.writeObject(prodFV.keys());
 		}
 	    }
@@ -202,8 +197,8 @@ public class DependencyPipe2O extends DependencyPipe {
 	    for(int w2 = 0; w2 < instanceLength; w2++) {
 		for(int wh = 0; wh < 2; wh++) {
 		    if(w1 != w2) {
-			FeatureVector prodFV = addSiblingFeatures(instance,w1,w2,wh == 0,
-								  new FeatureVector());
+			FeatureVector prodFV = new FeatureVector();
+			addSiblingFeatures(instance,w1,w2,wh == 0,prodFV);
 			out.writeObject(prodFV.keys());
 		    }
 		}

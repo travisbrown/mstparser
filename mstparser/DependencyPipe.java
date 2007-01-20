@@ -175,18 +175,16 @@ public class DependencyPipe {
 
 
     // add with default 1.0
-    public final FeatureVector add(String feat, FeatureVector fv) {
+    public final void add(String feat, FeatureVector fv) {
 	int num = dataAlphabet.lookupIndex(feat);
 	if(num >= 0)
 	    fv.add(num, 1.0);
-	return fv;
     }
 
-    public final FeatureVector add(String feat, double val, FeatureVector fv) {
+    public final void add(String feat, double val, FeatureVector fv) {
 	int num = dataAlphabet.lookupIndex(feat);
 	if(num >= 0)
 	    fv.add(num, val);
-	return fv;
     }
 
 	
@@ -216,17 +214,15 @@ public class DependencyPipe {
 	return fv;
     }
 
-    protected FeatureVector addExtendedFeatures(DependencyInstance instance, 
-						FeatureVector fv) {
-	return fv;
-    }
+    protected void addExtendedFeatures(DependencyInstance instance, 
+				       FeatureVector fv) {}
 
 
-    public FeatureVector addCoreFeatures(DependencyInstance instance,
-					 int small,
-					 int large,
-					 boolean attR,
-					 FeatureVector fv) {
+    public void addCoreFeatures(DependencyInstance instance,
+				int small,
+				int large,
+				boolean attR,
+				FeatureVector fv) {
 
 	String[] forms = instance.forms;
 	String[] pos = instance.postags;
@@ -262,42 +258,25 @@ public class DependencyPipe {
 				  forms[childIndex], pos[childIndex], attDist, fv);
 
 	if (isCONLL) {
-
 	    addLinearFeatures("LEMMA", instance.lemmas, small, large, attDist, fv);
+	    addTwoObsFeatures("HCA", forms[headIndex], posA[headIndex], 
+				      forms[childIndex], posA[childIndex], attDist, fv);
 
 	    addTwoObsFeatures("HCB", forms[headIndex], instance.lemmas[headIndex],
-			      forms[childIndex], instance.lemmas[childIndex], 
-			      attDist, fv);
+				      forms[childIndex], instance.lemmas[childIndex], 
+				      attDist, fv);
 
-	    addTwoObsFeatures("HCA", forms[headIndex], posA[headIndex], 
-			      forms[childIndex], posA[childIndex], attDist, fv);
-	    
 	    addTwoObsFeatures("HCC", instance.lemmas[headIndex], pos[headIndex], 
-			      instance.lemmas[childIndex], pos[childIndex], 
-			      attDist, fv);
+				      instance.lemmas[childIndex], pos[childIndex], 
+				      attDist, fv);
 
 	    addTwoObsFeatures("HCD", instance.lemmas[headIndex], posA[headIndex], 
-			      instance.lemmas[childIndex], posA[childIndex], 
-			      attDist, fv);
-
-	    addTwoObsFeatures("HCD", pos[headIndex], posA[headIndex], 
-			      pos[childIndex], posA[childIndex], 
-			      attDist, fv);
+				      instance.lemmas[childIndex], posA[childIndex], 
+				      attDist, fv);
 
 	    // Test out relational features
-	    //for (int rf_index=0; rf_index<instance.relFeats.length; rf_index++) {
-	    //	String headToChild = "RF"+rf_index"+instance.relFeats[rf_index].getFeature(headIndex, childIndex);
-	    //	add("H2C="+headToChild, fv);
-	    //	add("RF-H2C-F="+forms[headIndex]+" "+forms[childIndex]+" "+headToChild, fv);
-	    //	add("RF-H2C-L="+instance.lemmas[headIndex]+" "+instance.lemmas[childIndex]+" "+headToChild, fv);
-	    //	add("RF-H2C-P="+pos[headIndex]+" "+pos[childIndex]+" "+headToChild, fv);
-	    //	add("RF-H2C-PA="+posA[headIndex]+" "+posA[childIndex]+" "+headToChild, fv);
-	    //
-	    //}
-
-	    // Use this if your extra feature list has the same length
-	    // for all items.
-	    //
+	    //for (int rf_index=0; rf_index<instance.relFeats.length; rf_index++)
+	    //add(instance.relFeats[rf_index].getFeature(headIndex, childIndex), fv);
 	    for (int i=0; i<instance.feats.length; i++) {
 		
 		addLinearFeatures("F"+i, instance.feats[i], small, large, attDist, fv);
@@ -332,15 +311,16 @@ public class DependencyPipe {
 				  attDist, fv);
 	    
 
-	    	for (int j=i+1; j<instance.feats.length; j++) {
-	    
-	    	    addTwoObsFeatures("CPF"+i+"_"+j, 
-				      instance.feats[i][headIndex],
-				      instance.feats[j][headIndex],
-				      instance.feats[i][childIndex],
-				      instance.feats[j][childIndex],
-				      attDist, fv);
-	    	}
+	    	//for (int j=i+1; j<instance.feats.length; j++) {
+	    	//
+	    	//    addTwoObsFeatures("CPF"+i+"_"+j, 
+		//		      instance.feats[i][headIndex],
+		//		      instance.feats[j][headIndex],
+		//		      instance.feats[i][childIndex],
+		//		      instance.feats[j][childIndex],
+		//		      attDist, fv);
+	    	//}
+
 	    }
 
 	    // Use this if your extra feature lists can have different
@@ -350,17 +330,18 @@ public class DependencyPipe {
 	    //for (int i=0; i<instance.feats[headIndex].length; i++) {
 	    //	for (int j=0; j<instance.feats[childIndex].length; j++) {
 	    //	    addTwoObsFeatures("FF"+i+"*"+j, 
-	    //				      instance.forms[headIndex], 
-	    //				      instance.feats[headIndex][i],
-	    //				      instance.forms[childIndex], 
-	    //				      instance.feats[childIndex][j], 
-	    //				      attDist, fv);
+	    //			      instance.forms[headIndex], 
+	    //			      instance.feats[headIndex][i],
+	    //			      instance.forms[childIndex], 
+	    //			      instance.feats[childIndex][j], 
+	    //			      attDist, fv);
+	    //
 	    //	    addTwoObsFeatures("LF"+i+"*"+j, 
-	    //				      instance.lemmas[headIndex], 
-	    //				      instance.feats[headIndex][i],
-	    //				      instance.lemmas[childIndex], 
-	    //				      instance.feats[childIndex][j], 
-	    //				      attDist, fv);
+	    //			      instance.lemmas[headIndex], 
+	    //			      instance.feats[headIndex][i],
+	    //			      instance.lemmas[childIndex], 
+	    //			      instance.feats[childIndex][j], 
+	    //			      attDist, fv);
 	    //	}
 	    //}
 
@@ -371,23 +352,22 @@ public class DependencyPipe {
 	    int hL = forms[headIndex].length();
 	    int cL = forms[childIndex].length();
 	    if (hL > 5 || cL > 5) {
-		addOldMSTStemFeatures(instance.lemmas[headIndex], pos[headIndex],
-					   instance.lemmas[childIndex], pos[childIndex],
-					   attDist, hL, cL, fv);
+		addOldMSTStemFeatures(instance.lemmas[headIndex], 
+				      pos[headIndex],
+				      instance.lemmas[childIndex], 
+				      pos[childIndex],
+				      attDist, hL, cL, fv);
 	    }
 	}				       
 		
-	return fv;
-		
     }
  
-    private final FeatureVector addLinearFeatures(String type, String[] obsVals, 
-						  int first, int second,
-						  String attachDistance,
-						  FeatureVector fv) {
+    private final void addLinearFeatures(String type, String[] obsVals, 
+					 int first, int second,
+					 String attachDistance,
+					 FeatureVector fv) {
 	
 	String pLeft = first > 0 ? obsVals[first-1] : "STR";
-	//System.out.println(type+" : "+ first + " : " + second + " : " + Arrays.toString(obsVals));
 	String pRight = second < obsVals.length-1 ? obsVals[second+1] : "END";
 	String pLeftRight = first < second-1 ? obsVals[first+1] : "MID";
 	String pRightLeft = second > first+1 ? obsVals[second-1] : "MID";
@@ -406,12 +386,10 @@ public class DependencyPipe {
 	addCorePosFeatures(type+"PT", pLeft, obsVals[first], pLeftRight, 
 				pRightLeft, obsVals[second], pRight, attachDistance, fv);
 
-	return fv;
-
     }
 
 
-    private final FeatureVector 
+    private final void 
 	addCorePosFeatures(String prefix,
 			   String leftOf1, String one, String rightOf1, 
 			   String leftOf2, String two, String rightOf2, 
@@ -488,8 +466,6 @@ public class DependencyPipe {
 	feat.append('*').append(attachDistance);
 	add(feat.toString(), fv);
 
-	return fv;
-
     }
 
 
@@ -503,11 +479,11 @@ public class DependencyPipe {
      * add other features more easily based on other items and
      * observations.)
      **/
-    private final FeatureVector addTwoObsFeatures(String prefix, 
-						     String item1F1, String item1F2, 
-						     String item2F1, String item2F2, 
-						     String attachDistance,
-						     FeatureVector fv) {
+    private final void addTwoObsFeatures(String prefix, 
+					 String item1F1, String item1F2, 
+					 String item2F1, String item2F2, 
+					 String attachDistance,
+					 FeatureVector fv) {
 
 	StringBuilder feat = new StringBuilder(prefix+"2FF1="+item1F1);
 	add(feat.toString(), fv);
@@ -575,20 +551,17 @@ public class DependencyPipe {
 	feat.append('*').append(attachDistance);
 	add(feat.toString(), fv);
 	
-	return fv;
-
     }
 
-
-	
-    public FeatureVector addLabeledFeatures(DependencyInstance instance,
-					    int word,
-					    String type,
-					    boolean attR,
-					    boolean childFeatures,
-					    FeatureVector fv) {
+    public void addLabeledFeatures(DependencyInstance instance,
+				   int word,
+				   String type,
+				   boolean attR,
+				   boolean childFeatures,
+				   FeatureVector fv) {
 		
-	if(!labeled) return fv;
+	if(!labeled) 
+	    return;
 
 	String[] forms = instance.forms;
 	String[] pos = instance.postags;
@@ -622,7 +595,6 @@ public class DependencyPipe {
 
 	}
 		
-	return fv;
     }
 
 
@@ -643,8 +615,9 @@ public class DependencyPipe {
 		    int childInt = attR ? w2 : w1;
 		    int parInt = attR ? w1 : w2;
 		    
-		    FeatureVector prodFV = addCoreFeatures(instance,w1,w2,attR,
-							   new FeatureVector());
+		    FeatureVector prodFV = new FeatureVector();
+		    addCoreFeatures(instance,w1,w2,attR, prodFV)
+;
 		    double prodProb = params.getScore(prodFV);
 		    fvs[w1][w2][ph] = prodFV;
 		    probs[w1][w2][ph] = prodProb;
@@ -656,13 +629,16 @@ public class DependencyPipe {
 	    for(int w1 = 0; w1 < instanceLength; w1++) {
 		for(int t = 0; t < types.length; t++) {
 		    String type = types[t];
-		    for(int ph = 0; ph < 2; ph++) {						
+		    for(int ph = 0; ph < 2; ph++) {
+
 			boolean attR = ph == 0 ? true : false;
-			for(int ch = 0; ch < 2; ch++) {						
-			    boolean child = ch == 0 ? true : false;			    
-			    FeatureVector prodFV = addLabeledFeatures(instance,w1,
-								      type,attR,child,
-								      new FeatureVector());
+			for(int ch = 0; ch < 2; ch++) {
+
+			    boolean child = ch == 0 ? true : false;
+
+			    FeatureVector prodFV = new FeatureVector();
+			    addLabeledFeatures(instance,w1,
+					       type,attR,child, prodFV);
 			    
 			    double nt_prob = params.getScore(prodFV);
 			    nt_fvs[w1][t][ph][ch] = prodFV;
@@ -688,10 +664,10 @@ public class DependencyPipe {
 
 	    for(int w1 = 0; w1 < instanceLength; w1++) {
 		for(int w2 = w1+1; w2 < instanceLength; w2++) {
-		    for(int ph = 0; ph < 2; ph++) {						
+		    for(int ph = 0; ph < 2; ph++) {
 			boolean attR = ph == 0 ? true : false;
-			FeatureVector prodFV = addCoreFeatures(instance,w1,w2,attR,
-							       new FeatureVector());
+			FeatureVector prodFV = new FeatureVector();
+			addCoreFeatures(instance,w1,w2,attR,prodFV);
 			out.writeObject(prodFV.keys());
 		    }
 		}
@@ -706,11 +682,9 @@ public class DependencyPipe {
 			    boolean attR = ph == 0 ? true : false;
 			    for(int ch = 0; ch < 2; ch++) {
 				boolean child = ch == 0 ? true : false;
-				FeatureVector prodFV = 
-				    addLabeledFeatures(instance,w1,
-						       type, attR,child,
-						       new FeatureVector());
-
+				FeatureVector prodFV = new FeatureVector();
+				addLabeledFeatures(instance,w1,
+						   type, attR,child,prodFV);
 				out.writeObject(prodFV.keys());
 			    }
 			}
@@ -818,7 +792,7 @@ public class DependencyPipe {
      * adding features.
      *
      */
-    private final FeatureVector 
+    private final void
 	addOldMSTStemFeatures(String hLemma, String headP, 
 			      String cLemma, String childP, String attDist, 
 			      int hL, int cL, FeatureVector fv) {
@@ -858,7 +832,6 @@ public class DependencyPipe {
 	    add("SJJ="+hLemma,fv); //this
 	}
 
-	return fv;
     }
 		
 }
