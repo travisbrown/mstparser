@@ -311,15 +311,15 @@ public class DependencyPipe {
 				  attDist, fv);
 	    
 
-	    	//for (int j=i+1; j<instance.feats.length; j++) {
-	    	//
-	    	//    addTwoObsFeatures("CPF"+i+"_"+j, 
-		//		      instance.feats[i][headIndex],
-		//		      instance.feats[j][headIndex],
-		//		      instance.feats[i][childIndex],
-		//		      instance.feats[j][childIndex],
-		//		      attDist, fv);
-	    	//}
+	    	for (int j=i+1; j<instance.feats.length; j++) {
+	    	
+	    	    addTwoObsFeatures("CPF"+i+"_"+j, 
+				      instance.feats[i][headIndex],
+				      instance.feats[j][headIndex],
+				      instance.feats[i][childIndex],
+				      instance.feats[j][childIndex],
+				      attDist, fv);
+	    	}
 
 	    }
 
