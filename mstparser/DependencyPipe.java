@@ -275,8 +275,15 @@ public class DependencyPipe {
 				      attDist, fv);
 
 	    // Test out relational features
-	    //for (int rf_index=0; rf_index<instance.relFeats.length; rf_index++)
-	    //add(instance.relFeats[rf_index].getFeature(headIndex, childIndex), fv);
+	    for (int rf_index=0; rf_index<instance.relFeats.length; rf_index++) {
+	    	String headToChild = "RF"+rf_index+instance.relFeats[rf_index].getFeature(headIndex, childIndex);
+	    	add("H2C="+headToChild, fv);
+	    	add("RF-H2C-F="+forms[headIndex]+" "+forms[childIndex]+" "+headToChild, fv);
+	    	add("RF-H2C-L="+instance.lemmas[headIndex]+" "+instance.lemmas[childIndex]+" "+headToChild, fv);
+	    	add("RF-H2C-P="+pos[headIndex]+" "+pos[childIndex]+" "+headToChild, fv);
+	    	add("RF-H2C-CP="+posA[headIndex]+" "+posA[childIndex]+" "+headToChild, fv);
+	    }
+
 	    for (int i=0; i<instance.feats.length; i++) {
 		
 		addLinearFeatures("F"+i, instance.feats[i], small, large, attDist, fv);
