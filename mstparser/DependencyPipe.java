@@ -245,6 +245,7 @@ public class DependencyPipe {
 	addLinearFeatures("POS", pos, small, large, attDist, fv);
 	addLinearFeatures("CPOS", posA, small, large, attDist, fv);
 		
+
 	//////////////////////////////////////////////////////////////////////
 	
 	int headIndex = small;
@@ -255,79 +256,90 @@ public class DependencyPipe {
 	}
 
 	addTwoObsFeatures("HC", forms[headIndex], pos[headIndex], 
-				  forms[childIndex], pos[childIndex], attDist, fv);
+			  forms[childIndex], pos[childIndex], attDist, fv);
 
 	if (isCONLL) {
-	    addLinearFeatures("LEMMA", instance.lemmas, small, large, attDist, fv);
+
+	    //addLinearFeatures("LEMMA", instance.lemmas, small, large, attDist, fv);
+	    
 	    addTwoObsFeatures("HCA", forms[headIndex], posA[headIndex], 
-				      forms[childIndex], posA[childIndex], attDist, fv);
-
+	    		      forms[childIndex], posA[childIndex], attDist, fv);
+	    
 	    addTwoObsFeatures("HCB", forms[headIndex], instance.lemmas[headIndex],
-				      forms[childIndex], instance.lemmas[childIndex], 
-				      attDist, fv);
-
+	    		      forms[childIndex], instance.lemmas[childIndex], 
+	    		      attDist, fv);
+	    
 	    addTwoObsFeatures("HCC", instance.lemmas[headIndex], pos[headIndex], 
-				      instance.lemmas[childIndex], pos[childIndex], 
-				      attDist, fv);
-
+	    		      instance.lemmas[childIndex], pos[childIndex], 
+	    		      attDist, fv);
+	    
 	    addTwoObsFeatures("HCD", instance.lemmas[headIndex], posA[headIndex], 
-				      instance.lemmas[childIndex], posA[childIndex], 
-				      attDist, fv);
+			      instance.lemmas[childIndex], posA[childIndex], 
+			      attDist, fv);
 
-	    // Test out relational features
-	    for (int rf_index=0; rf_index<instance.relFeats.length; rf_index++) {
-	    	String headToChild = "RF"+rf_index+instance.relFeats[rf_index].getFeature(headIndex, childIndex);
-	    	add("H2C="+headToChild, fv);
-	    	add("RF-H2C-F="+forms[headIndex]+" "+forms[childIndex]+" "+headToChild, fv);
-	    	add("RF-H2C-L="+instance.lemmas[headIndex]+" "+instance.lemmas[childIndex]+" "+headToChild, fv);
-	    	add("RF-H2C-P="+pos[headIndex]+" "+pos[childIndex]+" "+headToChild, fv);
-	    	add("RF-H2C-CP="+posA[headIndex]+" "+posA[childIndex]+" "+headToChild, fv);
-	    }
-
+	    // Use this if your extra feature lists all have the same length.
 	    for (int i=0; i<instance.feats.length; i++) {
-		
-		addLinearFeatures("F"+i, instance.feats[i], small, large, attDist, fv);
-
-	    	addTwoObsFeatures("FF"+i, 
-				  instance.forms[headIndex], 
-				  instance.feats[i][headIndex],
-				  instance.forms[childIndex], 
-				  instance.feats[i][childIndex],
-				  attDist, fv);
 	    
-	    	addTwoObsFeatures("LF"+i, 
-				  instance.lemmas[headIndex], 
-				  instance.feats[i][headIndex],
-				  instance.lemmas[childIndex], 
-				  instance.feats[i][childIndex],
-				  attDist, fv);
-
-	    	addTwoObsFeatures("PF"+i, 
-				  instance.postags[headIndex], 
-				  instance.feats[i][headIndex],
-				  instance.postags[childIndex], 
-				  instance.feats[i][childIndex],
-				  attDist, fv);
+	    	//addLinearFeatures("F"+i, instance.feats[i], small, large, attDist, fv);
 	    
+	    	//addTwoObsFeatures("FF"+i, 
+	    	//		  instance.forms[headIndex], 
+	    	//		  instance.feats[i][headIndex],
+	    	//		  instance.forms[childIndex], 
+	    	//		  instance.feats[i][childIndex],
+	    	//		  attDist, fv);
+	    	//
+	    	//addTwoObsFeatures("LF"+i, 
+	    	//		  instance.lemmas[headIndex], 
+	    	//		  instance.feats[i][headIndex],
+	    	//		  instance.lemmas[childIndex], 
+	    	//		  instance.feats[i][childIndex],
+	    	//		  attDist, fv);
+	    	//
+	    	//addTwoObsFeatures("PF"+i, 
+	    	//		  instance.postags[headIndex], 
+	    	//		  instance.feats[i][headIndex],
+	    	//		  instance.postags[childIndex], 
+	    	//		  instance.feats[i][childIndex],
+	    	//		  attDist, fv);
+	    	//
+	    	//addTwoObsFeatures("CPF"+i, 
+	    	//		  instance.cpostags[headIndex], 
+	    	//		  instance.feats[i][headIndex],
+	    	//		  instance.cpostags[childIndex], 
+	    	//		  instance.feats[i][childIndex],
+	    	//		  attDist, fv);
+	    	//
+	    	//
+	    	//for (int j=i+1; j<instance.feats.length; j++) {
+	    	//
+	    	//    addTwoObsFeatures("CPF"+i+"_"+j, 
+	    	//		      instance.feats[i][headIndex],
+	    	//		      instance.feats[j][headIndex],
+	    	//		      instance.feats[i][childIndex],
+	    	//		      instance.feats[j][childIndex],
+	    	//		      attDist, fv);
+		//
+	    	//}
 
-	    	addTwoObsFeatures("CPF"+i, 
-				  instance.cpostags[headIndex], 
-				  instance.feats[i][headIndex],
-				  instance.cpostags[childIndex], 
-				  instance.feats[i][childIndex],
-				  attDist, fv);
+	    	for (int j=0; j<instance.feats.length; j++) {
 	    
+	    	    addTwoObsFeatures("XFF"+i+"_"+j, 
+	    			      instance.forms[headIndex],
+	    			      instance.feats[i][headIndex],
+	    			      instance.forms[childIndex],
+	    			      instance.feats[j][childIndex],
+	    			      attDist, fv);
 
-	    	for (int j=i+1; j<instance.feats.length; j++) {
-	    	
-	    	    addTwoObsFeatures("CPF"+i+"_"+j, 
-				      instance.feats[i][headIndex],
-				      instance.feats[j][headIndex],
-				      instance.feats[i][childIndex],
-				      instance.feats[j][childIndex],
-				      attDist, fv);
+	    	    addTwoObsFeatures("XLF"+i+"_"+j, 
+	    			      instance.forms[headIndex],
+	    			      instance.feats[i][headIndex],
+	    			      instance.forms[childIndex],
+	    			      instance.feats[j][childIndex],
+	    			      attDist, fv);
+
 	    	}
-
+	    
 	    }
 
 	    // Use this if your extra feature lists can have different
@@ -350,6 +362,17 @@ public class DependencyPipe {
 	    //			      instance.feats[childIndex][j], 
 	    //			      attDist, fv);
 	    //	}
+	    //}
+
+
+	    // Test out relational features
+	    //for (int rf_index=0; rf_index<instance.relFeats.length; rf_index++) {
+	    //	String headToChild = "RF"+rf_index+instance.relFeats[rf_index].getFeature(headIndex, childIndex);
+	    //	add("H2C="+headToChild, fv);
+	    //	add("RF-H2C-F="+forms[headIndex]+" "+forms[childIndex]+" "+headToChild, fv);
+	    //	add("RF-H2C-L="+instance.lemmas[headIndex]+" "+instance.lemmas[childIndex]+" "+headToChild, fv);
+	    //	add("RF-H2C-P="+pos[headIndex]+" "+pos[childIndex]+" "+headToChild, fv);
+	    //	add("RF-H2C-CP="+posA[headIndex]+" "+posA[childIndex]+" "+headToChild, fv);
 	    //}
 
 	} else {
