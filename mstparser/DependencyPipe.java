@@ -332,9 +332,9 @@ public class DependencyPipe {
 	    			      attDist, fv);
 
 	    	    addTwoObsFeatures("XLF"+i+"_"+j, 
-	    			      instance.forms[headIndex],
+	    			      instance.lemmas[headIndex],
 	    			      instance.feats[i][headIndex],
-	    			      instance.forms[childIndex],
+	    			      instance.lemmas[childIndex],
 	    			      instance.feats[j][childIndex],
 	    			      attDist, fv);
 
