@@ -81,7 +81,7 @@ public class DependencyPipe {
 
 
     public int[] createInstances(String file,
-				 String featFileName) throws IOException {
+				 File featFileName) throws IOException {
 
 	createAlphabet(file);
 
@@ -337,6 +337,22 @@ public class DependencyPipe {
 	    			      instance.lemmas[childIndex],
 	    			      instance.feats[j][childIndex],
 	    			      attDist, fv);
+
+	    	    addTwoObsFeatures("XPF"+i+"_"+j, 
+	    			      instance.postags[headIndex],
+	    			      instance.feats[i][headIndex],
+	    			      instance.postags[childIndex],
+	    			      instance.feats[j][childIndex],
+	    			      attDist, fv);
+
+
+	    	    addTwoObsFeatures("XCF"+i+"_"+j, 
+	    			      instance.cpostags[headIndex],
+	    			      instance.feats[i][headIndex],
+	    			      instance.cpostags[childIndex],
+	    			      instance.feats[j][childIndex],
+	    			      attDist, fv);
+
 
 	    	}
 	    

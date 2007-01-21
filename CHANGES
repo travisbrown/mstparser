@@ -1,6 +1,10 @@
 -----------------------------------------------------------------------
 v0.4.3
 
+- Forest files are created in the tmp directory. Without this, two
+  instances of MSTParser being run on the same data set would
+  overwrite each other's feature forest files. Also, the forest files
+  created in tmp are deleted when the Java VM exits. (JMB, 21-JAN-07).
 
 
 

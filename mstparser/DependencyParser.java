@@ -12,8 +12,8 @@ public class DependencyParser {
 
     public static String trainfile = null;
     public static String testfile = null;
-    public static String trainforest = null;
-    public static String testforest = null;
+    public static File trainforest = null;
+    public static File testforest = null;
     public static boolean train = false;
     public static boolean eval = false;
     public static boolean test = false;
@@ -40,7 +40,7 @@ public class DependencyParser {
 	decoder = secondOrder ? new DependencyDecoder2O(pipe) : new DependencyDecoder(pipe);
     }
 
-    public void train(int[] instanceLengths, String trainfile, String train_forest) 
+    public void train(int[] instanceLengths, String trainfile, File train_forest) 
 	throws IOException {
 		
 	//System.out.print("About to train. ");
@@ -69,7 +69,7 @@ public class DependencyParser {
     }
 
     private void trainingIter(int[] instanceLengths, String trainfile, 
-			      String train_forest, int iter) throws IOException {
+			      File train_forest, int iter) throws IOException {
 
 	int numUpd = 0;
 	ObjectInputStream in = new ObjectInputStream(new FileInputStream(train_forest));
@@ -365,9 +365,26 @@ public class DependencyParser {
 		format = pair[1];
 	    }			
 	}
-	trainforest = trainfile == null ? null : trainfile+".forest";
-	testforest = testfile == null ? null : testfile+".forest";
-	
+
+
+	try {
+	    File tmpDir = new File("/tmp");
+	    if (null != trainfile) {
+		trainforest = File.createTempFile("train", ".forest");
+		trainforest.deleteOnExit();
+	    }
+
+	    if (null != testfile) {
+		testforest = File.createTempFile("test", ".forest");
+		testforest.deleteOnExit();
+	    }
+
+	} catch (java.io.IOException e) {
+	    System.out.println("Unable to create tmp files for feature forests!");
+	    System.out.println(e);
+	    System.exit(0);
+	}
+
 	System.out.print("FLAGS [");
 	System.out.print("train-file: " + trainfile);
 	System.out.print(" | ");
