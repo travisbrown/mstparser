@@ -408,7 +408,7 @@ public class DependencyPipe {
 
 	    // Test out relational features
 	    if (useRelationalFeatures) {
-		System.out.println("*********************");
+
 		//for (int rf_index=0; rf_index<2; rf_index++) {
 		for (int rf_index=0; 
 		     rf_index<instance.relFeats.length; 
