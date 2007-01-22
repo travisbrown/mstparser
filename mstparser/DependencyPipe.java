@@ -22,6 +22,7 @@ public class DependencyPipe {
     private boolean isCONLL = true;
 
     public boolean createForest;
+    private boolean useRelationalFeatures;
 	
     public DependencyPipe() throws IOException {
 	this(true, "CONLL");
@@ -36,6 +37,10 @@ public class DependencyPipe {
 	if (!format.equals("CONLL"))
 	    isCONLL = false;
 	depReader = DependencyReader.createDependencyReader(format);
+    }
+
+    public void useRelationalFeatures (boolean useRFs) throws IOException {
+	useRelationalFeatures = useRFs;
     }
 
     public void initInputFile (String file) throws IOException {
@@ -400,15 +405,61 @@ public class DependencyPipe {
 	    //}
 
 
+
 	    // Test out relational features
-	    //for (int rf_index=0; rf_index<instance.relFeats.length; rf_index++) {
-	    //	String headToChild = "RF"+rf_index+instance.relFeats[rf_index].getFeature(headIndex, childIndex);
-	    //	add("H2C="+headToChild, fv);
-	    //	add("RF-H2C-F="+forms[headIndex]+" "+forms[childIndex]+" "+headToChild, fv);
-	    //	add("RF-H2C-L="+instance.lemmas[headIndex]+" "+instance.lemmas[childIndex]+" "+headToChild, fv);
-	    //	add("RF-H2C-P="+pos[headIndex]+" "+pos[childIndex]+" "+headToChild, fv);
-	    //	add("RF-H2C-CP="+posA[headIndex]+" "+posA[childIndex]+" "+headToChild, fv);
-	    //}
+	    if (useRelationalFeatures) {
+		System.out.println("*********************");
+		//for (int rf_index=0; rf_index<2; rf_index++) {
+		for (int rf_index=0; 
+		     rf_index<instance.relFeats.length; 
+		     rf_index++) {
+
+		    String headToChild = "H2C"+rf_index+instance.relFeats[rf_index].getFeature(headIndex, childIndex);
+		    
+		    addTwoObsFeatures("RFA1",
+				      instance.forms[headIndex], 
+				      instance.lemmas[headIndex],
+				      instance.postags[childIndex],
+				      headToChild,
+				      attDist, fv);
+		    
+		    addTwoObsFeatures("RFA2",
+				      instance.postags[headIndex], 
+				      instance.cpostags[headIndex],
+				      instance.forms[childIndex],
+				      headToChild,
+				      attDist, fv);
+		    
+		    addTwoObsFeatures("RFA3",
+				      instance.lemmas[headIndex], 
+				      instance.postags[headIndex],
+				      instance.forms[childIndex],
+				      headToChild,
+				      attDist, fv);
+		    
+		    addTwoObsFeatures("RFB1",
+				      headToChild,
+				      instance.postags[headIndex],
+				      instance.forms[childIndex], 
+				      instance.lemmas[childIndex],
+				      attDist, fv);
+		    
+		    addTwoObsFeatures("RFB2",
+				      headToChild,
+				      instance.forms[headIndex],
+				      instance.postags[childIndex], 
+				      instance.cpostags[childIndex],
+				      attDist, fv);
+		    
+		    addTwoObsFeatures("RFB3",
+				      headToChild,
+				      instance.forms[headIndex],
+				      instance.lemmas[childIndex], 
+				      instance.postags[childIndex],
+				      attDist, fv);
+		    
+		}
+	    }
 
 	} else {
 	    // Pick up stem features the way they used to be done. This

@@ -28,6 +28,7 @@ public class DependencyParser {
     public static int trainK = 1;
     public static int testK = 1;
     public static boolean secondOrder = false;
+    public static boolean useRelationalFeatures = false;
 
     private DependencyPipe pipe;
     private DependencyDecoder decoder;
@@ -274,7 +275,8 @@ public class DependencyParser {
 		secondOrder ? new DependencyPipe2O (createForest, format) 
 		: new DependencyPipe (createForest, format);
 
-	    
+	    pipe.useRelationalFeatures(useRelationalFeatures);
+
 	    int[] instanceLengths = pipe.createInstances(trainfile,trainforest);
 		
 	    pipe.closeAlphabets();
@@ -296,6 +298,8 @@ public class DependencyParser {
 		
 	if (test) {
 	    DependencyPipe pipe = secondOrder ? new DependencyPipe2O (createForest, format) : new DependencyPipe (createForest, format);
+
+	    pipe.useRelationalFeatures(useRelationalFeatures);
 
 	    DependencyParser dp = new DependencyParser(pipe);
 
@@ -364,6 +368,9 @@ public class DependencyParser {
 	    if(pair[0].equals("format")) {
 		format = pair[1];
 	    }			
+	    if(pair[0].equals("relational-features")) {
+		useRelationalFeatures = pair[1].equals("true") ? true : false;
+	    }			
 	}
 
 
@@ -415,6 +422,8 @@ public class DependencyParser {
 	System.out.print("create-forest: " + createForest);
 	System.out.print(" | ");
 	System.out.print("format: " + format);
+	System.out.print(" | ");
+	System.out.print("relational-features: " + useRelationalFeatures);
 	System.out.print("]\n");
     }
 }
