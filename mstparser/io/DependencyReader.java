@@ -30,17 +30,27 @@ public abstract class DependencyReader {
     protected BufferedReader inputReader;
     protected boolean labeled = true;
 
-    public static DependencyReader createDependencyReader (String format) throws IOException {
+    public static DependencyReader createDependencyReader (String format, 
+							   boolean discourseMode) 
+	throws IOException {
+
 	if (format.equals("MST")) {
 	    return new MSTReader();
 	} else if (format.equals("CONLL")) {
-	    return new CONLLReader();
+	    return new CONLLReader(discourseMode);
 	} else {
 	    System.out.println("!!!!!!!  Not a supported format: " + format);
 	    System.out.println("********* Assuming CONLL format. **********");
-	    return new CONLLReader();
+	    return new CONLLReader(discourseMode);
 	}
     }
+
+    public static DependencyReader createDependencyReader (String format)
+	throws IOException {
+
+	return createDependencyReader(format, false);
+    }
+
 
     public boolean startReading (String file) throws IOException {
 	labeled = fileContainsLabels(file);

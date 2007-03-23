@@ -32,6 +32,11 @@ import java.util.*;
  */
 public class CONLLReader extends DependencyReader {
 
+    protected boolean discourseMode = false;
+
+    public CONLLReader (boolean discourseMode) {
+	this.discourseMode = discourseMode;
+    }
 
     public DependencyInstance getNext() throws IOException {
 
@@ -81,15 +86,22 @@ public class CONLLReader extends DependencyReader {
 	for (int i = 0; i< feats[1].length; i++)
 	    feats[0][i] = "<root-feat>"+i;
 	
-	//String[][] extended_feats = new String[feats[0].length][length+1];
-	//for (int i=0; i<extended_feats.length; i++) {
-	//    for (int j=0; j<length+1; j++)
-	//	extended_feats[i][j] = feats[j][i];
-	//}
-	//
-	//feats = extended_feats;
+	// The following stuff is for discourse and can be safely
+	// ignored if you are doing sentential parsing. (In theory it
+	// could be useful for sentential parsing.)
+	if (discourseMode) {
+	    String[][] extended_feats = new String[feats[0].length][length+1];
+	    for (int i=0; i<extended_feats.length; i++) {
+		for (int j=0; j<length+1; j++)
+		    extended_feats[i][j] = feats[j][i];
+	    }
+	
+	    feats = extended_feats;
+	}
 
-	ArrayList<RelationalFeature> rfeats = new ArrayList<RelationalFeature>();
+	ArrayList<RelationalFeature> rfeats = 
+	    new ArrayList<RelationalFeature>();
+	
 	while (line != null && !line.equals("")) {
 	    rfeats.add(new RelationalFeature(length, line, inputReader));
 	    line = inputReader.readLine();
@@ -97,6 +109,8 @@ public class CONLLReader extends DependencyReader {
 
 	RelationalFeature[] rfeatsList = new RelationalFeature[rfeats.size()];
 	rfeats.toArray(rfeatsList);
+
+	// End of discourse stuff.
 
 	return new DependencyInstance(forms, lemmas, cpos, pos, feats, deprels, heads, rfeatsList);
 

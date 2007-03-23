@@ -104,6 +104,7 @@ public class DependencyInstance implements Serializable {
 
     private void writeObject (ObjectOutputStream out) throws IOException {
 	out.writeObject(forms);
+	out.writeObject(lemmas);
 	out.writeObject(cpostags);
 	out.writeObject(postags);
 	out.writeObject(heads);
@@ -115,6 +116,7 @@ public class DependencyInstance implements Serializable {
 
     private void readObject (ObjectInputStream in) throws IOException, ClassNotFoundException {
 	forms = (String[])in.readObject();
+	lemmas = (String[])in.readObject();
 	cpostags = (String[])in.readObject();
 	postags = (String[])in.readObject();
 	heads = (int[])in.readObject();
