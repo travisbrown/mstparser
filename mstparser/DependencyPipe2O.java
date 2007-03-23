@@ -7,12 +7,8 @@ import mstparser.io.*;
 
 public class DependencyPipe2O extends DependencyPipe {
 
-    public DependencyPipe2O() throws IOException {
-	super();
-    }
-
-    public DependencyPipe2O(boolean createForest, String format) throws IOException {
-	super(createForest, format);
+    public DependencyPipe2O(ParserOptions options) throws IOException {
+	super(options);
     }
 
 			

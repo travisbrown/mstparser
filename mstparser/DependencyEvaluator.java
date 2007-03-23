@@ -5,7 +5,10 @@ import mstparser.io.*;
 
 public class DependencyEvaluator {
 	
-    public static void evaluate(String act_file, String pred_file, String format) throws IOException {
+    public static void evaluate (String act_file, 
+				 String pred_file, 
+				 String format) throws IOException {
+	
 	DependencyReader goldReader = DependencyReader.createDependencyReader(format);
 	boolean labeled = goldReader.startReading(act_file);
 

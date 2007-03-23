@@ -119,7 +119,7 @@ opt_parser.add_option("-l", "--language", action="store", default='Unspecified',
 		  help="use configurations specific to LANGUAGE",
 		  metavar="LANGUAGE")
 opt_parser.add_option("-e", "--eval_file", action="store", default='Generated',
-		  help="read evaluation sentences from FILE",
+		  help="Read evaluation sentences from FILE. Using this option means that cross-validation will not be used.",
 		  metavar="FILE")
 opt_parser.add_option("-d", "--decoder_type", action="store",
                       choices=['proj', 'non-proj'],
@@ -130,14 +130,14 @@ opt_parser.add_option("-o", "--output_dir", action="store", default='output',
 		  help="save parser output to DIR",
 		  metavar="DIR")
 opt_parser.add_option("-f", "--num_folds", action="store", default=10,
-		  help="The number of folds to use in cross-validation (Default=10). Set the number of folds to be zero if you want don't want cross-validation.",
+		  help="The number of folds to use in cross-validation (Default=10).",
 		  metavar="NUM")
 opt_parser.add_option("-v", "--verbose", action="store_true", default=False,
                       help="be verbose")
 
-opt_parser.add_option("-t", "--tag_source", choices=['Raw','Gold','OTK_Tagger'],
-                   default='Raw',
-                   help="use tags from Gold standard or from a tagger (Raw (def), Gold, OTK_Tagger)",
+opt_parser.add_option("-t", "--tag_source", choices=['Gold','OTK_Tagger'],
+                   default='Gold',
+                   help="use tags from Gold standard or from a tagger (Gold (default), OTK_Tagger)",
                    metavar="SOURCE")
 
 (options, args) = opt_parser.parse_args()
@@ -167,83 +167,88 @@ train_filename = args[0]
 # This file accumulates the gold dependencies across all folds.
 gold_deps_filename = output_dir+"/gold.deps"
 
-num_folds = int(options.num_folds)
+if options.eval_file == "Generated":
 
-if num_folds != 0:
-
+    num_folds = int(options.num_folds)
+    
     print "Running a %d-fold evaluation on file %s" \
           % (num_folds, train_filename)
     print
-
+    
     # Align parses with their corresponding sentences and assign a
     # partition id to them.
-
+    
     train_file = file(train_filename)
-
+    
     examples = []
-
+    
     next_example = train_file.readline()
-
+    
     counter = 0
     while next_example:
         partition = counter % num_folds
-
+    
         elements = []
         while next_example and next_example != "\n":
             elements += next_example
             next_example = train_file.readline()
-
+    
         examples.append((partition, elements))
-
+    
         next_example = train_file.readline()
-
+    
         counter += 1
-
-
+    
+    
     # Close the sentences file and delete it. (It was either copied or
     # generated, so it's okay.)
     train_file.close()
-
+    
     # Train/test on each partion
-
+    
     gold_deps = open(gold_deps_filename,"w")
-
+    
     # Run each fold. The output from each fold is appended to gold.deps
     # and model.deps
     #for test_partition in range(1):
     for test_partition in range(num_folds):
-
+    
         print "Fold",test_partition
-
+    
         train_filename = output_dir+"/train"
         train_set = open(train_filename, "w")
-
+    
         test_filename = output_dir+"/test"
         test_set = open(test_filename, "w")
-
-	counter = 0
+    
+        counter = 0
         for ex in examples:
             if ex[0] == test_partition:
                 test_set.write("".join(ex[1])+"\n")
                 gold_deps.write("".join(ex[1])+"\n")
             else:
                 train_set.write("".join(ex[1])+"\n")
-
-	    counter += 1
-
+    
+        counter += 1
+    
         train_set.close()
         test_set.close()
-
+    
         # Run the fold.
-	output_filename = output_dir+"/output"
+        output_filename = output_dir+"/output"
         run_single_train_and_test(options, train_filename, test_filename, output_filename, args)
-
+    
         # Pile this fold's output onto the accumulating result file.
         os.system('cat %s >> %s' % (output_filename, model_output_filename))
-
+    
         gold_deps.flush()
-
+    
     gold_deps.close()
+
+else:
+    os.system('cp %s %s' %(options.eval_file, gold_deps_filename))
+    
+    run_single_train_and_test(options, train_filename, gold_deps_filename, model_output_filename, args)
 
 
 ################## EVALUATION ###################

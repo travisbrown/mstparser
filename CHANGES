@@ -6,6 +6,11 @@ v0.4.3
   overwrite each other's feature forest files. Also, the forest files
   created in tmp are deleted when the Java VM exits. (JMB, 21-JAN-07).
 
+- Separated out the standard sentential parsing features from extra
+  features used for discourse parsing. (JMB, 23-MAR-07)
+
+- Created ParserOptions so that it is easier to pass various options
+  between the parser and the pipes. (JMB, 23-MAR-07)
 
 
 -----------------------------------------------------------------------

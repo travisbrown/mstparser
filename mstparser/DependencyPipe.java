@@ -18,29 +18,20 @@ public class DependencyPipe {
     public int[] typesInt;
 	
     public boolean labeled = false;
-    private String format;
     private boolean isCONLL = true;
 
-    public boolean createForest;
-    private boolean useRelationalFeatures;
-	
-    public DependencyPipe() throws IOException {
-	this(true, "CONLL");
-    }
+    private ParserOptions options;
 
-    public DependencyPipe(boolean createForest, String format) throws IOException {
+    public DependencyPipe (ParserOptions options) throws IOException {
+	this.options = options;
+
+	if (!options.format.equals("CONLL"))
+	    isCONLL = false;
+
 	dataAlphabet = new Alphabet();
 	typeAlphabet = new Alphabet();
 
-	this.createForest = createForest;
-	this.format = format;
-	if (!format.equals("CONLL"))
-	    isCONLL = false;
-	depReader = DependencyReader.createDependencyReader(format);
-    }
-
-    public void useRelationalFeatures (boolean useRFs) throws IOException {
-	useRelationalFeatures = useRFs;
+	depReader = DependencyReader.createDependencyReader(options.format);
     }
 
     public void initInputFile (String file) throws IOException {
@@ -48,7 +39,8 @@ public class DependencyPipe {
     }
 
     public void initOutputFile (String file) throws IOException {
-	depWriter = DependencyWriter.createDependencyWriter(format, labeled);
+	depWriter = 
+	    DependencyWriter.createDependencyWriter(options.format, labeled);
 	depWriter.startWriting(file);
     }
 
@@ -96,7 +88,7 @@ public class DependencyPipe {
 
 	TIntArrayList lengths = new TIntArrayList();
 
-	ObjectOutputStream out = createForest
+	ObjectOutputStream out = options.createForest
 	    ? new ObjectOutputStream(new FileOutputStream(featFileName))
 	    : null;
 		
@@ -120,7 +112,7 @@ public class DependencyPipe {
 
 	    lengths.add(instance.length());
 			
-	    if(createForest)
+	    if(options.createForest)
 		writeInstance(instance,out);
 	    instance = null;
 			
@@ -133,7 +125,7 @@ public class DependencyPipe {
 
 	closeAlphabets();
 		
-	if(createForest)
+	if(options.createForest)
 	    out.close();
 
 	return lengths.toNativeArray();
@@ -246,7 +238,7 @@ public class DependencyPipe {
 		
 	String attDist = "&"+att+"&"+distBool;
 
-	addLinearFeatures("WORD", forms, small, large, attDist, fv);
+	//addLinearFeatures("WORD", forms, small, large, attDist, fv);
 	addLinearFeatures("POS", pos, small, large, attDist, fv);
 	addLinearFeatures("CPOS", posA, small, large, attDist, fv);
 		
@@ -265,28 +257,8 @@ public class DependencyPipe {
 
 	if (isCONLL) {
 
-	    addLinearFeatures("LEMMA", instance.lemmas, small, large, attDist, fv);
-	    
-	    addTwoObsFeatures("HCB1", forms[headIndex], instance.lemmas[headIndex],
-	    		      forms[childIndex], instance.lemmas[childIndex], 
-	    		      attDist, fv);
-
-	    addTwoObsFeatures("HCB2", forms[headIndex], instance.lemmas[headIndex],
-	    		      forms[childIndex], instance.postags[childIndex], 
-	    		      attDist, fv);
-
-	    addTwoObsFeatures("HCB3", forms[headIndex], instance.lemmas[headIndex],
-	    		      forms[childIndex], instance.cpostags[childIndex], 
-	    		      attDist, fv);
-
-
-	    addTwoObsFeatures("HC2", forms[headIndex], pos[headIndex], 
-			  forms[childIndex], posA[childIndex], attDist, fv);
-
-
 	    addTwoObsFeatures("HCA", forms[headIndex], posA[headIndex], 
 	    		      forms[childIndex], posA[childIndex], attDist, fv);
-
 	    
 	    addTwoObsFeatures("HCC", instance.lemmas[headIndex], pos[headIndex], 
 	    		      instance.lemmas[childIndex], pos[childIndex], 
@@ -296,175 +268,46 @@ public class DependencyPipe {
 			      instance.lemmas[childIndex], posA[childIndex], 
 			      attDist, fv);
 
-	    addTwoObsFeatures("HCC2", instance.lemmas[headIndex], pos[headIndex], 
-	    		      instance.lemmas[childIndex], posA[childIndex], 
-	    		      attDist, fv);
+	    if (options.discourseMode) {
+		// Note: The features invoked here are designed for
+		// discourse parsing (as opposed to sentential
+		// parsing). It is conceivable that they could help for
+		// sentential parsing, but current testing indicates that
+		// they hurt sentential parsing performance.
 
+		addDiscourseFeatures(instance, headIndex, childIndex, 
+				     attDist, fv);
 
-	    // Use this if your extra feature lists all have the same length.
-	    for (int i=0; i<instance.feats.length; i++) {
+	    } else {
+		// Add in features from the feature lists. It assumes
+		// the feature lists can have different lengths for
+		// each item. For example, nouns might have a
+		// different number of morphological features than
+		// verbs.
 	    
-	    	addLinearFeatures("F"+i, instance.feats[i], small, large, attDist, fv);
-	    
-	    	//addTwoObsFeatures("FF"+i, 
-	    	//		  instance.forms[headIndex], 
-	    	//		  instance.feats[i][headIndex],
-	    	//		  instance.forms[childIndex], 
-	    	//		  instance.feats[i][childIndex],
-	    	//		  attDist, fv);
-	    	//
-	    	//addTwoObsFeatures("LF"+i, 
-	    	//		  instance.lemmas[headIndex], 
-	    	//		  instance.feats[i][headIndex],
-	    	//		  instance.lemmas[childIndex], 
-	    	//		  instance.feats[i][childIndex],
-	    	//		  attDist, fv);
-	    	//
-	    	//addTwoObsFeatures("PF"+i, 
-	    	//		  instance.postags[headIndex], 
-	    	//		  instance.feats[i][headIndex],
-	    	//		  instance.postags[childIndex], 
-	    	//		  instance.feats[i][childIndex],
-	    	//		  attDist, fv);
-	    	//
-	    	//addTwoObsFeatures("CPF"+i, 
-	    	//		  instance.cpostags[headIndex], 
-	    	//		  instance.feats[i][headIndex],
-	    	//		  instance.cpostags[childIndex], 
-	    	//		  instance.feats[i][childIndex],
-	    	//		  attDist, fv);
-	    	//
-	    	//
-	    	//for (int j=i+1; j<instance.feats.length; j++) {
-	    	//
-	    	//    addTwoObsFeatures("CPF"+i+"_"+j, 
-	    	//		      instance.feats[i][headIndex],
-	    	//		      instance.feats[j][headIndex],
-	    	//		      instance.feats[i][childIndex],
-	    	//		      instance.feats[j][childIndex],
-	    	//		      attDist, fv);
-		//
-	    	//}
-
-	    	for (int j=0; j<instance.feats.length; j++) {
-	    
-	    	    addTwoObsFeatures("XFF"+i+"_"+j, 
-	    			      instance.forms[headIndex],
-	    			      instance.feats[i][headIndex],
-	    			      instance.forms[childIndex],
-	    			      instance.feats[j][childIndex],
-	    			      attDist, fv);
-
-	    	    addTwoObsFeatures("XLF"+i+"_"+j, 
-	    			      instance.lemmas[headIndex],
-	    			      instance.feats[i][headIndex],
-	    			      instance.lemmas[childIndex],
-	    			      instance.feats[j][childIndex],
-	    			      attDist, fv);
-
-	    	    addTwoObsFeatures("XPF"+i+"_"+j, 
-	    			      instance.postags[headIndex],
-	    			      instance.feats[i][headIndex],
-	    			      instance.postags[childIndex],
-	    			      instance.feats[j][childIndex],
-	    			      attDist, fv);
-
-
-	    	    addTwoObsFeatures("XCF"+i+"_"+j, 
-	    			      instance.cpostags[headIndex],
-	    			      instance.feats[i][headIndex],
-	    			      instance.cpostags[childIndex],
-	    			      instance.feats[j][childIndex],
-	    			      attDist, fv);
-
-
-	    	}
-	    
-	    }
-
-	    // Use this if your extra feature lists can have different
-	    // lengths for each item. For example, nouns might have a
-	    // different number of morphological features than verbs.
-	    //
-	    //for (int i=0; i<instance.feats[headIndex].length; i++) {
-	    //	for (int j=0; j<instance.feats[childIndex].length; j++) {
-	    //	    addTwoObsFeatures("FF"+i+"*"+j, 
-	    //			      instance.forms[headIndex], 
-	    //			      instance.feats[headIndex][i],
-	    //			      instance.forms[childIndex], 
-	    //			      instance.feats[childIndex][j], 
-	    //			      attDist, fv);
-	    //
-	    //	    addTwoObsFeatures("LF"+i+"*"+j, 
-	    //			      instance.lemmas[headIndex], 
-	    //			      instance.feats[headIndex][i],
-	    //			      instance.lemmas[childIndex], 
-	    //			      instance.feats[childIndex][j], 
-	    //			      attDist, fv);
-	    //	}
-	    //}
-
-
-
-	    // Test out relational features
-	    if (useRelationalFeatures) {
-
-		//for (int rf_index=0; rf_index<2; rf_index++) {
-		for (int rf_index=0; 
-		     rf_index<instance.relFeats.length; 
-		     rf_index++) {
-
-		    String headToChild = "H2C"+rf_index+instance.relFeats[rf_index].getFeature(headIndex, childIndex);
-		    
-		    addTwoObsFeatures("RFA1",
-				      instance.forms[headIndex], 
-				      instance.lemmas[headIndex],
-				      instance.postags[childIndex],
-				      headToChild,
-				      attDist, fv);
-		    
-		    addTwoObsFeatures("RFA2",
-				      instance.postags[headIndex], 
-				      instance.cpostags[headIndex],
-				      instance.forms[childIndex],
-				      headToChild,
-				      attDist, fv);
-		    
-		    addTwoObsFeatures("RFA3",
-				      instance.lemmas[headIndex], 
-				      instance.postags[headIndex],
-				      instance.forms[childIndex],
-				      headToChild,
-				      attDist, fv);
-		    
-		    addTwoObsFeatures("RFB1",
-				      headToChild,
-				      instance.postags[headIndex],
-				      instance.forms[childIndex], 
-				      instance.lemmas[childIndex],
-				      attDist, fv);
-		    
-		    addTwoObsFeatures("RFB2",
-				      headToChild,
-				      instance.forms[headIndex],
-				      instance.postags[childIndex], 
-				      instance.cpostags[childIndex],
-				      attDist, fv);
-		    
-		    addTwoObsFeatures("RFB3",
-				      headToChild,
-				      instance.forms[headIndex],
-				      instance.lemmas[childIndex], 
-				      instance.postags[childIndex],
-				      attDist, fv);
-		    
+		for (int i=0; i<instance.feats[headIndex].length; i++) {
+		    for (int j=0; j<instance.feats[childIndex].length; j++) {
+			addTwoObsFeatures("FF"+i+"*"+j, 
+					  instance.forms[headIndex], 
+					  instance.feats[headIndex][i],
+					  instance.forms[childIndex], 
+					  instance.feats[childIndex][j], 
+					  attDist, fv);
+			
+			addTwoObsFeatures("LF"+i+"*"+j, 
+					  instance.lemmas[headIndex], 
+					  instance.feats[headIndex][i],
+					  instance.lemmas[childIndex], 
+					  instance.feats[childIndex][j], 
+					  attDist, fv);
+		    }
 		}
 	    }
 
 	} else {
-	    // Pick up stem features the way they used to be done. This
-	    // will soon be phased out, but is kept for replicability
-	    // of results for this version
+	    // We are using the old MST format.  Pick up stem features
+	    // the way they used to be done. This is kept for
+	    // replicability of results for old versions.
 	    int hL = forms[headIndex].length();
 	    int cL = forms[childIndex].length();
 	    if (hL > 5 || cL > 5) {
@@ -710,7 +553,175 @@ public class DependencyPipe {
 	    add("NTJ="+w+suff,fv); //this
 
 	}
+    }
+
+
+    private void addDiscourseFeatures (DependencyInstance instance, 
+				       int headIndex,
+				       int childIndex,
+				       String attDist,
+				       FeatureVector fv) {
+    
+	//addLinearFeatures("LEMMA", instance.lemmas, small, large, attDist, fv);
+	
+	//addTwoObsFeatures("HCB1", forms[headIndex], instance.lemmas[headIndex],
+	//		      forms[childIndex], instance.lemmas[childIndex], 
+	//		      attDist, fv);
+	//
+	//addTwoObsFeatures("HCB2", forms[headIndex], instance.lemmas[headIndex],
+	//		      forms[childIndex], instance.postags[childIndex], 
+	//		      attDist, fv);
+	//
+	//addTwoObsFeatures("HCB3", forms[headIndex], instance.lemmas[headIndex],
+	//		      forms[childIndex], instance.cpostags[childIndex], 
+	//		      attDist, fv);
+	
+	
+	//addTwoObsFeatures("HC2", forms[headIndex], pos[headIndex], 
+	//	      forms[childIndex], posA[childIndex], attDist, fv);
+	
+	//addTwoObsFeatures("HCC2", instance.lemmas[headIndex], pos[headIndex], 
+	//		      instance.lemmas[childIndex], posA[childIndex], 
+	//		      attDist, fv);
+	
+	
+	//// Use this if your extra feature lists all have the same length.
+	//for (int i=0; i<instance.feats.length; i++) {
+	//
+	//	addLinearFeatures("F"+i, instance.feats[i], small, large, attDist, fv);
+	//
+	//	//addTwoObsFeatures("FF"+i, 
+	//	//		  instance.forms[headIndex], 
+	//	//		  instance.feats[i][headIndex],
+	//	//		  instance.forms[childIndex], 
+	//	//		  instance.feats[i][childIndex],
+	//	//		  attDist, fv);
+	//	//
+	//	//addTwoObsFeatures("LF"+i, 
+	//	//		  instance.lemmas[headIndex], 
+	//	//		  instance.feats[i][headIndex],
+	//	//		  instance.lemmas[childIndex], 
+	//	//		  instance.feats[i][childIndex],
+	//	//		  attDist, fv);
+	//	//
+	//	//addTwoObsFeatures("PF"+i, 
+	//	//		  instance.postags[headIndex], 
+	//	//		  instance.feats[i][headIndex],
+	//	//		  instance.postags[childIndex], 
+	//	//		  instance.feats[i][childIndex],
+	//	//		  attDist, fv);
+	//	//
+	//	//addTwoObsFeatures("CPF"+i, 
+	//	//		  instance.cpostags[headIndex], 
+	//	//		  instance.feats[i][headIndex],
+	//	//		  instance.cpostags[childIndex], 
+	//	//		  instance.feats[i][childIndex],
+	//	//		  attDist, fv);
+	//	//
+	//	//
+	//	//for (int j=i+1; j<instance.feats.length; j++) {
+	//	//
+	//	//    addTwoObsFeatures("CPF"+i+"_"+j, 
+	//	//		      instance.feats[i][headIndex],
+	//	//		      instance.feats[j][headIndex],
+	//	//		      instance.feats[i][childIndex],
+	//	//		      instance.feats[j][childIndex],
+	//	//		      attDist, fv);
+	//	//
+	//	//}
+	//
+	//	for (int j=0; j<instance.feats.length; j++) {
+	//
+	//	    addTwoObsFeatures("XFF"+i+"_"+j, 
+	//			      instance.forms[headIndex],
+	//			      instance.feats[i][headIndex],
+	//			      instance.forms[childIndex],
+	//			      instance.feats[j][childIndex],
+	//			      attDist, fv);
+	//
+	//	    addTwoObsFeatures("XLF"+i+"_"+j, 
+	//			      instance.lemmas[headIndex],
+	//			      instance.feats[i][headIndex],
+	//			      instance.lemmas[childIndex],
+	//			      instance.feats[j][childIndex],
+	//			      attDist, fv);
+	//
+	//	    addTwoObsFeatures("XPF"+i+"_"+j, 
+	//			      instance.postags[headIndex],
+	//			      instance.feats[i][headIndex],
+	//			      instance.postags[childIndex],
+	//			      instance.feats[j][childIndex],
+	//			      attDist, fv);
+	//
+	//
+	//	    addTwoObsFeatures("XCF"+i+"_"+j, 
+	//			      instance.cpostags[headIndex],
+	//			      instance.feats[i][headIndex],
+	//			      instance.cpostags[childIndex],
+	//			      instance.feats[j][childIndex],
+	//			      attDist, fv);
+	//
+	//
+	//	}
+	//
+	//}
+
+
+	// Test out relational features
+	if (options.useRelationalFeatures) {
+
+	    //for (int rf_index=0; rf_index<2; rf_index++) {
+	    for (int rf_index=0; 
+		 rf_index<instance.relFeats.length; 
+		 rf_index++) {
 		
+		String headToChild = 
+		    "H2C"+rf_index+instance.relFeats[rf_index].getFeature(headIndex, childIndex);
+	    
+		addTwoObsFeatures("RFA1",
+				  instance.forms[headIndex], 
+				  instance.lemmas[headIndex],
+				  instance.postags[childIndex],
+				  headToChild,
+				  attDist, fv);
+		
+		addTwoObsFeatures("RFA2",
+				  instance.postags[headIndex], 
+				  instance.cpostags[headIndex],
+				  instance.forms[childIndex],
+				  headToChild,
+				  attDist, fv);
+	    
+	    	addTwoObsFeatures("RFA3",
+				  instance.lemmas[headIndex], 
+				  instance.postags[headIndex],
+				  instance.forms[childIndex],
+				  headToChild,
+				  attDist, fv);
+	    	
+	    	addTwoObsFeatures("RFB1",
+				  headToChild,
+				  instance.postags[headIndex],
+				  instance.forms[childIndex], 
+				  instance.lemmas[childIndex],
+				  attDist, fv);
+	    	
+	    	addTwoObsFeatures("RFB2",
+				  headToChild,
+				  instance.forms[headIndex],
+				  instance.postags[childIndex], 
+				  instance.cpostags[childIndex],
+				  attDist, fv);
+	    	
+	    	addTwoObsFeatures("RFB3",
+				  headToChild,
+				  instance.forms[headIndex],
+				  instance.lemmas[childIndex], 
+				  instance.postags[childIndex],
+				  attDist, fv);
+		
+	    }
+	}
     }
 
 

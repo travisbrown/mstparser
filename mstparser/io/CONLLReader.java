@@ -81,13 +81,13 @@ public class CONLLReader extends DependencyReader {
 	for (int i = 0; i< feats[1].length; i++)
 	    feats[0][i] = "<root-feat>"+i;
 	
-	String[][] extended_feats = new String[feats[0].length][length+1];
-	for (int i=0; i<extended_feats.length; i++) {
-	    for (int j=0; j<length+1; j++)
-		extended_feats[i][j] = feats[j][i];
-	}
-	
-	feats = extended_feats;
+	//String[][] extended_feats = new String[feats[0].length][length+1];
+	//for (int i=0; i<extended_feats.length; i++) {
+	//    for (int j=0; j<length+1; j++)
+	//	extended_feats[i][j] = feats[j][i];
+	//}
+	//
+	//feats = extended_feats;
 
 	ArrayList<RelationalFeature> rfeats = new ArrayList<RelationalFeature>();
 	while (line != null && !line.equals("")) {

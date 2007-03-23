@@ -184,7 +184,7 @@ train-file:file.txt
 model-name:model.name
 - store trained model in file called model.name
 
-training-iterations:numIters
+iters:numIters
 - Run training algorithm for numIters epochs, default is 10
 
 decode-type:type

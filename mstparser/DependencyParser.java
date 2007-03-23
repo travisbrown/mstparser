@@ -10,35 +10,20 @@ import mstparser.io.*;
 
 public class DependencyParser {
 
-    public static String trainfile = null;
-    public static String testfile = null;
-    public static File trainforest = null;
-    public static File testforest = null;
-    public static boolean train = false;
-    public static boolean eval = false;
-    public static boolean test = false;
-    public static String modelName = "dep.model";
-    public static String lossType = "punc";
-    public static boolean createForest = true;
-    public static String decodeType = "proj";
-    public static String format = "CONLL";
-    public static int numIters = 10;
-    public static String outfile = "out.txt";
-    public static String goldfile = null;
-    public static int trainK = 1;
-    public static int testK = 1;
-    public static boolean secondOrder = false;
-    public static boolean useRelationalFeatures = false;
+    public ParserOptions options;
 
     private DependencyPipe pipe;
     private DependencyDecoder decoder;
     private Parameters params;
 
-    public DependencyParser(DependencyPipe pipe) {
+    public DependencyParser(DependencyPipe pipe, ParserOptions options) {
 	this.pipe=pipe;
+	this.options = options;
+
 	// Set up arrays
 	params = new Parameters(pipe.dataAlphabet.size());
-	decoder = secondOrder ? new DependencyDecoder2O(pipe) : new DependencyDecoder(pipe);
+	decoder = options.secondOrder ? 
+	    new DependencyDecoder2O(pipe) : new DependencyDecoder(pipe);
     }
 
     public void train(int[] instanceLengths, String trainfile, File train_forest) 
@@ -48,7 +33,7 @@ public class DependencyParser {
 	//System.out.print("Num Feats: " + pipe.dataAlphabet.size());
 		
 	int i = 0;
-	for(i = 0; i < numIters; i++) {
+	for(i = 0; i < options.numIters; i++) {
 			
 	    System.out.print(" Iteration "+i);
 	    //System.out.println("========================");
@@ -98,7 +83,7 @@ public class DependencyParser {
 
 	    DependencyInstance inst;
 
-	    if(secondOrder) {
+	    if(options.secondOrder) {
 		inst = ((DependencyPipe2O)pipe).readInstance(in,length,fvs,probs,
 							     fvs_trips,probs_trips,
 							     fvs_sibs,probs_sibs,
@@ -108,11 +93,11 @@ public class DependencyParser {
 	    else
 		inst = pipe.readInstance(in,length,fvs,probs,nt_fvs,nt_probs,params);
 
-	    double upd = (double)(numIters*numInstances - (numInstances*(iter-1)+(i+1)) + 1);
-	    int K=trainK;
+	    double upd = (double)(options.numIters*numInstances - (numInstances*(iter-1)+(i+1)) + 1);
+	    int K = options.trainK;
 	    Object[][] d = null;
-	    if(decodeType.equals("proj")) {
-		if(secondOrder)
+	    if(options.decodeType.equals("proj")) {
+		if(options.secondOrder)
 		    d = ((DependencyDecoder2O)decoder).decodeProjective(inst,fvs,probs,
 									fvs_trips,probs_trips,
 									fvs_sibs,probs_sibs,
@@ -120,8 +105,8 @@ public class DependencyParser {
 		else
 		    d = decoder.decodeProjective(inst,fvs,probs,nt_fvs,nt_probs,K);
 	    }
-	    if(decodeType.equals("non-proj")) {
-		if(secondOrder)
+	    if(options.decodeType.equals("non-proj")) {
+		if(options.secondOrder)
 		    d = ((DependencyDecoder2O)decoder).decodeNonProjective(inst,fvs,probs,
 								       fvs_trips,probs_trips,
 								       fvs_sibs,probs_sibs,
@@ -165,8 +150,10 @@ public class DependencyParser {
     //////////////////////////////////////////////////////
     // Get Best Parses ///////////////////////////////////
     //////////////////////////////////////////////////////
-    public void outputParses(String tFile, String file)
-	throws IOException {
+    public void outputParses () throws IOException {
+
+	String tFile = options.testfile;
+	String file = options.outfile;
 
 	long start = System.currentTimeMillis();
 
@@ -191,7 +178,7 @@ public class DependencyParser {
 	    double[][][] probs_trips = new double[length][length][length];
 	    FeatureVector[][][] fvs_sibs = new FeatureVector[length][length][2];
 	    double[][][] probs_sibs = new double[length][length][2];
-	    if(secondOrder)
+	    if(options.secondOrder)
 		((DependencyPipe2O)pipe).fillFeatureVectors(instance,fvs,probs,
 							    fvs_trips,probs_trips,
 							    fvs_sibs,probs_sibs,
@@ -199,10 +186,10 @@ public class DependencyParser {
 	    else
 		pipe.fillFeatureVectors(instance,fvs,probs,nt_fvs,nt_probs,params);
 
-	    int K = testK;
+	    int K = options.testK;
 	    Object[][] d = null;
-	    if(decodeType.equals("proj")) {
-		if(secondOrder)
+	    if(options.decodeType.equals("proj")) {
+		if(options.secondOrder)
 		    d = ((DependencyDecoder2O)decoder).decodeProjective(instance,fvs,probs,
 									fvs_trips,probs_trips,
 									fvs_sibs,probs_sibs,
@@ -210,8 +197,8 @@ public class DependencyParser {
 		else
 		    d = decoder.decodeProjective(instance,fvs,probs,nt_fvs,nt_probs,K);
 	    }
-	    if(decodeType.equals("non-proj")) {
-		if(secondOrder)
+	    if(options.decodeType.equals("non-proj")) {
+		if(options.secondOrder)
 		    d = ((DependencyDecoder2O)decoder).decodeNonProjective(instance,fvs,probs,
 								       fvs_trips,probs_trips,
 								       fvs_sibs,probs_sibs,
@@ -266,164 +253,57 @@ public class DependencyParser {
     ////////////////////////////////////////////////////
     public static void main (String[] args) throws FileNotFoundException, Exception
     {
+	
+	ParserOptions options = new ParserOptions(args);
+
+	if (options.train) {
 		
-	processArguments(args);
+	    DependencyPipe pipe = options.secondOrder ? 
+		new DependencyPipe2O (options) : new DependencyPipe (options);
 
-	if(train) {
-		
-	    DependencyPipe pipe = 
-		secondOrder ? new DependencyPipe2O (createForest, format) 
-		: new DependencyPipe (createForest, format);
-
-	    pipe.useRelationalFeatures(useRelationalFeatures);
-
-	    int[] instanceLengths = pipe.createInstances(trainfile,trainforest);
+	    int[] instanceLengths = 
+		pipe.createInstances(options.trainfile,options.trainforest);
 		
 	    pipe.closeAlphabets();
 	    
-	    DependencyParser dp = new DependencyParser(pipe);
+	    DependencyParser dp = new DependencyParser(pipe, options);
 	    
 	    int numFeats = pipe.dataAlphabet.size();
 	    int numTypes = pipe.typeAlphabet.size();
 	    System.out.print("Num Feats: " + numFeats);	
 	    System.out.println(".\tNum Edge Labels: " + numTypes);
 	    
-	    dp.train(instanceLengths,trainfile,trainforest);
+	    dp.train(instanceLengths,options.trainfile,options.trainforest);
 	    
 	    System.out.print("Saving model...");
-	    dp.saveModel(modelName);
+	    dp.saveModel(options.modelName);
 	    System.out.print("done.");
 	    
 	}
 		
-	if (test) {
-	    DependencyPipe pipe = secondOrder ? new DependencyPipe2O (createForest, format) : new DependencyPipe (createForest, format);
+	if (options.test) {
+	    DependencyPipe pipe = options.secondOrder ? 
+		new DependencyPipe2O (options) : new DependencyPipe (options);
 
-	    pipe.useRelationalFeatures(useRelationalFeatures);
-
-	    DependencyParser dp = new DependencyParser(pipe);
+	    DependencyParser dp = new DependencyParser(pipe, options);
 
 	    System.out.print("\tLoading model...");
-	    dp.loadModel(modelName);
+	    dp.loadModel(options.modelName);
 	    System.out.println("done.");
 
 	    pipe.closeAlphabets();
 
-	    dp.outputParses(testfile,outfile);
+	    dp.outputParses();
 	}
 		
 	System.out.println();
 
-	if(eval) {
+	if (options.eval) {
 	    System.out.println("\nEVALUATION PERFORMANCE:");
-	    DependencyEvaluator.evaluate(goldfile, outfile, format);
+	    DependencyEvaluator.evaluate(options.goldfile, 
+					 options.outfile, 
+					 options.format);
 	}
     }
 
-    public static void processArguments(String[] args) {
-	for(int i = 0; i < args.length; i++) {
-	    String[] pair = args[i].split(":");
-	    if(pair[0].equals("train")) {
-		train = true;
-	    }
-	    if(pair[0].equals("eval")) {
-		eval = true;
-	    }
-	    if(pair[0].equals("test")) {
-		test = true;
-	    }
-	    if(pair[0].equals("iters")) {
-		numIters = Integer.parseInt(pair[1]);
-	    }
-	    if(pair[0].equals("output-file")) {
-		outfile = pair[1];
-	    }
-	    if(pair[0].equals("gold-file")) {
-		goldfile = pair[1];
-	    }
-	    if(pair[0].equals("train-file")) {
-		trainfile = pair[1];
-	    }
-	    if(pair[0].equals("test-file")) {
-		testfile = pair[1];
-	    }
-	    if(pair[0].equals("model-name")) {
-		modelName = pair[1];
-	    }
-	    if(pair[0].equals("training-k")) {
-		trainK = Integer.parseInt(pair[1]);
-	    }
-	    if(pair[0].equals("loss-type")) {
-		lossType = pair[1];
-	    }			
-	    if(pair[0].equals("order") && pair[1].equals("2")) {
-		secondOrder = true;
-	    }			
-	    if(pair[0].equals("create-forest")) {
-		createForest = pair[1].equals("true") ? true : false;
-	    }			
-	    if(pair[0].equals("decode-type")) {
-		decodeType = pair[1];
-	    }			
-	    if(pair[0].equals("format")) {
-		format = pair[1];
-	    }			
-	    if(pair[0].equals("relational-features")) {
-		useRelationalFeatures = pair[1].equals("true") ? true : false;
-	    }			
-	}
-
-
-	try {
-	    File tmpDir = new File("/tmp");
-	    if (null != trainfile) {
-		trainforest = File.createTempFile("train", ".forest");
-		trainforest.deleteOnExit();
-	    }
-
-	    if (null != testfile) {
-		testforest = File.createTempFile("test", ".forest");
-		testforest.deleteOnExit();
-	    }
-
-	} catch (java.io.IOException e) {
-	    System.out.println("Unable to create tmp files for feature forests!");
-	    System.out.println(e);
-	    System.exit(0);
-	}
-
-	System.out.print("FLAGS [");
-	System.out.print("train-file: " + trainfile);
-	System.out.print(" | ");
-	System.out.print("test-file: " + testfile);
-	System.out.print(" | ");
-	System.out.print("gold-file: " + goldfile);
-	System.out.print(" | ");
-	System.out.print("output-file: " + outfile);
-	System.out.print(" | ");
-	System.out.print("model-name: " + modelName);
-	System.out.print(" | ");
-	System.out.print("train: " + train);
-	System.out.print(" | ");
-	System.out.print("test: " + test);
-	System.out.print(" | ");
-	System.out.print("eval: " + eval);
-	System.out.print(" | ");
-	System.out.print("loss-type: " + lossType);
-	System.out.print(" | ");
-	System.out.print("second-order: " + secondOrder);
-	System.out.print(" | ");
-	System.out.print("training-iterations: " + numIters);
-	System.out.print(" | ");
-	System.out.print("training-k: " + trainK);
-	System.out.print(" | ");
-	System.out.print("decode-type: " + decodeType);
-	System.out.print(" | ");
-	System.out.print("create-forest: " + createForest);
-	System.out.print(" | ");
-	System.out.print("format: " + format);
-	System.out.print(" | ");
-	System.out.print("relational-features: " + useRelationalFeatures);
-	System.out.print("]\n");
-    }
 }
