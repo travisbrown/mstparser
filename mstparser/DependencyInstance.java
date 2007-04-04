@@ -110,6 +110,7 @@ public class DependencyInstance implements Serializable {
 	out.writeObject(heads);
 	out.writeObject(deprels);
 	out.writeObject(actParseTree);
+	out.writeObject(feats);
 	out.writeObject(relFeats);
     }
 
@@ -122,6 +123,7 @@ public class DependencyInstance implements Serializable {
 	heads = (int[])in.readObject();
 	deprels = (String[])in.readObject();
 	actParseTree = (String)in.readObject();
+	feats = (String[][])in.readObject();
 	relFeats = (RelationalFeature[])in.readObject();
     }
 
