@@ -1,4 +1,11 @@
 -----------------------------------------------------------------------
+v0.4.4
+
+- Fixed bug: DependencyInstance serialization was not handling the
+  feats. This caused errors when using the non-projective decoder with
+  second order. (JMB 4-APR-07)
+
+-----------------------------------------------------------------------
 v0.4.3
 
 - Forest files are created in the tmp directory. Without this, two
