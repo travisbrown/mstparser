@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------
-v0.4.4
+v0.4.3b
 
 - Fixed bug: DependencyInstance serialization was not handling the
   feats. This caused errors when using the non-projective decoder with
