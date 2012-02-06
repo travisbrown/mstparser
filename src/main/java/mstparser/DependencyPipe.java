@@ -2,7 +2,7 @@ package mstparser;
 
 import mstparser.io.*;
 import java.io.*;
-import gnu.trove.*;
+import gnu.trove.list.array.TIntArrayList;
 import java.util.*;
 
 public class DependencyPipe {
@@ -128,7 +128,7 @@ public class DependencyPipe {
 	if(options.createForest)
 	    out.close();
 
-	return lengths.toNativeArray();
+	return lengths.toArray();
 		
     }
 

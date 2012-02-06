@@ -17,16 +17,18 @@ package mstparser;
 import java.util.ArrayList;
 import java.io.*;
 import java.util.Iterator;
+import gnu.trove.map.TObjectIntMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
 
 public class Alphabet implements Serializable
 {
-    gnu.trove.TObjectIntHashMap map;
+    TObjectIntHashMap map;
     int numEntries;
     boolean growthStopped = false;
 
     public Alphabet (int capacity)
     {
-	this.map = new gnu.trove.TObjectIntHashMap (capacity);
+	this.map = new TObjectIntHashMap (capacity, 0.75F, -1);
 	//this.map.setDefaultValue(-1);
 
 	numEntries = 0;
@@ -102,7 +104,7 @@ public class Alphabet implements Serializable
     private void readObject (ObjectInputStream in) throws IOException, ClassNotFoundException {
 	int version = in.readInt ();
 	numEntries = in.readInt();
-	map = (gnu.trove.TObjectIntHashMap)in.readObject();
+	map = (TObjectIntHashMap)in.readObject();
 	growthStopped = in.readBoolean();
     }
 	

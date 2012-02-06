@@ -12,7 +12,10 @@
 
 package mstparser;
 
-import gnu.trove.*;
+import gnu.trove.list.linked.TLinkedList;
+import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.map.hash.TIntDoubleHashMap;
 import java.util.*;
 
 
@@ -69,7 +72,7 @@ public final class FeatureVector extends TLinkedList {
     public int[] keys() {
 	TIntArrayList keys = new TIntArrayList();
 	addKeysToList(keys);
-	return keys.toNativeArray();
+	return keys.toArray();
     }
 
     private void addKeysToList(TIntArrayList keys) {

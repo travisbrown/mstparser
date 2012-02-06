@@ -12,7 +12,7 @@
 
 package mstparser;
 
-import gnu.trove.*;
+import gnu.trove.list.TLinkable;
 
 
 /**
@@ -28,10 +28,12 @@ import gnu.trove.*;
  * @see mstparser.FeatureVector
  */
 
-public final class Feature extends TLinkableAdaptor {
+public final class Feature implements TLinkable<Feature> {
 
     public int index;
     public double value;
+    private Feature next;
+    private Feature previous;
 
     public Feature (int i, double v) {
 	index = i;
@@ -48,6 +50,22 @@ public final class Feature extends TLinkableAdaptor {
 
     public final String toString() {
 	return index+"="+value;
+    }
+
+    public Feature getNext() {
+      return this.next;
+    }
+
+    public Feature getPrevious() {
+      return this.previous;
+    }
+
+    public void setNext(Feature next) {
+      this.next = next;
+    }
+
+    public void setPrevious(Feature previous) {
+      this.previous = previous;
     }
 
 }

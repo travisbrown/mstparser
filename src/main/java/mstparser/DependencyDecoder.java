@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.StringTokenizer;
-import gnu.trove.*;
+import gnu.trove.map.hash.TIntIntHashMap;
 
 public class DependencyDecoder {
 
