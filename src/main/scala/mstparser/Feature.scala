@@ -10,10 +10,10 @@
 // available from their website at http://www.opensource.org.
 ///////////////////////////////////////////////////////////////////////////////
 
-package mstparser;
+package mstparser
 
-import gnu.trove.list.TLinkable;
-
+import gnu.trove.list.TLinkable
+import scala.reflect.BeanProperty
 
 /**
  * A simple class holding a feature index and value that can be used
@@ -28,44 +28,13 @@ import gnu.trove.list.TLinkable;
  * @see mstparser.FeatureVector
  */
 
-public final class Feature implements TLinkable<Feature> {
+class Feature(
+  @BeanProperty val index: Int,
+  @BeanProperty val value: Double
+) extends TLinkable[Feature] {
+  @BeanProperty var next: Feature = _ 
+  @BeanProperty var previous: Feature = _ 
 
-    public int index;
-    public double value;
-    private Feature next;
-    private Feature previous;
-
-    public Feature (int i, double v) {
-	index = i;
-	value = v;
-    }
-
-    public final Feature clone () {
-	return new Feature(index, value);
-    }
-
-    public final Feature negation () {
-	return new Feature(index, -value);
-    }
-
-    public final String toString() {
-	return index+"="+value;
-    }
-
-    public Feature getNext() {
-      return this.next;
-    }
-
-    public Feature getPrevious() {
-      return this.previous;
-    }
-
-    public void setNext(Feature next) {
-      this.next = next;
-    }
-
-    public void setPrevious(Feature previous) {
-      this.previous = previous;
-    }
-
+  override def toString = this.index + " " + this.value
 }
+

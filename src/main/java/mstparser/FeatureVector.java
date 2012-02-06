@@ -85,7 +85,7 @@ public final class FeatureVector extends TLinkedList {
 
 	ListIterator it = listIterator();
 	while (it.hasNext())
-	    keys.add(((Feature)it.next()).index);
+	    keys.add(((Feature)it.next()).getIndex());
 
     }
 
@@ -123,12 +123,12 @@ public final class FeatureVector extends TLinkedList {
 	if (negate) {
 	    while (it.hasNext()) {
 		Feature f = (Feature)it.next();
-		score -= parameters[f.index]*f.value;
+		score -= parameters[f.getIndex()]*f.getValue();
 	    }
 	} else {
 	    while (it.hasNext()) {
 		Feature f = (Feature)it.next();
-		score += parameters[f.index]*f.value;
+		score += parameters[f.getIndex()]*f.getValue();
 	    }
 	}
 
@@ -160,14 +160,14 @@ public final class FeatureVector extends TLinkedList {
 	if (negate) {
 	    while (it.hasNext()) {
 		Feature f = (Feature)it.next();
-		parameters[f.index] -= alpha_k*f.value;
-		total[f.index] -= upd*alpha_k*f.value;
+		parameters[f.getIndex()] -= alpha_k*f.getValue();
+		total[f.getIndex()] -= upd*alpha_k*f.getValue();
 	    }
 	} else {
 	    while (it.hasNext()) {
 		Feature f = (Feature)it.next();
-		parameters[f.index] += alpha_k*f.value;
-		total[f.index] += upd*alpha_k*f.value;
+		parameters[f.getIndex()] += alpha_k*f.getValue();
+		total[f.getIndex()] += upd*alpha_k*f.getValue();
 	    }
 	}
 
@@ -211,14 +211,14 @@ public final class FeatureVector extends TLinkedList {
 	if (negate) {
 	    while (it.hasNext()) {
 		Feature f = (Feature)it.next();
-		if (!map.adjustValue(f.index, -f.value))
-		    map.put(f.index, -f.value);
+		if (!map.adjustValue(f.getIndex(), -f.getValue()))
+		    map.put(f.getIndex(), -f.getValue());
 	    }
 	} else {
 	    while (it.hasNext()) {
 		Feature f = (Feature)it.next();
-		if (!map.adjustValue(f.index, f.value))
-		    map.put(f.index, f.value);
+		if (!map.adjustValue(f.getIndex(), f.getValue()))
+		    map.put(f.getIndex(), f.getValue());
 	    }
 	}
     }
