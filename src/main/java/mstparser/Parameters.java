@@ -35,8 +35,8 @@ public class Parameters {
 	
     public void updateParamsMIRA(DependencyInstance inst, Object[][] d, double upd) {
 		
-	String actParseTree = inst.actParseTree;
-	FeatureVector actFV = inst.fv;
+	String actParseTree = inst.getParseTree();
+	FeatureVector actFV = inst.getFeatureVector();
 
 	int K = 0;
 	for(int i = 0; i < d.length && d[i][0] != null; i++) {

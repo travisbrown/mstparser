@@ -37,7 +37,7 @@ import java.util.*;
  * @version $Id$
  * @see mstparser.Feature
  */
-public final class FeatureVector extends TLinkedList {
+public final class FeatureVector extends TLinkedList<Feature> {
     private FeatureVector subfv1 = null;
     private FeatureVector subfv2 = null;
     private boolean negateSecondSubFV = false;

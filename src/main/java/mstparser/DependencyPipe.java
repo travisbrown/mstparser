@@ -59,8 +59,9 @@ public class DependencyPipe {
     }
 
     protected final DependencyInstance nextInstance() throws IOException {
-	DependencyInstance instance = depReader.getNext();
-	if (instance == null || instance.forms == null) return null;
+      if (!depReader.hasNext()) return null;
+	DependencyInstance instance = depReader.next();
+	if (instance.forms == null) return null;
 
 	instance.setFeatureVector(createFeatureVector(instance));
 	
@@ -71,7 +72,7 @@ public class DependencyPipe {
 	for(int i = 1; i < heads.length; i++) {
 	    spans.append(heads[i]).append("|").append(i).append(":").append(typeAlphabet.lookupIndex(labs[i])).append(" ");
 	}
-	instance.actParseTree = spans.substring(0,spans.length()-1);
+	instance.setParseTree(spans.substring(0,spans.length()-1));
 	
 	return instance;
     }
@@ -92,11 +93,11 @@ public class DependencyPipe {
 	    ? new ObjectOutputStream(new FileOutputStream(featFileName))
 	    : null;
 		
-	DependencyInstance instance = depReader.getNext();
 	int num1 = 0;
 
 	System.out.println("Creating Feature Vector Instances: ");
-	while(instance != null) {
+	while(depReader.hasNext()) {
+	    DependencyInstance instance = depReader.next();
 	    System.out.print(num1 + " ");
 	    
 	    instance.setFeatureVector(createFeatureVector(instance));
@@ -108,7 +109,7 @@ public class DependencyPipe {
 	    for(int i = 1; i < heads.length; i++) {
 		spans.append(heads[i]).append("|").append(i).append(":").append(typeAlphabet.lookupIndex(labs[i])).append(" ");
 	    }
-	    instance.actParseTree = spans.substring(0,spans.length()-1);
+	    instance.setParseTree(spans.substring(0,spans.length()-1));
 
 	    lengths.add(instance.length());
 			
@@ -116,7 +117,6 @@ public class DependencyPipe {
 		writeInstance(instance,out);
 	    instance = null;
 			
-	    instance = depReader.getNext();
 
 	    num1++;
 	}
@@ -138,9 +138,9 @@ public class DependencyPipe {
 
 	labeled = depReader.startReading(file);
 
-	DependencyInstance instance = depReader.getNext();
 
-	while(instance != null) {
+	while(depReader.hasNext()) {
+	    DependencyInstance instance = depReader.next();
 	    
 	    String[] labs = instance.deprels;
 	    for(int i = 0; i < labs.length; i++)
@@ -148,7 +148,6 @@ public class DependencyPipe {
 			
 	    createFeatureVector(instance);
 			
-	    instance = depReader.getNext();
 	}
 
 	closeAlphabets();
@@ -157,11 +156,11 @@ public class DependencyPipe {
     }
 	
     public void closeAlphabets() {
-	dataAlphabet.stopGrowth();
-	typeAlphabet.stopGrowth();
+	dataAlphabet.setGrowing(false);
+	typeAlphabet.setGrowing(false);
 
 	types = new String[typeAlphabet.size()];
-	Object[] keys = typeAlphabet.toArray();
+	String[] keys = typeAlphabet.toArray();
 	for(int i = 0; i < keys.length; i++) {
 	    int indx = typeAlphabet.lookupIndex(keys[i]);
 	    types[indx] = (String)keys[i];
@@ -834,7 +833,7 @@ public class DependencyPipe {
 
 	    writeExtendedFeatures(instance, out);
 
-	    out.writeObject(instance.fv.keys());
+	    out.writeObject(instance.getFeatureVector().keys());
 	    out.writeInt(-4);
 
 	    out.writeObject(instance);
