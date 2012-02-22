@@ -1,15 +1,15 @@
-package mstparser;
+package mstparser
 
-import java.io._
-import java.util.ArrayList
-import java.util.Arrays
-import java.util.StringTokenizer
-import gnu.trove._
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 
 import mstparser.io._
 
 class DependencyParser(
-  private val pipe: DependencyPipe,
+  private var pipe: DependencyPipe,
   private val options: ParserOptions
 ) {
 
@@ -95,8 +95,9 @@ class DependencyParser(
   def loadModel(file: String) {
     val in = new ObjectInputStream(new FileInputStream(file))
     this.params.parameters = in.readObject().asInstanceOf[Array[Double]]
-    this.pipe.dataAlphabet = in.readObject().asInstanceOf[Alphabet]
-    this.pipe.typeAlphabet = in.readObject().asInstanceOf[Alphabet]
+    //this.pipe = new DependencyPipe(this.options, in.readObject().asInstanceOf[Alphabet], in.readObject().asInstanceOf[Alphabet])
+    this.pipe.setDataAlphabet(in.readObject().asInstanceOf[Alphabet])
+    this.pipe.setTypeAlphabet(in.readObject().asInstanceOf[Alphabet])
     in.close()
     this.pipe.closeAlphabets()
   }

@@ -1,6 +1,8 @@
-package mstparser;
+package mstparser.old;
 
-public class OldDependencyInstance implements java.io.Serializable {
+import mstparser.*;
+
+public class DependencyInstance implements java.io.Serializable {
 
     // The various data types. Here's an example from Portuguese:
     //
@@ -33,7 +35,7 @@ public class OldDependencyInstance implements java.io.Serializable {
     // RELATIONAL FEATURE: relational features that hold between items
     public RelationalFeature[] relFeats;
 
-    public OldDependencyInstance(String[] forms, String[] lemmas, String[] cpostags, 
+    public DependencyInstance(String[] forms, String[] lemmas, String[] cpostags, 
 			      String[] postags, String[][] feats, String[] labs, int[] heads,
 			      RelationalFeature[] relFeats) {
 	this.forms = forms;

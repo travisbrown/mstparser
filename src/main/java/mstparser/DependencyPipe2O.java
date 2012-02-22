@@ -222,7 +222,7 @@ public class DependencyPipe2O extends DependencyPipe {
 	    for(int w1 = 0; w1 < length; w1++) {
 		for(int w2 = w1+1; w2 < length; w2++) {
 		    for(int ph = 0; ph < 2; ph++) {
-			FeatureVector prodFV = new FeatureVector((int[])in.readObject());
+			FeatureVector prodFV = FeatureVector.fromKeys((int[])in.readObject());
 			double prodProb = params.getScore(prodFV);
 			fvs[w1][w2][ph] = prodFV;
 			probs[w1][w2][ph] = prodProb;
@@ -238,7 +238,7 @@ public class DependencyPipe2O extends DependencyPipe {
 			String type = types[t];
 			for(int ph = 0; ph < 2; ph++) {						
 			    for(int ch = 0; ch < 2; ch++) {
-				FeatureVector prodFV = new FeatureVector((int[])in.readObject());
+			  FeatureVector prodFV = FeatureVector.fromKeys((int[])in.readObject());
 				double nt_prob = params.getScore(prodFV);
 				nt_fvs[w1][t][ph][ch] = prodFV;
 				nt_probs[w1][t][ph][ch] = nt_prob;
@@ -253,7 +253,7 @@ public class DependencyPipe2O extends DependencyPipe {
 	    for(int w1 = 0; w1 < length; w1++) {
 		for(int w2 = w1; w2 < length; w2++) {
 		    for(int w3 = w2+1; w3 < length; w3++) {
-			FeatureVector prodFV = new FeatureVector((int[])in.readObject());
+			FeatureVector prodFV = FeatureVector.fromKeys((int[])in.readObject());
 			double prodProb = params.getScore(prodFV);
 			fvs_trips[w1][w2][w3] = prodFV;
 			probs_trips[w1][w2][w3] = prodProb;
@@ -261,7 +261,7 @@ public class DependencyPipe2O extends DependencyPipe {
 		}
 		for(int w2 = w1; w2 >= 0; w2--) {
 		    for(int w3 = w2-1; w3 >= 0; w3--) {
-			FeatureVector prodFV = new FeatureVector((int[])in.readObject());
+			FeatureVector prodFV = FeatureVector.fromKeys((int[])in.readObject());
 			double prodProb = params.getScore(prodFV);
 			fvs_trips[w1][w2][w3] = prodFV;
 			probs_trips[w1][w2][w3] = prodProb;
@@ -275,7 +275,7 @@ public class DependencyPipe2O extends DependencyPipe {
 		for(int w2 = 0; w2 < length; w2++) {
 		    for(int wh = 0; wh < 2; wh++) {
 			if(w1 != w2) {
-			    FeatureVector prodFV = new FeatureVector((int[])in.readObject());
+			    FeatureVector prodFV = FeatureVector.fromKeys((int[])in.readObject());
 			    double prodProb = params.getScore(prodFV);
 			    fvs_sibs[w1][w2][wh] = prodFV;
 			    probs_sibs[w1][w2][wh] = prodProb;
@@ -286,7 +286,7 @@ public class DependencyPipe2O extends DependencyPipe {
 	    last = in.readInt();
 	    if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
 	    
-	    FeatureVector nfv = new FeatureVector((int[])in.readObject());
+			FeatureVector nfv = FeatureVector.fromKeys((int[])in.readObject());
 	    last = in.readInt();
 	    if(last != -4) { System.out.println("Error reading file."); System.exit(0); }
 

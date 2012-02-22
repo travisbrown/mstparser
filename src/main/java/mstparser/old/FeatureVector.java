@@ -10,7 +10,7 @@
 // available from their website at http://www.opensource.org.
 ///////////////////////////////////////////////////////////////////////////////
 
-package mstparser;
+package mstparser.old;
 
 import gnu.trove.list.linked.TLinkedList;
 import gnu.trove.list.TIntList;
@@ -18,6 +18,7 @@ import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.TIntDoubleHashMap;
 import java.util.*;
 
+import mstparser.Feature;
 
 
 /**
@@ -37,7 +38,7 @@ import java.util.*;
  * @version $Id$
  * @see mstparser.Feature
  */
-public final class FeatureVector extends TLinkedList<Feature> {
+public class FeatureVector extends TLinkedList<Feature> {
     private FeatureVector subfv1 = null;
     private FeatureVector subfv2 = null;
     private boolean negateSecondSubFV = false;
@@ -90,14 +91,14 @@ public final class FeatureVector extends TLinkedList<Feature> {
     }
 
 
-    public final FeatureVector cat(FeatureVector fl2) {
+    /*public final FeatureVector cat(FeatureVector fl2) {
 	return new FeatureVector(this, fl2);
     }
 
     // fv1 - fv2
     public FeatureVector getDistVector(FeatureVector fl2) {
 	return new FeatureVector(this, fl2, true);
-    }
+    }*/
 
     public final double getScore(double[] parameters) {
 	return getScore(parameters, false);

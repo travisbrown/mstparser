@@ -1,8 +1,17 @@
 package mstparser
 
+import scala.reflect.BeanProperty
+
 import mstparser.io._
 
-class DependencyPipe(options: ParserOptions) extends old.DependencyPipe(options) {
+class DependencyPipe(
+  @BeanProperty protected val options: ParserOptions,
+  @BeanProperty var dataAlphabet: Alphabet,
+  @BeanProperty var typeAlphabet: Alphabet
+) extends old.DependencyPipe {
+  def this(options: ParserOptions) = this(options, new Alphabet(), new Alphabet())
+
+  this.depReader = DependencyReader.createDependencyReader(this.options.format, this.options.discourseMode)
 
   def initInputFile(file: String) {
     this.labeled = this.depReader.startReading(file)

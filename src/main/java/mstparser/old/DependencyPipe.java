@@ -1,95 +1,43 @@
-package mstparser;
+package mstparser.old;
 
+import mstparser.Alphabet;
+import mstparser.KBestParseForest;
+import mstparser.Parameters;
+import mstparser.ParserOptions;
 import mstparser.io.*;
 import java.io.*;
 import gnu.trove.list.array.TIntArrayList;
 import java.util.*;
 
-public class DependencyPipe {
-
-    public Alphabet dataAlphabet;
-	
-    public Alphabet typeAlphabet;
-
-    private DependencyReader depReader;
-    private DependencyWriter depWriter;
+public abstract class DependencyPipe {
+    protected DependencyReader depReader;
+    protected DependencyWriter depWriter;
 
     public String[] types;
     public int[] typesInt;
 	
     public boolean labeled = false;
-    private boolean isCONLL = true;
 
-    private ParserOptions options;
-
-    public DependencyPipe (ParserOptions options) throws IOException {
-	this.options = options;
-
-	if (!options.format.equals("CONLL"))
-	    isCONLL = false;
-
-	dataAlphabet = new Alphabet();
-	typeAlphabet = new Alphabet();
-
-	depReader = DependencyReader.createDependencyReader(options.format, options.discourseMode);
-    }
-
-    public void initInputFile (String file) throws IOException {
-	labeled = depReader.startReading(file);
-    }
-
-    public void initOutputFile (String file) throws IOException {
-	depWriter = 
-	    DependencyWriter.createDependencyWriter(options.format, labeled);
-	depWriter.startWriting(file);
-    }
-
-    public void outputInstance (DependencyInstance instance) throws IOException {
-	depWriter.write(instance);
-    }
-
-    public void close () throws IOException {
-	if (null != depWriter) {
-	    depWriter.finishWriting();
-	}
-    }
-
-    public String getType (int typeIndex) {
-	return types[typeIndex];
-    }
-
-    protected final DependencyInstance nextInstance() throws IOException {
-      if (!depReader.hasNext()) return null;
-	DependencyInstance instance = depReader.next();
-	if (instance.forms == null) return null;
-
-	instance.setFeatureVector(createFeatureVector(instance));
+    public abstract ParserOptions getOptions();
+    public abstract Alphabet getDataAlphabet();
+    public abstract Alphabet getTypeAlphabet();
+    public abstract void closeAlphabets() throws IOException;
+    public abstract void add(String feat, mstparser.FeatureVector fv);
+    public abstract void add(String feat, double val, mstparser.FeatureVector fv);
 	
-	String[] labs = instance.deprels;
-	int[] heads = instance.heads;
-
-	StringBuffer spans = new StringBuffer(heads.length*5);
-	for(int i = 1; i < heads.length; i++) {
-	    spans.append(heads[i]).append("|").append(i).append(":").append(typeAlphabet.lookupIndex(labs[i])).append(" ");
-	}
-	instance.setParseTree(spans.substring(0,spans.length()-1));
-	
-	return instance;
-    }
-
 
     public int[] createInstances(String file,
 				 File featFileName) throws IOException {
 
 	createAlphabet(file);
 
-	System.out.println("Num Features: " + dataAlphabet.size());
+	System.out.println("Num Features: " + this.getDataAlphabet().size());
 
 	labeled = depReader.startReading(file);
 
 	TIntArrayList lengths = new TIntArrayList();
 
-	ObjectOutputStream out = options.createForest
+	ObjectOutputStream out = this.getOptions().createForest
 	    ? new ObjectOutputStream(new FileOutputStream(featFileName))
 	    : null;
 		
@@ -97,7 +45,7 @@ public class DependencyPipe {
 
 	System.out.println("Creating Feature Vector Instances: ");
 	while(depReader.hasNext()) {
-	    DependencyInstance instance = depReader.next();
+	    mstparser.DependencyInstance instance = depReader.next();
 	    System.out.print(num1 + " ");
 	    
 	    instance.setFeatureVector(createFeatureVector(instance));
@@ -107,13 +55,13 @@ public class DependencyPipe {
 
 	    StringBuffer spans = new StringBuffer(heads.length*5);
 	    for(int i = 1; i < heads.length; i++) {
-		spans.append(heads[i]).append("|").append(i).append(":").append(typeAlphabet.lookupIndex(labs[i])).append(" ");
+		spans.append(heads[i]).append("|").append(i).append(":").append(this.getTypeAlphabet().lookupIndex(labs[i])).append(" ");
 	    }
 	    instance.setParseTree(spans.substring(0,spans.length()-1));
 
 	    lengths.add(instance.length());
 			
-	    if(options.createForest)
+	    if(this.getOptions().createForest)
 		writeInstance(instance,out);
 	    instance = null;
 			
@@ -125,7 +73,7 @@ public class DependencyPipe {
 
 	closeAlphabets();
 		
-	if(options.createForest)
+	if(this.getOptions().createForest)
 	    out.close();
 
 	return lengths.toArray();
@@ -140,11 +88,11 @@ public class DependencyPipe {
 
 
 	while(depReader.hasNext()) {
-	    DependencyInstance instance = depReader.next();
+	    mstparser.DependencyInstance instance = depReader.next();
 	    
 	    String[] labs = instance.deprels;
 	    for(int i = 0; i < labs.length; i++)
-		typeAlphabet.lookupIndex(labs[i]);
+		this.getTypeAlphabet().lookupIndex(labs[i]);
 			
 	    createFeatureVector(instance);
 			
@@ -155,43 +103,15 @@ public class DependencyPipe {
 	System.out.println("Done.");
     }
 	
-    public void closeAlphabets() {
-	dataAlphabet.setGrowing(false);
-	typeAlphabet.setGrowing(false);
 
-	types = new String[typeAlphabet.size()];
-	String[] keys = typeAlphabet.toArray();
-	for(int i = 0; i < keys.length; i++) {
-	    int indx = typeAlphabet.lookupIndex(keys[i]);
-	    types[indx] = (String)keys[i];
-	}
-
-	KBestParseForest.rootType = typeAlphabet.lookupIndex("<root-type>");
-    }
-
-
-    // add with default 1.0
-    public final void add(String feat, FeatureVector fv) {
-	int num = dataAlphabet.lookupIndex(feat);
-	if(num >= 0)
-	    fv.add(num, 1.0);
-    }
-
-    public final void add(String feat, double val, FeatureVector fv) {
-	int num = dataAlphabet.lookupIndex(feat);
-	if(num >= 0)
-	    fv.add(num, val);
-    }
-
-	
-    public FeatureVector createFeatureVector(DependencyInstance instance) {
+    public mstparser.FeatureVector createFeatureVector(mstparser.DependencyInstance instance) {
 
 	final int instanceLength = instance.length();
 
 	String[] labs = instance.deprels;
 	int[] heads = instance.heads;
 
-	FeatureVector fv = new FeatureVector();
+	mstparser.FeatureVector fv = new mstparser.FeatureVector();
 	for(int i = 0; i < instanceLength; i++) {
 	    if(heads[i] == -1)
 		continue;
@@ -210,15 +130,15 @@ public class DependencyPipe {
 	return fv;
     }
 
-    protected void addExtendedFeatures(DependencyInstance instance, 
-				       FeatureVector fv) {}
+    protected void addExtendedFeatures(mstparser.DependencyInstance instance, 
+				       mstparser.FeatureVector fv) {}
 
 
-    public void addCoreFeatures(DependencyInstance instance,
+    public void addCoreFeatures(mstparser.DependencyInstance instance,
 				int small,
 				int large,
 				boolean attR,
-				FeatureVector fv) {
+				mstparser.FeatureVector fv) {
 
 	String[] forms = instance.forms;
 	String[] pos = instance.postags;
@@ -253,7 +173,7 @@ public class DependencyPipe {
 	addTwoObsFeatures("HC", forms[headIndex], pos[headIndex], 
 			  forms[childIndex], pos[childIndex], attDist, fv);
 
-	if (isCONLL) {
+	if (this.getOptions().format.equals("CONLL")) {
 
 	    addTwoObsFeatures("HCA", forms[headIndex], posA[headIndex], 
 	    		      forms[childIndex], posA[childIndex], attDist, fv);
@@ -266,7 +186,7 @@ public class DependencyPipe {
 			      instance.lemmas[childIndex], posA[childIndex], 
 			      attDist, fv);
 
-	    if (options.discourseMode) {
+	    if (this.getOptions().discourseMode) {
 		// Note: The features invoked here are designed for
 		// discourse parsing (as opposed to sentential
 		// parsing). It is conceivable that they could help for
@@ -323,7 +243,7 @@ public class DependencyPipe {
     private final void addLinearFeatures(String type, String[] obsVals, 
 					 int first, int second,
 					 String attachDistance,
-					 FeatureVector fv) {
+					 mstparser.FeatureVector fv) {
 	
 	String pLeft = first > 0 ? obsVals[first-1] : "STR";
 	String pRight = second < obsVals.length-1 ? obsVals[second+1] : "END";
@@ -352,7 +272,7 @@ public class DependencyPipe {
 			   String leftOf1, String one, String rightOf1, 
 			   String leftOf2, String two, String rightOf2, 
 			   String attachDistance, 
-			   FeatureVector fv) {
+			   mstparser.FeatureVector fv) {
 
 	// feature posL-1 posL posR posR+1
 
@@ -441,7 +361,7 @@ public class DependencyPipe {
 					 String item1F1, String item1F2, 
 					 String item2F1, String item2F2, 
 					 String attachDistance,
-					 FeatureVector fv) {
+					 mstparser.FeatureVector fv) {
 
 	StringBuilder feat = new StringBuilder(prefix+"2FF1="+item1F1);
 	add(feat.toString(), fv);
@@ -511,12 +431,12 @@ public class DependencyPipe {
 	
     }
 
-    public void addLabeledFeatures(DependencyInstance instance,
+    public void addLabeledFeatures(mstparser.DependencyInstance instance,
 				   int word,
 				   String type,
 				   boolean attR,
 				   boolean childFeatures,
-				   FeatureVector fv) {
+				   mstparser.FeatureVector fv) {
 		
 	if(!labeled) 
 	    return;
@@ -555,13 +475,13 @@ public class DependencyPipe {
     }
 
 
-    private void addDiscourseFeatures (DependencyInstance instance, 
+    private void addDiscourseFeatures (mstparser.DependencyInstance instance, 
 				       int small,
 				       int large,
 				       int headIndex,
 				       int childIndex,
 				       String attDist,
-				       FeatureVector fv) {
+				       mstparser.FeatureVector fv) {
     
 	addLinearFeatures("FORM", instance.forms, small, large, attDist, fv);
 	addLinearFeatures("LEMMA", instance.lemmas, small, large, attDist, fv);
@@ -679,7 +599,7 @@ public class DependencyPipe {
 
 
 	// Test out relational features
-	if (options.useRelationalFeatures) {
+	if (this.getOptions().useRelationalFeatures) {
 
 	    //for (int rf_index=0; rf_index<2; rf_index++) {
 	    for (int rf_index=0; 
@@ -736,10 +656,10 @@ public class DependencyPipe {
     }
 
 
-    public void fillFeatureVectors(DependencyInstance instance,
-				   FeatureVector[][][] fvs,
+    public void fillFeatureVectors(mstparser.DependencyInstance instance,
+				   mstparser.FeatureVector[][][] fvs,
 				   double[][][] probs,
-				   FeatureVector[][][][] nt_fvs,
+				   mstparser.FeatureVector[][][][] nt_fvs,
 				   double[][][][] nt_probs, Parameters params) {
 
 	final int instanceLength = instance.length();
@@ -753,7 +673,7 @@ public class DependencyPipe {
 		    int childInt = attR ? w2 : w1;
 		    int parInt = attR ? w1 : w2;
 		    
-		    FeatureVector prodFV = new FeatureVector();
+		    mstparser.FeatureVector prodFV = new mstparser.FeatureVector();
 		    addCoreFeatures(instance,w1,w2,attR, prodFV)
 ;
 		    double prodProb = params.getScore(prodFV);
@@ -774,7 +694,7 @@ public class DependencyPipe {
 
 			    boolean child = ch == 0 ? true : false;
 
-			    FeatureVector prodFV = new FeatureVector();
+			    mstparser.FeatureVector prodFV = new mstparser.FeatureVector();
 			    addLabeledFeatures(instance,w1,
 					       type,attR,child, prodFV);
 			    
@@ -794,7 +714,7 @@ public class DependencyPipe {
      * Write an instance to an output stream for later reading.
      *
      **/
-    protected void writeInstance(DependencyInstance instance, ObjectOutputStream out) {
+    protected void writeInstance(mstparser.DependencyInstance instance, ObjectOutputStream out) {
 
 	int instanceLength = instance.length();
 
@@ -804,7 +724,7 @@ public class DependencyPipe {
 		for(int w2 = w1+1; w2 < instanceLength; w2++) {
 		    for(int ph = 0; ph < 2; ph++) {
 			boolean attR = ph == 0 ? true : false;
-			FeatureVector prodFV = new FeatureVector();
+			mstparser.FeatureVector prodFV = new mstparser.FeatureVector();
 			addCoreFeatures(instance,w1,w2,attR,prodFV);
 			out.writeObject(prodFV.keys());
 		    }
@@ -820,7 +740,7 @@ public class DependencyPipe {
 			    boolean attR = ph == 0 ? true : false;
 			    for(int ch = 0; ch < 2; ch++) {
 				boolean child = ch == 0 ? true : false;
-				FeatureVector prodFV = new FeatureVector();
+				mstparser.FeatureVector prodFV = new mstparser.FeatureVector();
 				addLabeledFeatures(instance,w1,
 						   type, attR,child,prodFV);
 				out.writeObject(prodFV.keys());
@@ -851,7 +771,7 @@ public class DependencyPipe {
      * written to disk. For the basic DependencyPipe, nothing happens.
      *
      */
-    protected void writeExtendedFeatures (DependencyInstance instance, ObjectOutputStream out) 
+    protected void writeExtendedFeatures (mstparser.DependencyInstance instance, ObjectOutputStream out) 
 	throws IOException {}
 
 
@@ -859,11 +779,11 @@ public class DependencyPipe {
      * Read an instance from an input stream.
      *
      **/
-    public DependencyInstance readInstance(ObjectInputStream in,
+    public mstparser.DependencyInstance readInstance(ObjectInputStream in,
 					   int length,
-					   FeatureVector[][][] fvs,
+					   mstparser.FeatureVector[][][] fvs,
 					   double[][][] probs,
-					   FeatureVector[][][][] nt_fvs,
+					   mstparser.FeatureVector[][][][] nt_fvs,
 					   double[][][][] nt_probs,
 					   Parameters params) throws IOException {
 
@@ -873,7 +793,7 @@ public class DependencyPipe {
 	    for(int w1 = 0; w1 < length; w1++) {
 		for(int w2 = w1+1; w2 < length; w2++) {
 		    for(int ph = 0; ph < 2; ph++) {
-			FeatureVector prodFV = new FeatureVector((int[])in.readObject());
+			mstparser.FeatureVector prodFV = mstparser.FeatureVector.fromKeys((int[])in.readObject());
 			double prodProb = params.getScore(prodFV);
 			fvs[w1][w2][ph] = prodFV;
 			probs[w1][w2][ph] = prodProb;
@@ -890,7 +810,7 @@ public class DependencyPipe {
 			
 			for(int ph = 0; ph < 2; ph++) {						
 			    for(int ch = 0; ch < 2; ch++) {
-				FeatureVector prodFV = new FeatureVector((int[])in.readObject());
+			  mstparser.FeatureVector prodFV = mstparser.FeatureVector.fromKeys((int[])in.readObject());
 				double nt_prob = params.getScore(prodFV);
 				nt_fvs[w1][t][ph][ch] = prodFV;
 				nt_probs[w1][t][ph][ch] = nt_prob;
@@ -902,12 +822,12 @@ public class DependencyPipe {
 		if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
 	    }
 
-	    FeatureVector nfv = new FeatureVector((int[])in.readObject());
+			mstparser.FeatureVector nfv = mstparser.FeatureVector.fromKeys((int[])in.readObject());
 	    last = in.readInt();
 	    if(last != -4) { System.out.println("Error reading file."); System.exit(0); }
 
-	    DependencyInstance marshalledDI;
-	    marshalledDI = (DependencyInstance)in.readObject();
+	    mstparser.DependencyInstance marshalledDI;
+	    marshalledDI = (mstparser.DependencyInstance)in.readObject();
 	    marshalledDI.setFeatureVector(nfv);	
 
 	    last = in.readInt();
@@ -933,7 +853,7 @@ public class DependencyPipe {
     private final void
 	addOldMSTStemFeatures(String hLemma, String headP, 
 			      String cLemma, String childP, String attDist, 
-			      int hL, int cL, FeatureVector fv) {
+			      int hL, int cL, mstparser.FeatureVector fv) {
 
 	String all = hLemma + " " + headP + " " + cLemma + " " + childP;
 	String hPos = headP + " " + cLemma + " " + childP;
