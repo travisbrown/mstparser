@@ -15,19 +15,6 @@ package mstparser
 import gnu.trove.list.TLinkable
 import scala.reflect.BeanProperty
 
-/**
- * A simple class holding a feature index and value that can be used
- * in a TLinkedList.
- *
- * <p>
- * Created: Sat Nov 10 15:25:10 2001
- * </p>
- *
- * @author Jason Baldridge
- * @version $Id: TLinkedList.java,v 1.5 2005/03/26 17:52:56 ericdf Exp $
- * @see mstparser.FeatureVector
- */
-
 class Feature(
   @BeanProperty val index: Int,
   @BeanProperty val value: Double
@@ -38,3 +25,13 @@ class Feature(
   override def toString = this.index + " " + this.value
 }
 
+class RelationalFeature(size: Int, declaration: String, lines: Array[String]) {
+  require(lines.length == size)
+  private val decFields = declaration.split(" ")
+  private val name = this.decFields(2)
+  private val values = lines.map(_.substring(2).split(" "))
+
+  def getFeature(firstIndex: Int, secondIndex: Int) =
+    if (firstIndex == 0 || secondIndex == 0) this.name + "=NULL"
+    else this.name + "=" + this.values(firstIndex - 1)(secondIndex - 1)
+}
