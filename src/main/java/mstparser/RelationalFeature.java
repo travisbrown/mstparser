@@ -1,8 +1,8 @@
 package mstparser;
 
 public class RelationalFeature implements java.io.Serializable {
-  public String name;
-  public String[][] values;
+  private String name;
+  private String[][] values;
 
   public RelationalFeature(int size, String declaration, String[] lines) {
     values = new String[size][size];
