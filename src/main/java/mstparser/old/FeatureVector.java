@@ -90,16 +90,6 @@ public class FeatureVector extends TLinkedList<Feature> {
 
     }
 
-
-    /*public final FeatureVector cat(FeatureVector fl2) {
-	return new FeatureVector(this, fl2);
-    }
-
-    // fv1 - fv2
-    public FeatureVector getDistVector(FeatureVector fl2) {
-	return new FeatureVector(this, fl2, true);
-    }*/
-
     public final double getScore(double[] parameters) {
 	return getScore(parameters, false);
     }

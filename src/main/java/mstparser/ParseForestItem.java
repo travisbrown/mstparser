@@ -45,19 +45,6 @@ public class ParseForestItem {
 
     public ParseForestItem() {}
 
-    public void copyValues(ParseForestItem p) {
-	p.s = s;
-	p.r = r;
-	p.t = t;
-	p.dir = dir;
-	p.comp = comp;
-	p.prob = prob;
-	p.fv = fv;
-	p.length = length;
-	p.left = left;
-	p.right = right;
-	p.type = type;
-    }
 	
     // way forest works, only have to check rule and indeces
     // for equality.

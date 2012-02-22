@@ -18,7 +18,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 			   double[][][] probs_sibs, double[][][][] nt_probs, int[] par, int[] labs) {
 		
 	int[][] static_types = null;
-	if(pipe.labeled) {
+	if(pipe.getLabeled()) {
 	    static_types = getTypes(nt_probs,par.length);
 	}
 
@@ -48,7 +48,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 		double change = 0.0 - probs[lDir ? ch : par[ch]][lDir ? par[ch] : ch][lDir ? 1 : 0]
 		    - probs_trips[par[ch]][aSib][ch] - probs_sibs[aSib][ch][aSib == par[ch] ? 0 : 1]
 		    - (bSib != ch ? probs_trips[par[ch]][ch][bSib] + probs_sibs[ch][bSib][1] : 0.0)
-		    - (pipe.labeled ? (nt_probs[ch][labs[ch]][lDir ? 1 : 0][0] + nt_probs[par[ch]][labs[ch]][lDir ? 1 : 0][1]) : 0.0)
+		    - (pipe.getLabeled() ? (nt_probs[ch][labs[ch]][lDir ? 1 : 0][0] + nt_probs[par[ch]][labs[ch]][lDir ? 1 : 0][1]) : 0.0)
 		    + (bSib != ch ? probs_trips[par[ch]][aSib][bSib] + probs_sibs[aSib][bSib][aSib == par[ch] ? 0 : 1] : 0.0);
 		for(int pa = 0; pa < par.length; pa++) {
 		    if(ch == pa || pa == par[ch] || isChild[ch][pa]) continue;
@@ -57,10 +57,10 @@ public class DependencyDecoder2O extends DependencyDecoder {
 		    double change1 = 0.0 + probs[lDir1 ? ch : pa][lDir1 ? pa : ch][lDir1 ? 1 : 0]
 			+ probs_trips[pa][aSib][ch] + probs_sibs[aSib][ch][aSib == pa ? 0 : 1]
 			+ (bSib != ch ? probs_trips[pa][ch][bSib] + probs_sibs[ch][bSib][1] : 0.0)
-			+ (pipe.labeled ? (nt_probs[ch][static_types[pa][ch]][lDir1 ? 1 : 0][0] + nt_probs[pa][static_types[pa][ch]][lDir1 ? 1 : 0][1]) : 0.0)
+			+ (pipe.getLabeled() ? (nt_probs[ch][static_types[pa][ch]][lDir1 ? 1 : 0][0] + nt_probs[pa][static_types[pa][ch]][lDir1 ? 1 : 0][1]) : 0.0)
 			- (bSib != ch ? probs_trips[pa][aSib][bSib] + probs_sibs[aSib][bSib][aSib == pa ? 0 : 1] : 0.0);
 		    if(max < change+change1) {
-			max = change+change1; wh = ch; nPar = pa; nType = pipe.labeled ? static_types[pa][ch] : 0;
+			max = change+change1; wh = ch; nPar = pa; nType = pipe.getLabeled() ? static_types[pa][ch] : 0;
 		    }
 		}
 	    }
@@ -95,7 +95,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 	par[0] = -1;
 	for(int i = 1; i < par.length; i++) {
 	    par[i] = Integer.parseInt(o[i-1].split("\\|")[0]);
-	    labs[i] = pipe.labeled ? Integer.parseInt(o[i-1].split(":")[1]) : 0;
+	    labs[i] = pipe.getLabeled() ? Integer.parseInt(o[i-1].split(":")[1]) : 0;
 	}
 
 	rearrange(probs,probs_trips,probs_sibs,nt_probs,par,labs);
@@ -174,7 +174,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 	String[] pos = inst.postags;
 		
 	int[][] static_types = null;
-	if(pipe.labeled) {
+	if(pipe.getLabeled()) {
 	    static_types = getTypes(nt_probs,forms.length);
 	}
 
@@ -194,8 +194,8 @@ public class DependencyDecoder2O extends DependencyDecoder {
 		double prodProb_st = probs[s][t][0];
 		double prodProb_ts = probs[s][t][1];
 				
-		int type1 = pipe.labeled ? static_types[s][t] : 0;
-		int type2 = pipe.labeled ? static_types[t][s] : 0;
+		int type1 = pipe.getLabeled() ? static_types[s][t] : 0;
+		int type2 = pipe.getLabeled() ? static_types[t][s] : 0;
 		
 		FeatureVector nt_fv_s_01 = nt_fvs[s][type1][0][1];
 		FeatureVector nt_fv_s_10 = nt_fvs[s][type2][1][0];
@@ -232,7 +232,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 			    bc += prodProb_st + prodProb_sst;
 			    
 			    FeatureVector fv_fin = pf.cat(prodFV_st,prodFV_sst);
-			    if(pipe.labeled) {
+			    if(pipe.getLabeled()) {
 				bc += nt_prob_s_01+nt_prob_t_00;
 				fv_fin = nt_fv_s_01.cat(nt_fv_t_00.cat(fv_fin));
 			    }
@@ -266,7 +266,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 			    bc += prodProb_ts + prodProb_stt;
 			    
 			    FeatureVector fv_fin = pf.cat(prodFV_ts,prodFV_stt);
-			    if(pipe.labeled) {
+			    if(pipe.getLabeled()) {
 				bc += nt_prob_t_11+nt_prob_s_10;
 				fv_fin = nt_fv_t_11.cat(nt_fv_s_10.cat(fv_fin));
 			    }
@@ -322,7 +322,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 			    bc += prodProb_st + probs_trips[s][r][t] + probs_sibs[r][t][1];
 			    FeatureVector fv_fin = pf.cat(prodFV_st,pf.cat(fvs_trips[s][r][t],fvs_sibs[r][t][1]));
 
-			    if(pipe.labeled) {
+			    if(pipe.getLabeled()) {
 				bc += nt_prob_s_01+nt_prob_t_00;
 				fv_fin = nt_fv_s_01.cat(nt_fv_t_00.cat(fv_fin));
 			    }
@@ -351,7 +351,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 			    bc += prodProb_ts + probs_trips[t][r][s] + probs_sibs[r][s][1];
 			    
 			    FeatureVector fv_fin = pf.cat(prodFV_ts,pf.cat(fvs_trips[t][r][s],fvs_sibs[r][s][1]));
-			    if(pipe.labeled) {
+			    if(pipe.getLabeled()) {
 				bc += nt_prob_t_11+nt_prob_s_10;
 				fv_fin = nt_fv_t_11.cat(nt_fv_s_10.cat(fv_fin));
 			    }

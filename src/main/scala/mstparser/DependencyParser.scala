@@ -74,8 +74,8 @@ class DependencyParser(
   private def createArrays(length: Int) = (
     Array.ofDim[FeatureVector](length, length, 2),
     Array.ofDim[Double](length, length, 2),
-    Array.ofDim[FeatureVector](length, pipe.types.length, 2, 2),
-    Array.ofDim[Double](length, pipe.types.length, 2, 2),
+    Array.ofDim[FeatureVector](length, pipe.getTypes.length, 2, 2),
+    Array.ofDim[Double](length, pipe.getTypes.length, 2, 2),
 
     Array.ofDim[FeatureVector](length, length, length),
     Array.ofDim[Double](length, length, length),
@@ -163,7 +163,7 @@ class DependencyParser(
         posNoRoot(j) = instance.cpostags(j + 1)
 
         val trip = res(j).split("[\\|:]")
-        labels(j) = this.pipe.types(trip(2).toInt)
+        labels(j) = this.pipe.getTypes(trip(2).toInt)
         heads(j) = trip(0).toInt
       }
 

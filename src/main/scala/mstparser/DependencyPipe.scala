@@ -13,6 +13,9 @@ class DependencyPipe(
 
   this.depReader = DependencyReader.createDependencyReader(this.options.format, this.options.discourseMode)
 
+  def getLabeled = this.labeled
+  def getTypes = this.types
+
   def initInputFile(file: String) {
     this.labeled = this.depReader.startReading(file)
   }

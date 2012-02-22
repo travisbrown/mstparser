@@ -13,10 +13,9 @@ public abstract class DependencyPipe {
     protected DependencyReader depReader;
     protected DependencyWriter depWriter;
 
-    public String[] types;
-    public int[] typesInt;
+    protected String[] types;
 	
-    public boolean labeled = false;
+    protected boolean labeled = false;
 
     public abstract ParserOptions getOptions();
     public abstract Alphabet getDataAlphabet();
@@ -24,7 +23,6 @@ public abstract class DependencyPipe {
     public abstract void closeAlphabets() throws IOException;
     public abstract void add(String feat, mstparser.FeatureVector fv);
     public abstract void add(String feat, double val, mstparser.FeatureVector fv);
-	
 
     public int[] createInstances(String file,
 				 File featFileName) throws IOException {

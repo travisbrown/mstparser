@@ -21,7 +21,7 @@ public class DependencyDecoder {
 		if(i == j) {static_types[i][j] = 0; continue; }
 		int wh = -1;
 		double best = Double.NEGATIVE_INFINITY;
-		for(int t = 0; t < pipe.types.length; t++) {
+		for(int t = 0; t < pipe.getTypes().length; t++) {
 		    double score = 0.0;
 		    if(i < j)
 			score = nt_probs[i][t][0][1] + nt_probs[j][t][0][0];
@@ -47,7 +47,7 @@ public class DependencyDecoder {
 	String[] pos = inst.postags;
 
 	int[][] static_types = null;
-	if(pipe.labeled) {
+	if(pipe.getLabeled()) {
 	    static_types = getTypes(nt_probs,forms.length);
 	}
 
@@ -67,8 +67,8 @@ public class DependencyDecoder {
 		double prodProb_st = probs[s][t][0];
 		double prodProb_ts = probs[s][t][1];
 				
-		int type1 = pipe.labeled ? static_types[s][t] : 0;
-		int type2 = pipe.labeled ? static_types[t][s] : 0;
+		int type1 = pipe.getLabeled() ? static_types[s][t] : 0;
+		int type2 = pipe.getLabeled() ? static_types[t][s] : 0;
 		
 		FeatureVector nt_fv_s_01 = nt_fvs[s][type1][0][1];
 		FeatureVector nt_fv_s_10 = nt_fvs[s][type2][1][0];
@@ -102,7 +102,7 @@ public class DependencyDecoder {
 								
 				double prob_fin = bc+prodProb_st;
 				FeatureVector fv_fin = prodFV_st;
-				if(pipe.labeled) {
+				if(pipe.getLabeled()) {
 				    fv_fin = nt_fv_s_01.cat(nt_fv_t_00.cat(fv_fin));
 				    prob_fin += nt_prob_s_01+nt_prob_t_00;
 				}
@@ -110,7 +110,7 @@ public class DependencyDecoder {
 								
 				prob_fin = bc+prodProb_ts;
 				fv_fin = prodFV_ts;
-				if(pipe.labeled) {
+				if(pipe.getLabeled()) {
 				    fv_fin = nt_fv_t_11.cat(nt_fv_s_10.cat(fv_fin));
 				    prob_fin += nt_prob_t_11+nt_prob_s_10;
 				}
@@ -192,7 +192,7 @@ public class DependencyDecoder {
 	TIntIntHashMap[] reps = new TIntIntHashMap[numWords];
 
 	int[][] static_types = null;
-	if(pipe.labeled) {
+	if(pipe.getLabeled()) {
 	    static_types = getTypes(nt_probs,pos.length);
 	}
 
@@ -203,11 +203,11 @@ public class DependencyDecoder {
 	    for(int j = 0; j < numWords; j++) {
 		// score of edge (i,j) i --> j
 		scoreMatrix[i][j] = probs[i < j ? i : j][i < j ? j : i][i < j ? 0 : 1]
-		    + (pipe.labeled ? nt_probs[i][static_types[i][j]][i < j ? 0 : 1][1]
+		    + (pipe.getLabeled() ? nt_probs[i][static_types[i][j]][i < j ? 0 : 1][1]
 		       + nt_probs[j][static_types[i][j]][i < j ? 0 : 1][0]
 		       : 0.0);
 		orig_scoreMatrix[i][j] = probs[i < j ? i : j][i < j ? j : i][i < j ? 0 : 1]
-		    + (pipe.labeled ? nt_probs[i][static_types[i][j]][i < j ? 0 : 1][1]
+		    + (pipe.getLabeled() ? nt_probs[i][static_types[i][j]][i < j ? 0 : 1][1]
 		       + nt_probs[j][static_types[i][j]][i < j ? 0 : 1][0]
 		       : 0.0);
 		oldI[i][j] = i;
@@ -249,7 +249,7 @@ public class DependencyDecoder {
 		int ch = i; int pr = fin_par[k][i];
 		if(pr != -1) {
 		    fin_fv[k][ch] = fvs[ch < pr ? ch : pr][ch < pr ? pr : ch][ch < pr ? 1 : 0];
-		    if(pipe.labeled) {
+		    if(pipe.getLabeled()) {
 			fin_fv[k][ch] = 
 			    fin_fv[k][ch].cat(nt_fvs[ch][static_types[pr][ch]][ch < pr ? 1 : 0][0]);
 			fin_fv[k][ch] = 
@@ -270,7 +270,7 @@ public class DependencyDecoder {
 		fin[k] = fin_fv[k][i].cat(fin[k]);
 	    result[k] = "";
 	    for(int i = 1; i < par.length; i++)
-		result[k] += fin_par[k][i]+"|"+i + (pipe.labeled ? ":"+static_types[fin_par[k][i]][i] : ":0") +" ";
+		result[k] += fin_par[k][i]+"|"+i + (pipe.getLabeled() ? ":"+static_types[fin_par[k][i]][i] : ":0") +" ";
 	}
 		
 	// create d.
