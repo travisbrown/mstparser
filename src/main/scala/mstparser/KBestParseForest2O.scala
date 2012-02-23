@@ -1,27 +1,29 @@
-package mstparser;
+package mstparser
 
-public class KBestParseForest {
+class KBestParseForest2O(start: Int, end: Int, instance: DependencyInstance, k: Int)
+  extends old.KBestParseForest2O(start, end, instance, k) {
+}
 
-    public static int rootType;
-	
-    public ParseForestItem[][][][][] chart;
+/*class KBestParseForest2O {
+
+    private ParseForestItem[][][][][] chart;
     private String[] sent,pos;
     private int start,end;
     private int K;
 	
-    public KBestParseForest(int start, int end, DependencyInstance inst, int K) {
+    public KBestParseForest2O(int start, int end, DependencyInstance inst, int K) {
 	this.K = K;
-	chart = new ParseForestItem[end+1][end+1][2][2][K];
+	chart = new ParseForestItem[end+1][end+1][2][3][K];
 	this.start = start;
 	this.end = end;
 	this.sent = inst.forms;
 	this.pos = inst.postags;
     }
-	
-    public boolean add(int s, int type, int dir, double score, FeatureVector fv) {
 
+    public boolean add(int s, int type, int dir, double score, FeatureVector fv) {
+				
 	boolean added = false;
-		
+
 	if(chart[s][s][dir][0][0] == null) {
 	    for(int i = 0; i < K; i++)
 		chart[s][s][dir][0][i] = new ParseForestItem(s,type,dir,Double.NEGATIVE_INFINITY,null);
@@ -51,7 +53,7 @@ public class KBestParseForest {
 		       int dir, int comp, double score,
 		       FeatureVector fv,
 		       ParseForestItem p1, ParseForestItem p2) {
-
+		
 	boolean added = false;
 
 	if(chart[s][t][dir][comp][0] == null) {
@@ -66,8 +68,7 @@ public class KBestParseForest {
 	for(int i = 0; i < K; i++) {
 	    if(chart[s][t][dir][comp][i].prob < score) {
 		ParseForestItem tmp = chart[s][t][dir][comp][i];
-		chart[s][t][dir][comp][i] =
-		    new ParseForestItem(s,r,t,type,dir,comp,score,fv,p1,p2);
+		chart[s][t][dir][comp][i] = new ParseForestItem(s,r,t,type,dir,comp,score,fv,p1,p2);
 		for(int j = i+1; j < K && tmp.prob != Double.NEGATIVE_INFINITY; j++) {
 		    ParseForestItem tmp1 = chart[s][t][dir][comp][j];
 		    chart[s][t][dir][comp][j] = tmp;
@@ -97,9 +98,7 @@ public class KBestParseForest {
 	double[] result = new double[K];
 	for(int i = 0; i < K; i++)
 	    result[i] =
-		chart[s][t][dir][comp][i] != null
-		? chart[s][t][dir][comp][i].prob
-		: Double.NEGATIVE_INFINITY;
+		chart[s][t][dir][comp][i] != null ? chart[s][t][dir][comp][i].prob : Double.NEGATIVE_INFINITY;
 	return result;
     }
 
@@ -107,9 +106,9 @@ public class KBestParseForest {
 	return getItem(s,t,dir,comp,0);
     }
 
-    public ParseForestItem getItem(int s, int t, int dir, int comp, int k) {
-	if(chart[s][t][dir][comp][k] != null)
-	    return chart[s][t][dir][comp][k];
+    public ParseForestItem getItem(int s, int t, int dir, int comp, int i) {
+	if(chart[s][t][dir][comp][i] != null)
+	    return chart[s][t][dir][comp][i];
 	return null;
     }
 
@@ -118,7 +117,6 @@ public class KBestParseForest {
 	    return chart[s][t][dir][comp];
 	return null;
     }
-
 
     public Object[] getBestParse() {
 	Object[] d = new Object[2];
@@ -153,17 +151,11 @@ public class KBestParseForest {
 	if(pfi.left == null)
 	    return "";
 
-	if(pfi.comp == 0) {
-	    return (getDepString(pfi.left) + " " + getDepString(pfi.right)).trim();
-	}
-	else if(pfi.dir == 0) {
-	    return ((getDepString(pfi.left)+" "+getDepString(pfi.right)).trim()+" "
-		    +pfi.s+"|"+pfi.t+":"+pfi.type).trim();
-	}
-	else {
-	    return (pfi.t+"|"+pfi.s+":"+pfi.type +" "
-		    +(getDepString(pfi.left)+" "+getDepString(pfi.right)).trim()).trim();
-	}
+	if(pfi.dir == 0 && pfi.comp == 1)
+	    return ((getDepString(pfi.left)+" "+getDepString(pfi.right)).trim()+" "+pfi.s+"|"+pfi.t+":"+pfi.type).trim();
+	else if(pfi.dir == 1 && pfi.comp == 1)
+	    return (pfi.t+"|"+pfi.s+":"+pfi.type+" "+(getDepString(pfi.left)+" "+getDepString(pfi.right)).trim()).trim();
+	return (getDepString(pfi.left) + " " + getDepString(pfi.right)).trim();
     }
 	
     public FeatureVector cat(FeatureVector fv1, FeatureVector fv2) {
@@ -183,9 +175,6 @@ public class KBestParseForest {
 	    result[i][1] = -1;
 	}
 
-	if(items1 == null || items2 == null || items1[0] == null || items2[0] == null)
-	    return result;
-		
 	BinaryHeap heap = new BinaryHeap(K+1);
 	int n = 0;
 	ValueIndexPair vip = new ValueIndexPair(items1[0].prob+items2[0].prob,0,0);
@@ -219,93 +208,6 @@ public class KBestParseForest {
 		
 	return result;
     }
-}
 	
-class ValueIndexPair {
-    public double val;
-    public int i1, i2;
-		
-    public ValueIndexPair(double val, int i1, int i2) {
-	this.val = val;
-	this.i1 = i1;
-	this.i2 = i2;
-    }
-
-    public int compareTo(ValueIndexPair other) {
-	if(val < other.val)
-	    return -1;
-	if(val > other.val)
-	    return 1;
-	return 0;
-    }
-		
-}
-
-// Max Heap
-// We know that never more than K elements on Heap
-class BinaryHeap { 
-    private int DEFAULT_CAPACITY; 
-    private int currentSize; 
-    private ValueIndexPair[] theArray;
-  
-    public BinaryHeap(int def_cap) {
-	DEFAULT_CAPACITY = def_cap;
-	theArray = new ValueIndexPair[DEFAULT_CAPACITY+1]; 
-	// theArray[0] serves as dummy parent for root (who is at 1) 
-	// "largest" is guaranteed to be larger than all keys in heap
-	theArray[0] = new ValueIndexPair(Double.POSITIVE_INFINITY,-1,-1);          
-	currentSize = 0; 
-    } 
-  
-    public ValueIndexPair getMax() { 
-	return theArray[1]; 
-    }
-  
-    private int parent(int i) { return i / 2; } 
-    private int leftChild(int i) { return 2 * i; } 
-    private int rightChild(int i) { return 2 * i + 1; } 
-  
-    public void add(ValueIndexPair e) { 
-   
-	// bubble up: 
-	int where = currentSize + 1; // new last place 
-	while ( e.compareTo(theArray[parent(where)]) > 0 ){ 
-	    theArray[where] = theArray[parent(where)]; 
-	    where = parent(where); 
-	} 
-	theArray[where] = e; currentSize++;
-    }
- 
-    public ValueIndexPair removeMax() {
-	ValueIndexPair min = theArray[1];
-	theArray[1] = theArray[currentSize];
-	currentSize--;
-	boolean switched = true;
-	// bubble down
-	for ( int parent = 1; switched && parent < currentSize; ) {
-	    switched = false;
-	    int leftChild = leftChild(parent);
-	    int rightChild = rightChild(parent);
-
-	    if(leftChild <= currentSize) {
-		// if there is a right child, see if we should bubble down there
-		int largerChild = leftChild;
-		if ((rightChild <= currentSize) && 
-		    (theArray[rightChild].compareTo(theArray[leftChild])) > 0){
-		    largerChild = rightChild; 
-		}
-		if (theArray[largerChild].compareTo(theArray[parent]) > 0) {      
-		    ValueIndexPair temp = theArray[largerChild];
-		    theArray[largerChild] = theArray[parent];
-		    theArray[parent] = temp;
-		    parent = largerChild;
-		    switched = true;
-		}
-	    }
-	} 
-	return min;
-    }
- 
-}
-
+}*/
 

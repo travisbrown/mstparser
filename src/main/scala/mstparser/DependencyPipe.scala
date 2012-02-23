@@ -42,8 +42,6 @@ class DependencyPipe(
     keys.foreach { key =>
       this.types(this.typeAlphabet.lookupIndex(key)) = key
     }
-
-    KBestParseForest.rootType = this.typeAlphabet.lookupIndex("<root-type>")
   }
 
   def getType(typeIndex: Int) = this.types(typeIndex)

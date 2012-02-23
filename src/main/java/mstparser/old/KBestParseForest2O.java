@@ -1,4 +1,7 @@
-package mstparser;
+package mstparser.old;
+
+import mstparser.FeatureVector;
+import mstparser.ParseForestItem;
 
 public class KBestParseForest2O {
 
@@ -7,7 +10,7 @@ public class KBestParseForest2O {
     private int start,end;
     private int K;
 	
-    public KBestParseForest2O(int start, int end, DependencyInstance inst, int K) {
+    public KBestParseForest2O(int start, int end, mstparser.DependencyInstance inst, int K) {
 	this.K = K;
 	chart = new ParseForestItem[end+1][end+1][2][3][K];
 	this.start = start;
