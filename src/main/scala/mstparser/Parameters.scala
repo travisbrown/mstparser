@@ -9,7 +9,6 @@ class Parameters(size: Int) extends old.Parameters(size) {
       instance.getFeatureVector.getDistVector(f)
     )}.unzip
 
-	  //val alpha = this.hildreth(dist.toArray, b.toArray)
     dist.zip(this.hildreth(dist.toArray, b.toArray)).foreach { case (f, a) =>
       f.update(this.parameters, this.total, a, update)
     }

@@ -83,71 +83,12 @@ public class KBestParseForest {
 		
     }
 
-    public double getProb(int s, int t, int dir, int comp) {
-	return getProb(s,t,dir,comp,0);
-    }
-
-    public double getProb(int s, int t, int dir, int comp, int i) {
-	if(chart[s][t][dir][comp][i] != null)
-	    return chart[s][t][dir][comp][i].prob;
-	return Double.NEGATIVE_INFINITY;
-    }
-
-    public double[] getProbs(int s, int t, int dir, int comp) {
-	double[] result = new double[K];
-	for(int i = 0; i < K; i++)
-	    result[i] =
-		chart[s][t][dir][comp][i] != null
-		? chart[s][t][dir][comp][i].prob
-		: Double.NEGATIVE_INFINITY;
-	return result;
-    }
-
-    /*public ParseForestItem getItem(int s, int t, int dir, int comp) {
-	return getItem(s,t,dir,comp,0);
-    }
-
-    public ParseForestItem getItem(int s, int t, int dir, int comp, int k) {
-	if(chart[s][t][dir][comp][k] != null)
-	    return chart[s][t][dir][comp][k];
-	return null;
-    }
-
-    public ParseForestItem[] getItems(int s, int t, int dir, int comp) {
-	if(chart[s][t][dir][comp][0] != null)
-	    return chart[s][t][dir][comp];
-	return null;
-    }
-
-
-    public Object[] getBestParse() {
-	Object[] d = new Object[2];
-	d[0] = getFeatureVector(chart[0][end][0][0][0]);
-	d[1] = getDepString(chart[0][end][0][0][0]);
-	return d;
-    }
-
-    public Object[][] getBestParses() {
-	Object[][] d = new Object[K][2];
-	for(int k = 0; k < K; k++) {
-	    if(chart[0][end][0][0][k].prob != Double.NEGATIVE_INFINITY) {
-		d[k][0] = getFeatureVector(chart[0][end][0][0][k]);
-		d[k][1] = getDepString(chart[0][end][0][0][k]);
-	    }
-	    else {
-		d[k][0] = null;
-		d[k][1] = null;
-	    }
-	}
-	return d;
-    }*/
-
-    public mstparser.FeatureVector getFeatureVector(ParseForestItem pfi) {
-	if(pfi.left == null)
-	    return pfi.fv;
+/*    public mstparser.FeatureVector getFeatureVector(ParseForestItem pfi) {
+//	if(pfi.left == null)
+//	    return pfi.fv;
 
 	return cat(pfi.fv,cat(getFeatureVector(pfi.left),getFeatureVector(pfi.right)));
-    }
+    }*/
 
     public String getDepString(ParseForestItem pfi) {
 	if(pfi.left == null)
@@ -166,9 +107,9 @@ public class KBestParseForest {
 	}
     }
 	
-    public mstparser.FeatureVector cat(mstparser.FeatureVector fv1, mstparser.FeatureVector fv2) {
+    /*public mstparser.FeatureVector cat(mstparser.FeatureVector fv1, mstparser.FeatureVector fv2) {
 	return fv1.cat(fv2);
-    }
+    }*/
 
 	
     // returns pairs of indeces and -1,-1 if < K pairs
