@@ -23,23 +23,15 @@ class KBestParseForest(start: Int, end: Int, instance: DependencyInstance, k: In
   def getFeatureVector(item: ParseForestItem): FeatureVector =
     Option(item.left).map(left => item.fv.cat(this.getFeatureVector(left).cat(this.getFeatureVector(item.right)))).getOrElse(item.fv)
 
-  /*  public String getDepString(ParseForestItem pfi) {
-	if(pfi.left == null)
-	    return "";
+  def getDepString(item: ParseForestItem): String = Option(item.left).map { left =>
+    val ld = this.getDepString(left)
+    val rd = this.getDepString(item.right)
+    val cs = (ld + " " + rd).trim
 
-	if(pfi.comp == 0) {
-	    return (getDepString(pfi.left) + " " + getDepString(pfi.right)).trim();
-	}
-	else if(pfi.dir == 0) {
-	    return ((getDepString(pfi.left)+" "+getDepString(pfi.right)).trim()+" "
-		    +pfi.s+"|"+pfi.t+":"+pfi.type).trim();
-	}
-	else {
-	    return (pfi.t+"|"+pfi.s+":"+pfi.type +" "
-		    +(getDepString(pfi.left)+" "+getDepString(pfi.right)).trim()).trim();
-	}
-    }*/
-	
+    if (item.comp == 0) cs
+    else if (item.dir == 0) "%s %d|%d:%s".format(cs, item.s, item.t, item.`type`).trim
+    else "%d|%d:%s %s".format(item.t, item.s, item.`type`, cs).trim 
+  }.getOrElse("")
 }
 
 case class ValueIndexPair(v: Double, i: Int, j: Int)

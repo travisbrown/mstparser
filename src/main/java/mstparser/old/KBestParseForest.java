@@ -88,7 +88,7 @@ public class KBestParseForest {
 //	    return pfi.fv;
 
 	return cat(pfi.fv,cat(getFeatureVector(pfi.left),getFeatureVector(pfi.right)));
-    }*/
+    }
 
     public String getDepString(ParseForestItem pfi) {
 	if(pfi.left == null)
@@ -105,7 +105,7 @@ public class KBestParseForest {
 	    return (pfi.t+"|"+pfi.s+":"+pfi.type +" "
 		    +(getDepString(pfi.left)+" "+getDepString(pfi.right)).trim()).trim();
 	}
-    }
+    }*/
 	
     /*public mstparser.FeatureVector cat(mstparser.FeatureVector fv1, mstparser.FeatureVector fv2) {
 	return fv1.cat(fv2);
