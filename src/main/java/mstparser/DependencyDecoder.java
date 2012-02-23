@@ -92,13 +92,13 @@ public class DependencyDecoder {
 			ParseForestItem[] c1 = pf.getItems(r+1,t,1,0);
 						
 			if(b1 != null && c1 != null) {
-			    int[][] pairs = pf.getKBestPairs(b1,c1);
+			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
 			    for(int k = 0; k < pairs.length; k++) {
 								
-				if(pairs[k][0] == -1 || pairs[k][1] == -1)
+				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
 				    break;
 								
-				int comp1 = pairs[k][0]; int comp2 = pairs[k][1];
+				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 								
 				double bc = b1[comp1].prob+c1[comp2].prob;
 								
@@ -130,13 +130,13 @@ public class DependencyDecoder {
 			ParseForestItem[] b1 = pf.getItems(s,r,0,1);
 			ParseForestItem[] c1 = pf.getItems(r,t,0,0);
 			if(b1 != null && c1 != null) {
-			    int[][] pairs = pf.getKBestPairs(b1,c1);
+			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
 			    for(int k = 0; k < pairs.length; k++) {
-									
-				if(pairs[k][0] == -1 || pairs[k][1] == -1)
+								
+				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
 				    break;
-									
-				int comp1 = pairs[k][0]; int comp2 = pairs[k][1];
+								
+				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 									
 				double bc = b1[comp1].prob+c1[comp2].prob;
 									
@@ -152,13 +152,13 @@ public class DependencyDecoder {
 			ParseForestItem[] b1 = pf.getItems(s,r,1,0);
 			ParseForestItem[] c1 = pf.getItems(r,t,1,1);
 			if(b1 != null && c1 != null) {
-			    int[][] pairs = pf.getKBestPairs(b1,c1);
+			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
 			    for(int k = 0; k < pairs.length; k++) {
-									
-				if(pairs[k][0] == -1 || pairs[k][1] == -1)
+								
+				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
 				    break;
-									
-				int comp1 = pairs[k][0]; int comp2 = pairs[k][1];
+								
+				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 									
 				double bc = b1[comp1].prob+c1[comp2].prob;
 									

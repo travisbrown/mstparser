@@ -4,9 +4,9 @@ import mstparser.ParseForestItem;
 
 public class KBestParseForest {
 
-    public ParseForestItem[][][][][] chart;
+    protected ParseForestItem[][][][][] chart;
     private String[] sent,pos;
-    private int start,end;
+    protected int start,end;
     private int K;
 	
     public KBestParseForest(int start, int end, mstparser.DependencyInstance inst, int K) {
@@ -113,7 +113,7 @@ public class KBestParseForest {
 
 	
     // returns pairs of indeces and -1,-1 if < K pairs
-    public int[][] getKBestPairs(ParseForestItem[] items1, ParseForestItem[] items2) {
+  /*  public int[][] getKBestPairs(ParseForestItem[] items1, ParseForestItem[] items2) {
 	// in this case K = items1.length
 
 	boolean[][] beenPushed = new boolean[K][K];
@@ -159,7 +159,7 @@ public class KBestParseForest {
 	}
 		
 	return result;
-    }
+    }*/
 }
 	
 class ValueIndexPair {

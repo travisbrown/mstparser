@@ -1,5 +1,7 @@
 package mstparser
 
+import scala.collection.mutable.PriorityQueue
+
 class KBestParseForest(start: Int, end: Int, instance: DependencyInstance, k: Int)
   extends old.KBestParseForest(start, end, instance, k) {
 
@@ -32,11 +34,39 @@ class KBestParseForest(start: Int, end: Int, instance: DependencyInstance, k: In
     else if (item.dir == 0) "%s %d|%d:%s".format(cs, item.s, item.t, item.`type`).trim
     else "%d|%d:%s %s".format(item.t, item.s, item.`type`, cs).trim 
   }.getOrElse("")
-}
 
-case class ValueIndexPair(v: Double, i: Int, j: Int)
-  extends Ordered[ValueIndexPair] {
-  def compare(that: ValueIndexPair) = (this.v - that.v).signum
+  def getKBestPairs(is: Array[ParseForestItem], js: Array[ParseForestItem]): Array[(java.lang.Integer, java.lang.Integer)] = {
+    val result = Array.fill[(java.lang.Integer, java.lang.Integer)](this.k)(-1, -1)
+
+    if (is != null && js != null && is(0) != null && js(0) != null) {
+      val heap = PriorityQueue((is(0).prob + js(0).prob, (0, 0)))
+      val beenPushed = Array.ofDim[Boolean](this.k, this.k)
+      beenPushed(0)(0) = true
+
+      var n = 0
+
+      while (n < this.k && heap.head._1 > Double.NegativeInfinity) {
+        val (v, (i, j)) = heap.dequeue
+
+        result(n) = (i, j)
+        n += 1
+
+        if (n < this.k) {
+          if (!beenPushed(i + 1)(j)) {
+            heap += ((is(i + 1).prob + js(j).prob, (i + 1, j)))
+            beenPushed(i + 1)(j) = true
+          }
+
+          if (!beenPushed(i)(j + 1)) {
+            heap += ((is(i).prob + js(j + 1).prob, (i, j + 1)))
+            beenPushed(i)(j + 1) = true
+          }
+        }
+      }
+    }
+
+    result
+	}
 }
 
 /*
@@ -119,36 +149,6 @@ case class ValueIndexPair(v: Double, i: Int, j: Int)
 	return added;
 		
     }
-
-    public FeatureVector getFeatureVector(ParseForestItem pfi) {
-	if(pfi.left == null)
-	    return pfi.fv;
-
-	return cat(pfi.fv,cat(getFeatureVector(pfi.left),getFeatureVector(pfi.right)));
-    }
-
-    public String getDepString(ParseForestItem pfi) {
-	if(pfi.left == null)
-	    return "";
-
-	if(pfi.comp == 0) {
-	    return (getDepString(pfi.left) + " " + getDepString(pfi.right)).trim();
-	}
-	else if(pfi.dir == 0) {
-	    return ((getDepString(pfi.left)+" "+getDepString(pfi.right)).trim()+" "
-		    +pfi.s+"|"+pfi.t+":"+pfi.type).trim();
-	}
-	else {
-	    return (pfi.t+"|"+pfi.s+":"+pfi.type +" "
-		    +(getDepString(pfi.left)+" "+getDepString(pfi.right)).trim()).trim();
-	}
-    }
-	
-    public FeatureVector cat(FeatureVector fv1, FeatureVector fv2) {
-	return fv1.cat(fv2);
-    }
-
-	
     // returns pairs of indeces and -1,-1 if < K pairs
     public int[][] getKBestPairs(ParseForestItem[] items1, ParseForestItem[] items2) {
 	// in this case K = items1.length

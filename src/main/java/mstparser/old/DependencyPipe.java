@@ -1,7 +1,6 @@
 package mstparser.old;
 
 import mstparser.Alphabet;
-import mstparser.KBestParseForest;
 import mstparser.ParserOptions;
 import mstparser.io.*;
 import java.io.*;
