@@ -2,6 +2,18 @@ package mstparser
 
 class KBestParseForest2O(start: Int, end: Int, instance: DependencyInstance, k: Int)
   extends old.KBestParseForest2O(start, end, instance, k) {
+
+  def getItem(s: Int, t: Int, d: Int, c: Int): ParseForestItem = this.getItem(s, t, d, c, 0)
+  def getItem(s: Int, t: Int, d: Int, c: Int, k: Int): ParseForestItem = this.chart(s)(t)(d)(c)(k)
+  def getItems(s: Int, t: Int, d: Int, c: Int) =
+    if (this.chart(s)(t)(d)(c)(0) != null) this.chart(s)(t)(d)(c) else null
+
+  def getBestParses =
+    this.chart(0)(this.end)(0)(0).map { item =>
+      if (item.prob > Double.NegativeInfinity)
+        (this.getFeatureVector(item), this.getDepString(item))
+      else (null, null)
+    }
 }
 
 /*class KBestParseForest2O {

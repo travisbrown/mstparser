@@ -1,13 +1,12 @@
 package mstparser.old;
 
-import mstparser.FeatureVector;
 import mstparser.ParseForestItem;
 
 public class KBestParseForest2O {
 
-    private ParseForestItem[][][][][] chart;
+    protected ParseForestItem[][][][][] chart;
     private String[] sent,pos;
-    private int start,end;
+    protected int start,end;
     private int K;
 	
     public KBestParseForest2O(int start, int end, mstparser.DependencyInstance inst, int K) {
@@ -19,7 +18,7 @@ public class KBestParseForest2O {
 	this.pos = inst.postags;
     }
 
-    public boolean add(int s, int type, int dir, double score, FeatureVector fv) {
+    public boolean add(int s, int type, int dir, double score, mstparser.FeatureVector fv) {
 				
 	boolean added = false;
 
@@ -50,7 +49,7 @@ public class KBestParseForest2O {
 
     public boolean add(int s, int r, int t, int type,
 		       int dir, int comp, double score,
-		       FeatureVector fv,
+		       mstparser.FeatureVector fv,
 		       ParseForestItem p1, ParseForestItem p2) {
 		
 	boolean added = false;
@@ -101,7 +100,7 @@ public class KBestParseForest2O {
 	return result;
     }
 
-    public ParseForestItem getItem(int s, int t, int dir, int comp) {
+    /*public ParseForestItem getItem(int s, int t, int dir, int comp) {
 	return getItem(s,t,dir,comp,0);
     }
 
@@ -137,9 +136,9 @@ public class KBestParseForest2O {
 	    }
 	}
 	return d;
-    }
+    }*/
 
-    public FeatureVector getFeatureVector(ParseForestItem pfi) {
+    public mstparser.FeatureVector getFeatureVector(ParseForestItem pfi) {
 	if(pfi.left == null)
 	    return pfi.fv;
 
@@ -157,7 +156,7 @@ public class KBestParseForest2O {
 	return (getDepString(pfi.left) + " " + getDepString(pfi.right)).trim();
     }
 	
-    public FeatureVector cat(FeatureVector fv1, FeatureVector fv2) {
+    public mstparser.FeatureVector cat(mstparser.FeatureVector fv1, mstparser.FeatureVector fv2) {
 	return fv1.cat(fv2);
     }
 

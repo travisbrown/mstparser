@@ -2,7 +2,6 @@ package mstparser.old;
 
 import mstparser.Alphabet;
 import mstparser.KBestParseForest;
-import mstparser.Parameters;
 import mstparser.ParserOptions;
 import mstparser.io.*;
 import java.io.*;
@@ -658,7 +657,7 @@ public abstract class DependencyPipe {
 				   mstparser.FeatureVector[][][] fvs,
 				   double[][][] probs,
 				   mstparser.FeatureVector[][][][] nt_fvs,
-				   double[][][][] nt_probs, Parameters params) {
+				   double[][][][] nt_probs, mstparser.Parameters params) {
 
 	final int instanceLength = instance.length();
 
@@ -783,7 +782,7 @@ public abstract class DependencyPipe {
 					   double[][][] probs,
 					   mstparser.FeatureVector[][][][] nt_fvs,
 					   double[][][][] nt_probs,
-					   Parameters params) throws IOException {
+					   mstparser.Parameters params) throws IOException {
 
 	try {
 

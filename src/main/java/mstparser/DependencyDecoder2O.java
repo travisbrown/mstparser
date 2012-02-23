@@ -7,6 +7,8 @@ import java.util.HashMap;
 import gnu.trove.*;
 import java.text.DecimalFormat;
 
+import scala.Tuple2;
+
 public class DependencyDecoder2O extends DependencyDecoder {
 
     public DependencyDecoder2O(DependencyPipe pipe) {
@@ -74,7 +76,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
     }
 	
     // same as decode, except return K best
-    public Object[][] decodeNonProjective(DependencyInstance inst,
+    public Tuple2<FeatureVector, String>[] decodeNonProjective(DependencyInstance inst,
 					  FeatureVector[][][] fvs,
 					  double[][][] probs,
 					  FeatureVector[][][] fvs_trips,
@@ -87,8 +89,8 @@ public class DependencyDecoder2O extends DependencyDecoder {
 	String[] forms = inst.forms;
 	String[] pos = inst.postags;
 
-	Object[][] orig = decodeProjective(inst,fvs,probs,fvs_trips,probs_trips,fvs_sibs,probs_sibs,nt_fvs,nt_probs,1);
-	String[] o = ((String)orig[0][1]).split(" ");
+	Tuple2<FeatureVector, String>[] orig = decodeProjective(inst,fvs,probs,fvs_trips,probs_trips,fvs_sibs,probs_sibs,nt_fvs,nt_probs,1);
+	String[] o = orig[0]._2().split(" ");
 	int[] par = new int[o.length+1];
 	int[] labs = new int[o.length+1];
 	labs[0] = 0;
@@ -110,9 +112,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 	for(int i = 0; i < labs.length; i++)
 	    inst.deprels[i] = pipe.getType(labs[i]);
 
-	orig[0][0] = ((DependencyPipe2O)pipe).createFeatureVector(inst);
-	orig[0][1] = pars;
-		
+	orig[0] = new Tuple2<FeatureVector, String>(((DependencyPipe2O)pipe).createFeatureVector(inst), pars);
 
 	return orig;
     }
@@ -160,7 +160,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
     }
 		
     // same as decode, except return K best
-    public Object[][] decodeProjective(DependencyInstance inst,
+    public Tuple2<FeatureVector, String>[] decodeProjective(DependencyInstance inst,
 				       FeatureVector[][][] fvs,
 				       double[][][] probs,
 				       FeatureVector[][][] fvs_trips,

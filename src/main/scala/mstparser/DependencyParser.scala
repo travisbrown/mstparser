@@ -152,7 +152,7 @@ class DependencyParser(
         case _ => null
       }
 
-      val res = d(0)(1).asInstanceOf[String].split(" ")
+      val res = d(0)._2.split(" ")
       val formsNoRoot = Array.ofDim[String](instance.forms.length - 1)
       val posNoRoot = Array.ofDim[String](instance.forms.length - 1)
       val labels = Array.ofDim[String](instance.forms.length - 1)

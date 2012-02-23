@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.StringTokenizer;
 import gnu.trove.map.hash.TIntIntHashMap;
 
+import scala.Tuple2;
+
 public class DependencyDecoder {
 
     DependencyPipe pipe;
@@ -37,7 +39,7 @@ public class DependencyDecoder {
     }
 
     // static type for each edge: run time O(n^3 + Tn^2) T is number of types
-    public Object[][] decodeProjective(DependencyInstance inst,
+    public Tuple2<FeatureVector, String>[] decodeProjective(DependencyInstance inst,
 				       FeatureVector[][][] fvs,
 				       double[][][] probs,
 				       FeatureVector[][][][] nt_fvs,
@@ -174,7 +176,7 @@ public class DependencyDecoder {
 	return pf.getBestParses();
     }
 
-    public Object[][] decodeNonProjective(DependencyInstance inst,
+    public Tuple2<FeatureVector, String>[] decodeNonProjective(DependencyInstance inst,
 					  FeatureVector[][][] fvs,
 					  double[][][] probs,
 					  FeatureVector[][][][] nt_fvs,
@@ -274,11 +276,10 @@ public class DependencyDecoder {
 	}
 		
 	// create d.
-	Object[][] d = new Object[new_k][2];
+	Tuple2<FeatureVector, String>[] d = (Tuple2<FeatureVector, String>[]) new Tuple2[new_k];
 
 	for(int k = 0; k < new_k; k++) {
-	    d[k][0] = fin[k];
-	    d[k][1] = result[k].trim();
+	    d[k] = new Tuple2<FeatureVector, String>(fin[k], result[k].trim());
 	}
 
 	return d;

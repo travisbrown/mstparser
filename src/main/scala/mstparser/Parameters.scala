@@ -1,13 +1,24 @@
-package mstparser;
+package mstparser
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.ListIterator;
-import gnu.trove.*;
+class Parameters(size: Int) extends old.Parameters(size) {
+  def updateParamsMIRA(instance: DependencyInstance, d: Array[(FeatureVector, String)], update: Double) {
+    val score = this.getScore(instance.getFeatureVector)
 
-public class Parameters {
+    val (b, dist) = d.takeWhile(_._1 != null).map { case (f, p) => (
+      this.numErrors(instance, p, instance.getParseTree) - (score - this.getScore(f)),
+      instance.getFeatureVector.getDistVector(f)
+    )}.unzip
 
-    private double SCORE = 0.0;
+	  //val alpha = this.hildreth(dist.toArray, b.toArray)
+    dist.zip(this.hildreth(dist.toArray, b.toArray)).foreach { case (f, a) =>
+      f.update(this.parameters, this.total, a, update)
+    }
+  }
+
+  def getScore(f: FeatureVector) = f.getScore(this.parameters)
+}
+
+/*    private double SCORE = 0.0;
 
     public double[] parameters;
     public double[] total;
@@ -250,4 +261,5 @@ public class Parameters {
 		
     }
 	
-}
+}*/
+
