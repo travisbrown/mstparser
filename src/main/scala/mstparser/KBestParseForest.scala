@@ -13,26 +13,13 @@ class KBestParseForest(start: Int, end: Int, instance: DependencyInstance, k: In
   def getBestParses: Array[(FeatureVector, String)] =
     this.chart(0)(this.end)(0)(0).map { item =>
       if (item.prob > Double.NegativeInfinity)
-        (this.getFeatureVector(item), this.getDepString(item))
+        (item.getFeatureVector, item.getDepString)
       else (null, null)
     }
 
   def getProb(s: Int, t: Int, d: Int, c: Int): Double = this.getProb(s, t, d, c, 0)
   def getProb(s: Int, t: Int, d: Int, c: Int, i: Int): Double =
     Option(this.chart(s)(t)(d)(c)(i)).map(_.prob).getOrElse(Double.NegativeInfinity)
-
-  def getFeatureVector(item: ParseForestItem): FeatureVector =
-    Option(item.left).map(left => item.fv.cat(this.getFeatureVector(left).cat(this.getFeatureVector(item.right)))).getOrElse(item.fv)
-
-  def getDepString(item: ParseForestItem): String = Option(item.left).map { left =>
-    val ld = this.getDepString(left)
-    val rd = this.getDepString(item.right)
-    val cs = (ld + " " + rd).trim
-
-    if (item.comp == 0) cs
-    else if (item.dir == 0) "%s %d|%d:%d".format(cs, item.s, item.t, item.label).trim
-    else "%d|%d:%d %s".format(item.t, item.s, item.label, cs).trim 
-  }.getOrElse("")
 
   def getKBestPairs(is: Array[ParseForestItem], js: Array[ParseForestItem]): Array[(java.lang.Integer, java.lang.Integer)] = {
     val result = Array.fill[(java.lang.Integer, java.lang.Integer)](this.k)(-1, -1)

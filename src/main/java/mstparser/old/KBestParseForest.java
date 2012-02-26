@@ -2,6 +2,9 @@ package mstparser.old;
 
 import mstparser.ParseForestItem;
 
+import scala.Tuple2;
+import scala.Some;
+
 public class KBestParseForest {
 
     protected ParseForestItem[][][][][] chart;
@@ -24,7 +27,7 @@ public class KBestParseForest {
 		
 	if(chart[s][s][dir][0][0] == null) {
 	    for(int i = 0; i < K; i++)
-		chart[s][s][dir][0][i] = new ParseForestItem(s,type,dir,Double.NEGATIVE_INFINITY,null);
+		chart[s][s][dir][0][i] = new ParseForestItem(s,type,dir);
 	}
 		
 	if(chart[s][s][dir][0][K-1].prob() > score)
@@ -57,7 +60,7 @@ public class KBestParseForest {
 	if(chart[s][t][dir][comp][0] == null) {
 	    for(int i = 0; i < K; i++)
 		chart[s][t][dir][comp][i] =
-		    new ParseForestItem(s,r,t,type,dir,comp,Double.NEGATIVE_INFINITY,null,null,null);
+		    new ParseForestItem(s,r,t,type,dir,comp);
 	}
 
 	if(chart[s][t][dir][comp][K-1].prob() > score)
@@ -67,7 +70,7 @@ public class KBestParseForest {
 	    if(chart[s][t][dir][comp][i].prob() < score) {
 		ParseForestItem tmp = chart[s][t][dir][comp][i];
 		chart[s][t][dir][comp][i] =
-		    new ParseForestItem(s,r,t,type,dir,comp,score,fv,p1,p2);
+		    new ParseForestItem(s,r,t,type,dir,comp,score,fv,new Some(new Tuple2(p1,p2)));
 		for(int j = i+1; j < K && tmp.prob() != Double.NEGATIVE_INFINITY; j++) {
 		    ParseForestItem tmp1 = chart[s][t][dir][comp][j];
 		    chart[s][t][dir][comp][j] = tmp;
