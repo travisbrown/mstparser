@@ -216,14 +216,13 @@ public class DependencyDecoder2O extends DependencyDecoder {
 			FeatureVector prodFV_sst = pf.cat(fvs_trips[s][s][t],fvs_sibs[s][t][0]);
 			double prodProb_sst = probs_trips[s][s][t]+probs_sibs[s][t][0];
 						
-			int[][] pairs = pf.getKBestPairs(b1,c1);
-						
-			for(int k = 0; k < pairs.length; k++) {
-							
-			    if(pairs[k][0] == -1 || pairs[k][1] == -1)
-				break;
-							
-			    int comp1 = pairs[k][0]; int comp2 = pairs[k][1];
+			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
+			    for(int k = 0; k < pairs.length; k++) {
+								
+				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
+				    break;
+								
+				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 							
 			    double bc = b1[comp1].prob+c1[comp2].prob;
 							
@@ -250,14 +249,13 @@ public class DependencyDecoder2O extends DependencyDecoder {
 			FeatureVector prodFV_stt = pf.cat(fvs_trips[t][t][s],fvs_sibs[t][s][0]);
 			double prodProb_stt = probs_trips[t][t][s]+probs_sibs[t][s][0];
 
-			int[][] pairs = pf.getKBestPairs(b1,c1);
-						
-			for(int k = 0; k < pairs.length; k++) {
-							
-			    if(pairs[k][0] == -1 || pairs[k][1] == -1)
-				break;
-							
-			    int comp1 = pairs[k][0]; int comp2 = pairs[k][1];
+			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
+			    for(int k = 0; k < pairs.length; k++) {
+								
+				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
+				    break;
+								
+				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 							
 			    double bc = b1[comp1].prob+c1[comp2].prob;
 							
@@ -284,14 +282,13 @@ public class DependencyDecoder2O extends DependencyDecoder {
 					
 		    if(!(b1 == null || c1 == null)) {
 					
-			int[][] pairs = pf.getKBestPairs(b1,c1);
-						
-			for(int k = 0; k < pairs.length; k++) {
-							
-			    if(pairs[k][0] == -1 || pairs[k][1] == -1)
-				break;
-							
-			    int comp1 = pairs[k][0]; int comp2 = pairs[k][1];
+			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
+			    for(int k = 0; k < pairs.length; k++) {
+								
+				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
+				    break;
+								
+				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 							
 			    double bc = b1[comp1].prob+c1[comp2].prob;
 							
@@ -308,14 +305,13 @@ public class DependencyDecoder2O extends DependencyDecoder {
 					
 		    if(!(b1 == null || c1 == null)) {
 					
-			int[][] pairs = pf.getKBestPairs(b1,c1);
-						
-			for(int k = 0; k < pairs.length; k++) {
-							
-			    if(pairs[k][0] == -1 || pairs[k][1] == -1)
-				break;
-							
-			    int comp1 = pairs[k][0]; int comp2 = pairs[k][1];
+			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
+			    for(int k = 0; k < pairs.length; k++) {
+								
+				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
+				    break;
+								
+				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 							
 			    double bc = b1[comp1].prob+c1[comp2].prob;
 
@@ -337,14 +333,13 @@ public class DependencyDecoder2O extends DependencyDecoder {
 					
 		    if(!(b1 == null || c1 == null)) {
 					
-			int[][] pairs = pf.getKBestPairs(b1,c1);
-						
-			for(int k = 0; k < pairs.length; k++) {
-							
-			    if(pairs[k][0] == -1 || pairs[k][1] == -1)
-				break;
-							
-			    int comp1 = pairs[k][0]; int comp2 = pairs[k][1];
+			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
+			    for(int k = 0; k < pairs.length; k++) {
+								
+				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
+				    break;
+								
+				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 							
 			    double bc = b1[comp1].prob+c1[comp2].prob;
 
@@ -373,13 +368,13 @@ public class DependencyDecoder2O extends DependencyDecoder {
 			if(!(b1 == null || c1 == null)) {
 			    //continue;
 						
-			    int[][] pairs = pf.getKBestPairs(b1,c1);
+			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
 			    for(int k = 0; k < pairs.length; k++) {
 								
-				if(pairs[k][0] == -1 || pairs[k][1] == -1)
+				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
 				    break;
 								
-				int comp1 = pairs[k][0]; int comp2 = pairs[k][1];
+				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 								
 				double bc = b1[comp1].prob+c1[comp2].prob;
 								
@@ -396,13 +391,13 @@ public class DependencyDecoder2O extends DependencyDecoder {
 			if(!(b1 == null || c1 == null)) {
 			    //continue;
 
-			    int[][] pairs = pf.getKBestPairs(b1,c1);
+			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
 			    for(int k = 0; k < pairs.length; k++) {
 								
-				if(pairs[k][0] == -1 || pairs[k][1] == -1)
+				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
 				    break;
 								
-				int comp1 = pairs[k][0]; int comp2 = pairs[k][1];
+				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 								
 				double bc = b1[comp1].prob+c1[comp2].prob;
 								

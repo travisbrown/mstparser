@@ -100,44 +100,6 @@ public class KBestParseForest2O {
 	return result;
     }
 
-    /*public ParseForestItem getItem(int s, int t, int dir, int comp) {
-	return getItem(s,t,dir,comp,0);
-    }
-
-    public ParseForestItem getItem(int s, int t, int dir, int comp, int i) {
-	if(chart[s][t][dir][comp][i] != null)
-	    return chart[s][t][dir][comp][i];
-	return null;
-    }
-
-    public ParseForestItem[] getItems(int s, int t, int dir, int comp) {
-	if(chart[s][t][dir][comp][0] != null)
-	    return chart[s][t][dir][comp];
-	return null;
-    }
-
-    public Object[] getBestParse() {
-	Object[] d = new Object[2];
-	d[0] = getFeatureVector(chart[0][end][0][0][0]);
-	d[1] = getDepString(chart[0][end][0][0][0]);
-	return d;
-    }
-
-    public Object[][] getBestParses() {
-	Object[][] d = new Object[K][2];
-	for(int k = 0; k < K; k++) {
-	    if(chart[0][end][0][0][k].prob != Double.NEGATIVE_INFINITY) {
-		d[k][0] = getFeatureVector(chart[0][end][0][0][k]);
-		d[k][1] = getDepString(chart[0][end][0][0][k]);
-	    }
-	    else {
-		d[k][0] = null;
-		d[k][1] = null;
-	    }
-	}
-	return d;
-    }*/
-
     public mstparser.FeatureVector getFeatureVector(ParseForestItem pfi) {
 	if(pfi.left == null)
 	    return pfi.fv;
@@ -159,54 +121,5 @@ public class KBestParseForest2O {
     public mstparser.FeatureVector cat(mstparser.FeatureVector fv1, mstparser.FeatureVector fv2) {
 	return fv1.cat(fv2);
     }
-
-	
-    // returns pairs of indeces and -1,-1 if < K pairs
-    public int[][] getKBestPairs(ParseForestItem[] items1, ParseForestItem[] items2) {
-	// in this case K = items1.length
-
-	boolean[][] beenPushed = new boolean[K][K];
-		
-	int[][] result = new int[K][2];
-	for(int i = 0; i < K; i++) {
-	    result[i][0] = -1;
-	    result[i][1] = -1;
-	}
-
-	BinaryHeap heap = new BinaryHeap(K+1);
-	int n = 0;
-	ValueIndexPair vip = new ValueIndexPair(items1[0].prob+items2[0].prob,0,0);
-
-	heap.add(vip);
-	beenPushed[0][0] = true;
-		
-	while(n < K) {
-	    vip = heap.removeMax();
-			
-	    if(vip.val == Double.NEGATIVE_INFINITY)
-		break;
-			
-	    result[n][0] = vip.i1;
-	    result[n][1] = vip.i2;
-
-	    n++;
-	    if(n >= K)
-		break;
-			
-	    if(!beenPushed[vip.i1+1][vip.i2]) {
-		heap.add(new ValueIndexPair(items1[vip.i1+1].prob+items2[vip.i2].prob,vip.i1+1,vip.i2));
-		beenPushed[vip.i1+1][vip.i2] = true;
-	    }
-	    if(!beenPushed[vip.i1][vip.i2+1]) {
-		heap.add(new ValueIndexPair(items1[vip.i1].prob+items2[vip.i2+1].prob,vip.i1,vip.i2+1));
-		beenPushed[vip.i1][vip.i2+1] = true;
-	    }
-
-	}
-		
-	return result;
-    }
-	
 }
-
 

@@ -1,5 +1,7 @@
 package mstparser
 
+import scala.collection.mutable.PriorityQueue
+
 class KBestParseForest2O(start: Int, end: Int, instance: DependencyInstance, k: Int)
   extends old.KBestParseForest2O(start, end, instance, k) {
 
@@ -14,6 +16,39 @@ class KBestParseForest2O(start: Int, end: Int, instance: DependencyInstance, k: 
         (this.getFeatureVector(item), this.getDepString(item))
       else (null, null)
     }
+
+  def getKBestPairs(is: Array[ParseForestItem], js: Array[ParseForestItem]): Array[(java.lang.Integer, java.lang.Integer)] = {
+    val result = Array.fill[(java.lang.Integer, java.lang.Integer)](this.k)(-1, -1)
+
+    if (is != null && js != null && is(0) != null && js(0) != null) {
+      val heap = PriorityQueue((is(0).prob + js(0).prob, (0, 0)))
+      val beenPushed = Array.ofDim[Boolean](this.k, this.k)
+      beenPushed(0)(0) = true
+
+      var n = 0
+
+      while (n < this.k && heap.head._1 > Double.NegativeInfinity) {
+        val (v, (i, j)) = heap.dequeue
+
+        result(n) = (i, j)
+        n += 1
+
+        if (n < this.k) {
+          if (!beenPushed(i + 1)(j)) {
+            heap += ((is(i + 1).prob + js(j).prob, (i + 1, j)))
+            beenPushed(i + 1)(j) = true
+          }
+
+          if (!beenPushed(i)(j + 1)) {
+            heap += ((is(i).prob + js(j + 1).prob, (i, j + 1)))
+            beenPushed(i)(j + 1) = true
+          }
+        }
+      }
+    }
+
+    result
+  }
 }
 
 /*class KBestParseForest2O {
