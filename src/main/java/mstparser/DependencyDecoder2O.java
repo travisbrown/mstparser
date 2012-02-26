@@ -213,7 +213,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 		    ParseForestItem[] c1 = pf.getItems(s+1,t,1,0);
 		    if(!(b1 == null || c1 == null)) {
 						
-			FeatureVector prodFV_sst = pf.cat(fvs_trips[s][s][t],fvs_sibs[s][t][0]);
+			FeatureVector prodFV_sst = fvs_trips[s][s][t].cat(fvs_sibs[s][t][0]);
 			double prodProb_sst = probs_trips[s][s][t]+probs_sibs[s][t][0];
 						
 			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
@@ -230,7 +230,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 			    // create parent pair: s->t and s->(start,t)
 			    bc += prodProb_st + prodProb_sst;
 			    
-			    FeatureVector fv_fin = pf.cat(prodFV_st,prodFV_sst);
+			    FeatureVector fv_fin = prodFV_st.cat(prodFV_sst);
 			    if(pipe.getLabeled()) {
 				bc += nt_prob_s_01+nt_prob_t_00;
 				fv_fin = nt_fv_s_01.cat(nt_fv_t_00.cat(fv_fin));
@@ -246,7 +246,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 		    c1 = pf.getItems(t,t,1,0);
 		    if(!(b1 == null || c1 == null)) {
 						
-			FeatureVector prodFV_stt = pf.cat(fvs_trips[t][t][s],fvs_sibs[t][s][0]);
+			FeatureVector prodFV_stt = fvs_trips[t][t][s].cat(fvs_sibs[t][s][0]);
 			double prodProb_stt = probs_trips[t][t][s]+probs_sibs[t][s][0];
 
 			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
@@ -263,7 +263,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 			    // create parent pair: s->t and s->(start,t)
 			    bc += prodProb_ts + prodProb_stt;
 			    
-			    FeatureVector fv_fin = pf.cat(prodFV_ts,prodFV_stt);
+			    FeatureVector fv_fin = prodFV_ts.cat(prodFV_stt);
 			    if(pipe.getLabeled()) {
 				bc += nt_prob_t_11+nt_prob_s_10;
 				fv_fin = nt_fv_t_11.cat(nt_fv_s_10.cat(fv_fin));
@@ -316,7 +316,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 			    double bc = b1[comp1].prob+c1[comp2].prob;
 
 			    bc += prodProb_st + probs_trips[s][r][t] + probs_sibs[r][t][1];
-			    FeatureVector fv_fin = pf.cat(prodFV_st,pf.cat(fvs_trips[s][r][t],fvs_sibs[r][t][1]));
+			    FeatureVector fv_fin = prodFV_st.cat(fvs_trips[s][r][t].cat(fvs_sibs[r][t][1]));
 
 			    if(pipe.getLabeled()) {
 				bc += nt_prob_s_01+nt_prob_t_00;
@@ -345,7 +345,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 
 			    bc += prodProb_ts + probs_trips[t][r][s] + probs_sibs[r][s][1];
 			    
-			    FeatureVector fv_fin = pf.cat(prodFV_ts,pf.cat(fvs_trips[t][r][s],fvs_sibs[r][s][1]));
+			    FeatureVector fv_fin = prodFV_ts.cat(fvs_trips[t][r][s].cat(fvs_sibs[r][s][1]));
 			    if(pipe.getLabeled()) {
 				bc += nt_prob_t_11+nt_prob_s_10;
 				fv_fin = nt_fv_t_11.cat(nt_fv_s_10.cat(fv_fin));

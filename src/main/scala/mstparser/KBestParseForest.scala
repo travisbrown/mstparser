@@ -21,7 +21,6 @@ class KBestParseForest(start: Int, end: Int, instance: DependencyInstance, k: In
   def getProb(s: Int, t: Int, d: Int, c: Int, i: Int): Double =
     Option(this.chart(s)(t)(d)(c)(i)).map(_.prob).getOrElse(Double.NegativeInfinity)
 
-
   def getFeatureVector(item: ParseForestItem): FeatureVector =
     Option(item.left).map(left => item.fv.cat(this.getFeatureVector(left).cat(this.getFeatureVector(item.right)))).getOrElse(item.fv)
 
@@ -31,8 +30,8 @@ class KBestParseForest(start: Int, end: Int, instance: DependencyInstance, k: In
     val cs = (ld + " " + rd).trim
 
     if (item.comp == 0) cs
-    else if (item.dir == 0) "%s %d|%d:%s".format(cs, item.s, item.t, item.`type`).trim
-    else "%d|%d:%s %s".format(item.t, item.s, item.`type`, cs).trim 
+    else if (item.dir == 0) "%s %d|%d:%d".format(cs, item.s, item.t, item.label).trim
+    else "%d|%d:%d %s".format(item.t, item.s, item.label, cs).trim 
   }.getOrElse("")
 
   def getKBestPairs(is: Array[ParseForestItem], js: Array[ParseForestItem]): Array[(java.lang.Integer, java.lang.Integer)] = {

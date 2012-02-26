@@ -17,6 +17,19 @@ class KBestParseForest2O(start: Int, end: Int, instance: DependencyInstance, k: 
       else (null, null)
     }
 
+  def getFeatureVector(item: ParseForestItem): FeatureVector =
+    Option(item.left).map(left => item.fv.cat(this.getFeatureVector(left).cat(this.getFeatureVector(item.right)))).getOrElse(item.fv)
+
+  def getDepString(item: ParseForestItem): String = Option(item.left).map { left =>
+    val ld = this.getDepString(left)
+    val rd = this.getDepString(item.right)
+    val cs = (ld + " " + rd).trim
+
+    if (item.comp != 1) cs
+    else if (item.dir == 0) "%s %d|%d:%d".format(cs, item.s, item.t, item.label).trim
+    else "%d|%d:%d %s".format(item.t, item.s, item.label, cs).trim 
+  }.getOrElse("")
+
   def getKBestPairs(is: Array[ParseForestItem], js: Array[ParseForestItem]): Array[(java.lang.Integer, java.lang.Integer)] = {
     val result = Array.fill[(java.lang.Integer, java.lang.Integer)](this.k)(-1, -1)
 

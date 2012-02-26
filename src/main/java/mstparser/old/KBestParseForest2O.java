@@ -81,45 +81,5 @@ public class KBestParseForest2O {
 	return added;
 		
     }
-
-    public double getProb(int s, int t, int dir, int comp) {
-	return getProb(s,t,dir,comp,0);
-    }
-
-    public double getProb(int s, int t, int dir, int comp, int i) {
-	if(chart[s][t][dir][comp][i] != null)
-	    return chart[s][t][dir][comp][i].prob;
-	return Double.NEGATIVE_INFINITY;
-    }
-
-    public double[] getProbs(int s, int t, int dir, int comp) {
-	double[] result = new double[K];
-	for(int i = 0; i < K; i++)
-	    result[i] =
-		chart[s][t][dir][comp][i] != null ? chart[s][t][dir][comp][i].prob : Double.NEGATIVE_INFINITY;
-	return result;
-    }
-
-    public mstparser.FeatureVector getFeatureVector(ParseForestItem pfi) {
-	if(pfi.left == null)
-	    return pfi.fv;
-
-	return cat(pfi.fv,cat(getFeatureVector(pfi.left),getFeatureVector(pfi.right)));
-    }
-
-    public String getDepString(ParseForestItem pfi) {
-	if(pfi.left == null)
-	    return "";
-
-	if(pfi.dir == 0 && pfi.comp == 1)
-	    return ((getDepString(pfi.left)+" "+getDepString(pfi.right)).trim()+" "+pfi.s+"|"+pfi.t+":"+pfi.type).trim();
-	else if(pfi.dir == 1 && pfi.comp == 1)
-	    return (pfi.t+"|"+pfi.s+":"+pfi.type+" "+(getDepString(pfi.left)+" "+getDepString(pfi.right)).trim()).trim();
-	return (getDepString(pfi.left) + " " + getDepString(pfi.right)).trim();
-    }
-	
-    public mstparser.FeatureVector cat(mstparser.FeatureVector fv1, mstparser.FeatureVector fv2) {
-	return fv1.cat(fv2);
-    }
 }
 
