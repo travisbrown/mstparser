@@ -100,7 +100,7 @@ public class DependencyDecoder {
 								
 				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 								
-				double bc = b1[comp1].prob+c1[comp2].prob;
+				double bc = b1[comp1].prob()+c1[comp2].prob();
 								
 				double prob_fin = bc+prodProb_st;
 				FeatureVector fv_fin = prodFV_st;
@@ -138,7 +138,7 @@ public class DependencyDecoder {
 								
 				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 									
-				double bc = b1[comp1].prob+c1[comp2].prob;
+				double bc = b1[comp1].prob()+c1[comp2].prob();
 									
 				if(!pf.add(s,r,t,-1,0,0,bc,
 					   new FeatureVector(),
@@ -160,7 +160,7 @@ public class DependencyDecoder {
 								
 				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 									
-				double bc = b1[comp1].prob+c1[comp2].prob;
+				double bc = b1[comp1].prob()+c1[comp2].prob();
 									
 				if(!pf.add(s,r,t,-1,1,0,bc,
 					   new FeatureVector(),b1[comp1],c1[comp2]))

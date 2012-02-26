@@ -27,14 +27,14 @@ public class KBestParseForest {
 		chart[s][s][dir][0][i] = new ParseForestItem(s,type,dir,Double.NEGATIVE_INFINITY,null);
 	}
 		
-	if(chart[s][s][dir][0][K-1].prob > score)
+	if(chart[s][s][dir][0][K-1].prob() > score)
 	    return false;
 
 	for(int i = 0; i < K; i++) {
-	    if(chart[s][s][dir][0][i].prob < score) {
+	    if(chart[s][s][dir][0][i].prob() < score) {
 		ParseForestItem tmp = chart[s][s][dir][0][i];
 		chart[s][s][dir][0][i] = new ParseForestItem(s,type,dir,score,fv);
-		for(int j = i+1; j < K && tmp.prob != Double.NEGATIVE_INFINITY; j++) {
+		for(int j = i+1; j < K && tmp.prob() != Double.NEGATIVE_INFINITY; j++) {
 		    ParseForestItem tmp1 = chart[s][s][dir][0][j];
 		    chart[s][s][dir][0][j] = tmp;
 		    tmp = tmp1;
@@ -60,15 +60,15 @@ public class KBestParseForest {
 		    new ParseForestItem(s,r,t,type,dir,comp,Double.NEGATIVE_INFINITY,null,null,null);
 	}
 
-	if(chart[s][t][dir][comp][K-1].prob > score)
+	if(chart[s][t][dir][comp][K-1].prob() > score)
 	    return false;
 		
 	for(int i = 0; i < K; i++) {
-	    if(chart[s][t][dir][comp][i].prob < score) {
+	    if(chart[s][t][dir][comp][i].prob() < score) {
 		ParseForestItem tmp = chart[s][t][dir][comp][i];
 		chart[s][t][dir][comp][i] =
 		    new ParseForestItem(s,r,t,type,dir,comp,score,fv,p1,p2);
-		for(int j = i+1; j < K && tmp.prob != Double.NEGATIVE_INFINITY; j++) {
+		for(int j = i+1; j < K && tmp.prob() != Double.NEGATIVE_INFINITY; j++) {
 		    ParseForestItem tmp1 = chart[s][t][dir][comp][j];
 		    chart[s][t][dir][comp][j] = tmp;
 		    tmp = tmp1;

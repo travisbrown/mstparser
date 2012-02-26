@@ -224,7 +224,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 								
 				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 							
-			    double bc = b1[comp1].prob+c1[comp2].prob;
+			    double bc = b1[comp1].prob()+c1[comp2].prob();
 							
 			    // create sibling pair
 			    // create parent pair: s->t and s->(start,t)
@@ -257,7 +257,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 								
 				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 							
-			    double bc = b1[comp1].prob+c1[comp2].prob;
+			    double bc = b1[comp1].prob()+c1[comp2].prob();
 							
 			    // create sibling pair
 			    // create parent pair: s->t and s->(start,t)
@@ -290,7 +290,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 								
 				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 							
-			    double bc = b1[comp1].prob+c1[comp2].prob;
+			    double bc = b1[comp1].prob()+c1[comp2].prob();
 							
 			    pf.add(s,r,t,-1,0,2,bc,new FeatureVector(),b1[comp1],c1[comp2]);
 			    pf.add(s,r,t,-1,1,2,bc,new FeatureVector(),b1[comp1],c1[comp2]);
@@ -313,7 +313,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 								
 				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 							
-			    double bc = b1[comp1].prob+c1[comp2].prob;
+			    double bc = b1[comp1].prob()+c1[comp2].prob();
 
 			    bc += prodProb_st + probs_trips[s][r][t] + probs_sibs[r][t][1];
 			    FeatureVector fv_fin = prodFV_st.cat(fvs_trips[s][r][t].cat(fvs_sibs[r][t][1]));
@@ -341,7 +341,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 								
 				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 							
-			    double bc = b1[comp1].prob+c1[comp2].prob;
+			    double bc = b1[comp1].prob()+c1[comp2].prob();
 
 			    bc += prodProb_ts + probs_trips[t][r][s] + probs_sibs[r][s][1];
 			    
@@ -376,7 +376,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 								
 				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 								
-				double bc = b1[comp1].prob+c1[comp2].prob;
+				double bc = b1[comp1].prob()+c1[comp2].prob();
 								
 				if(!pf.add(s,r,t,-1,0,0,bc,new FeatureVector(),b1[comp1],c1[comp2]))
 				    break;
@@ -399,7 +399,7 @@ public class DependencyDecoder2O extends DependencyDecoder {
 								
 				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
 								
-				double bc = b1[comp1].prob+c1[comp2].prob;
+				double bc = b1[comp1].prob()+c1[comp2].prob();
 								
 				if(!pf.add(s,r,t,-1,1,0,bc,new FeatureVector(),b1[comp1],c1[comp2]))
 				    break;

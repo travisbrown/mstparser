@@ -2,11 +2,11 @@ package mstparser;
 
 public class ParseForestItem {
 
-    public int s,r,t,dir;
+    private int s,r,t,dir;
     private int comp,type;
-    public double prob;
-    public FeatureVector fv;
-    public ParseForestItem left, right;
+    private double prob;
+    private FeatureVector fv;
+    private ParseForestItem left, right;
 
 
     // productions
@@ -34,8 +34,16 @@ public class ParseForestItem {
       this(s, 0, 0, type, dir, 0, prob, fv, null, null);
     }
 
+    public int s() { return this.s; }
+    public int r() { return this.r; }
+    public int t() { return this.t; }
+    public int dir() { return this.dir; }
     public int comp() { return this.comp; }
     public int label() { return this.type; }
+    public double prob() { return this.prob; }
+    public FeatureVector fv() { return this.fv; }
+    public ParseForestItem left() { return this.left; }
+    public ParseForestItem right() { return this.right; }
 
     // way forest works, only have to check rule and indeces
     // for equality.
