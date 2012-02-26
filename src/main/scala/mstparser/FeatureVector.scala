@@ -1,5 +1,11 @@
 package mstparser
 
+import gnu.trove.list.TIntList
+import gnu.trove.list.array.TIntArrayList
+import gnu.trove.map.hash.TIntDoubleHashMap
+import gnu.trove.procedure.TObjectProcedure
+
+
 object FeatureVector {
   def fromKeys(keys: Array[Int]) = {
     val v = new FeatureVector()
@@ -15,137 +21,116 @@ class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) 
 
   def cat(that: FeatureVector) = new FeatureVector(this, that)
   def getDistVector(that: FeatureVector) = new FeatureVector(this, that, true)
+
+  def add(i: Int, v: Double) {
+    this.add(new Feature(i, v))
+  }
+
+  def keys = {
+    val keys = new TIntArrayList
+    this.addKeysToList(keys)
+	  keys.toArray
+  }
+
+  private def addKeysToList(keys: TIntArrayList) {
+    Option(this.fv1).foreach(_.addKeysToList(keys))
+    Option(this.fv2).foreach(_.addKeysToList(keys))
+
+    this.forEachValue(new TObjectProcedure[Feature] {
+      def execute(f: Feature) = {
+        keys.add(f.index)
+        true
+      }
+    })
+  }
+
+  def getScore(parameters: Array[Double]): Double = this.getScore(parameters, false)
+
+  private def getScore(parameters: Array[Double], negate: Boolean): Double = {
+    var score = Option(this.fv1).map(_.getScore(parameters, negate)).getOrElse(0.0) +
+    Option(this.fv2).map(_.getScore(parameters, negate != this.negSecond)).getOrElse(0.0)
+
+    var mult = if (negate) -1.0 else 1.0
+
+    this.forEachValue(new TObjectProcedure[Feature] {
+      def execute(f: Feature) = {
+        score += mult * parameters(f.index) * f.value
+        true
+      }
+    })
+
+    score
+  }
+
+  def update(parameters: Array[Double], total: Array[Double], alpha: Double, update: Double) {
+    this.update(parameters, total, alpha, update, false)
+  }
+
+  private def update(parameters: Array[Double], total: Array[Double], alpha: Double, update: Double, negate: Boolean) {
+    Option(this.fv1).foreach(_.update(parameters, total, alpha, update, negate))
+    Option(this.fv2).foreach(_.update(parameters, total, alpha, update, negate != this.negSecond))
+
+    var mult = if (negate) -1.0 else 1.0
+
+    this.forEachValue(new TObjectProcedure[Feature] {
+      def execute(f: Feature) = {
+        parameters(f.index) += mult * alpha * f.value
+        total(f.index) += mult * alpha * f.value * update
+        true
+      }
+    })
+	}
+
+
+  def dotProduct(that: FeatureVector) = {
+    val m1 = new TIntDoubleHashMap(this.size)
+    this.addFeaturesToMap(m1, false)
+    m1.compact()
+
+    val m2 = new TIntDoubleHashMap(that.size)
+    that.addFeaturesToMap(m2, false)
+    m2.compact()
+
+    m1.keys.map(k => m1.get(k) * m2.get(k)).sum
+  }
+
+  private def addFeaturesToMap(map: TIntDoubleHashMap, negate: Boolean) {
+    Option(this.fv1).foreach(_.addFeaturesToMap(map, negate))
+    Option(this.fv2).foreach(_.addFeaturesToMap(map, negate != this.negSecond))
+
+    var mult = if (negate) -1.0 else 1.0
+
+    this.forEachValue(new TObjectProcedure[Feature] {
+      def execute(f: Feature) = {
+        if (!map.adjustValue(f.index, mult * f.value))
+          map.put(f.index, mult * f.value)
+        true
+      }
+    })
+  }
+
+  override def toString = {
+    val builder = new StringBuilder
+    this.toString(builder)
+    builder.toString
+  }
+
+  private def toString(builder: StringBuilder) {
+    Option(this.fv1).foreach(_.toString(builder))
+    Option(this.fv2).foreach(_.toString(builder))
+
+    this.forEachValue(new TObjectProcedure[Feature] {
+      def execute(f: Feature) = {
+        builder.append(f.toString).append(' ')
+        true
+      }
+    })
+  }
 }
 
 /*
 public class FeatureVector extends TLinkedList<Feature> {
-    private FeatureVector subfv1 = null;
-    private FeatureVector subfv2 = null;
-    private boolean negateSecondSubFV = false;
 
-    public FeatureVector () {}
-
-    public FeatureVector (FeatureVector fv1) {
-	subfv1 = fv1;
-    }
-
-    public FeatureVector (FeatureVector fv1, FeatureVector fv2) {
-	subfv1 = fv1;
-	subfv2 = fv2;
-    }
-
-    public FeatureVector (FeatureVector fv1, FeatureVector fv2, boolean negSecond) {
-	subfv1 = fv1;
-	subfv2 = fv2;
-	negateSecondSubFV = negSecond;
-    }
-
-    public FeatureVector (int[] keys) {
-	for (int i=0; i<keys.length; i++)
-	    add(new Feature(keys[i],1.0));
-    }
-
-    public void add(int index, double value) {
-	add(new Feature(index, value));
-    }
-
-
-    public int[] keys() {
-	TIntArrayList keys = new TIntArrayList();
-	addKeysToList(keys);
-	return keys.toArray();
-    }
-
-    private void addKeysToList(TIntArrayList keys) {
-	if (null != subfv1) {
-	    subfv1.addKeysToList(keys);
-
-	    if (null != subfv2)
-		subfv2.addKeysToList(keys);
-	}
-
-	ListIterator it = listIterator();
-	while (it.hasNext())
-	    keys.add(((Feature)it.next()).getIndex());
-
-    }
-
-
-    public final double getScore(double[] parameters) {
-	return getScore(parameters, false);
-    }
-
-    private final double getScore(double[] parameters, boolean negate) {
-	double score = 0.0;
-
-	if (null != subfv1) {
-	    score += subfv1.getScore(parameters, negate);
-
-	    if (null != subfv2) {
-		if (negate) {
-		    score += subfv2.getScore(parameters, !negateSecondSubFV);
-		} else {
-		    score += subfv2.getScore(parameters, negateSecondSubFV);
-		}
-	    }
-	}
-
-	ListIterator it = listIterator();
-
-	if (negate) {
-	    while (it.hasNext()) {
-		Feature f = (Feature)it.next();
-		score -= parameters[f.getIndex()]*f.getValue();
-	    }
-	} else {
-	    while (it.hasNext()) {
-		Feature f = (Feature)it.next();
-		score += parameters[f.getIndex()]*f.getValue();
-	    }
-	}
-
-	return score;
-    }
-
-    public void update(double[] parameters, double[] total, double alpha_k, double upd) {
-	update(parameters, total, alpha_k, upd, false);
-    }
-
-    private final void update(double[] parameters, double[] total, 
-			      double alpha_k, double upd, boolean negate) {
-
-	if (null != subfv1) {
-	    subfv1.update(parameters, total, alpha_k, upd, negate);
-
-	    if (null != subfv2) {
-		if (negate) {
-		    subfv2.update(parameters, total, alpha_k, upd, !negateSecondSubFV);
-		} else {
-		    subfv2.update(parameters, total, alpha_k, upd, negateSecondSubFV);
-		}
-	    }
-	}
-
-
-	ListIterator it = listIterator();
-
-	if (negate) {
-	    while (it.hasNext()) {
-		Feature f = (Feature)it.next();
-		parameters[f.getIndex()] -= alpha_k*f.getValue();
-		total[f.getIndex()] -= upd*alpha_k*f.getValue();
-	    }
-	} else {
-	    while (it.hasNext()) {
-		Feature f = (Feature)it.next();
-		parameters[f.getIndex()] += alpha_k*f.getValue();
-		total[f.getIndex()] += upd*alpha_k*f.getValue();
-	    }
-	}
-
-    }
-
-	
     public double dotProduct(FeatureVector fl2) {
 
 	TIntDoubleHashMap hm1 = new TIntDoubleHashMap(this.size());

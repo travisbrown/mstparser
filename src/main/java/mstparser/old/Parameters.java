@@ -32,46 +32,6 @@ public class Parameters {
 	    total[j] *= 1.0/((double)avVal);		
 	parameters = total;
     }
-	
- /*   public void updateParamsMIRA(mstparser.DependencyInstance inst, Object[][] d, double upd) {
-		
-	String actParseTree = inst.getParseTree();
-	mstparser.FeatureVector actFV = inst.getFeatureVector();
-
-	int K = 0;
-	for(int i = 0; i < d.length && d[i][0] != null; i++) {
-	    K = i+1;
-	}
-
-	double[] b = new double[K];
-	double[] lam_dist = new double[K];
-	FeatureVector[] dist = new FeatureVector[K];
-
-	for(int k = 0; k < K; k++) {
-	    lam_dist[k] = getScore(actFV)
-		- getScore((FeatureVector)d[k][0]);
-	    b[k] = (double)numErrors(inst,(String)d[k][1],actParseTree);
-	    b[k] -= lam_dist[k];
-	    dist[k] = actFV.getDistVector((FeatureVector)d[k][0]);
-	}
-
-	double[] alpha = hildreth(dist,b);
-		
-	FeatureVector fv  = null;
-	int res = 0;
-	for(int k = 0; k < K; k++) {
-	    fv = dist[k];
-
-	    fv.update(parameters, total, alpha[k], upd);
-
-	    //for(FeatureVector curr = fv; curr.index >= 0; curr = curr.next) {
-            //    if(curr.index < 0)
-            //        continue;
-            //    parameters[curr.index] += alpha[k]*curr.value;
-            //    total[curr.index] += upd*alpha[k]*curr.value;
-            //}
-	    
-	}*/
 
     protected double[] hildreth(mstparser.FeatureVector[] a, double[] b) {
 
