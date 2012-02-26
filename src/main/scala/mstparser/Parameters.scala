@@ -15,6 +15,42 @@ class Parameters(size: Int) extends old.Parameters(size) {
   }
 
   def getScore(f: FeatureVector) = f.getScore(this.parameters)
+
+  def setLoss(lossType: String) {
+    this.lossType = lossType
+  }
+
+  def averageParams(v: Double) {
+    this.total.zipWithIndex.foreach { case (t, i) => this.total(i) /= v }
+    this.parameters = this.total
+  }
+
+  def numErrors(instance: DependencyInstance, pred: String, gold: String) =
+    this.lossType match {
+      case "nopunc" => this.errors(instance, pred, gold)(!_.matches("[,:.'`]+"))
+      case _ => this.errors(instance, pred, gold)(_ => true)
+    }
+
+  private def errors(instance: DependencyInstance, pred: String, gold: String)(p: String => Boolean) = {
+    val items = instance.postags.tail.zip(pred.split(" ").zip(gold.split(" "))).filter(x => p(x._1))
+    val (hs, ls) = items.map {
+      case (_, (p, g)) =>
+        val Array(ph, pl) = p.split(":")
+        val Array(gh, gl) = g.split(":")
+        (ph == gh, pl == gl)
+    }.unzip
+
+    ((items.size - hs.filter(x => x).size) + (items.size - ls.filter(x => x).size)).toDouble
+  }
+
+  /*def numErrorsLabel(instance: DependencyInstance, pred: String, gold: String) = {
+    val pairs = instance.pred.split(" ").zip(gold.split(" "))
+    val correct = pairs.filter {
+      case (p, g) => p.split(":")(1) == g.split(":")(1)
+    }.count
+
+    (pairs.size - correct).toDouble
+  }*/
 }
 
 /*    private double SCORE = 0.0;
@@ -31,66 +67,6 @@ class Parameters(size: Int) extends old.Parameters(size) {
 	    total[i] = 0.0;
 	}
 	lossType = "punc";
-    }
-
-    public void setLoss(String lt) {
-	lossType = lt;
-    }
-
-    public void averageParams(double avVal) {
-	for(int j = 0; j < total.length; j++)
-	    total[j] *= 1.0/((double)avVal);		
-	parameters = total;
-    }
-	
-    public void updateParamsMIRA(DependencyInstance inst, Object[][] d, double upd) {
-		
-	String actParseTree = inst.getParseTree();
-	FeatureVector actFV = inst.getFeatureVector();
-
-	int K = 0;
-	for(int i = 0; i < d.length && d[i][0] != null; i++) {
-	    K = i+1;
-	}
-
-	double[] b = new double[K];
-	double[] lam_dist = new double[K];
-	FeatureVector[] dist = new FeatureVector[K];
-
-	for(int k = 0; k < K; k++) {
-	    lam_dist[k] = getScore(actFV)
-		- getScore((FeatureVector)d[k][0]);
-	    b[k] = (double)numErrors(inst,(String)d[k][1],actParseTree);
-	    b[k] -= lam_dist[k];
-	    dist[k] = actFV.getDistVector((FeatureVector)d[k][0]);
-	}
-
-	double[] alpha = hildreth(dist,b);
-		
-	FeatureVector fv  = null;
-	int res = 0;
-	for(int k = 0; k < K; k++) {
-	    fv = dist[k];
-
-	    fv.update(parameters, total, alpha[k], upd);
-
-	    //for(FeatureVector curr = fv; curr.index >= 0; curr = curr.next) {
-            //    if(curr.index < 0)
-            //        continue;
-            //    parameters[curr.index] += alpha[k]*curr.value;
-            //    total[curr.index] += upd*alpha[k]*curr.value;
-            //}
-	    
-	}
-
-    }
-
-    public double getScore(FeatureVector fv) {
-	return fv.getScore(parameters);
-	//double score = 0.0;
-	//for(FeatureVector curr = fv; curr.index >= 0; curr = curr.next)
-        //    score += parameters[curr.index]*curr.value;
-	//return score;
     }
 
     private double[] hildreth(FeatureVector[] a, double[] b) {
@@ -167,50 +143,7 @@ class Parameters(size: Int) extends old.Parameters(size) {
 	return alpha;
     }
 
-    
-    public double numErrors(DependencyInstance inst, String pred, String act) {
-	if(lossType.equals("nopunc"))
-	    return numErrorsDepNoPunc(inst,pred,act)+numErrorsLabelNoPunc(inst,pred,act);
-	return numErrorsDep(inst,pred,act)+numErrorsLabel(inst,pred,act);
-    }
-
-    public double numErrorsDep(DependencyInstance inst, String pred, String act) {
-		
-	String[] act_spans = act.split(" ");
-	String[] pred_spans = pred.split(" ");
-
-	int correct = 0;
-		
-	for(int i = 0; i < pred_spans.length; i++) {
-	    String p = pred_spans[i].split(":")[0]; String a = act_spans[i].split(":")[0];
-	    if(p.equals(a)) {
-		correct++;
-	    }
-	}		
-
-	return ((double)act_spans.length - correct);
-		
-    }
-	
-    public double numErrorsLabel(DependencyInstance inst, String pred, String act) {
-		
-	String[] act_spans = act.split(" ");
-	String[] pred_spans = pred.split(" ");
-
-	int correct = 0;
-		
-	for(int i = 0; i < pred_spans.length; i++) {
-	    String p = pred_spans[i].split(":")[1]; String a = act_spans[i].split(":")[1];
-	    if(p.equals(a)) {
-		correct++;
-	    }
-	}		
-
-	return ((double)act_spans.length - correct);
-		
-    }
-	
-    public double numErrorsDepNoPunc(DependencyInstance inst, String pred, String act) {
+ double numErrorsDepNoPunc(DependencyInstance inst, String pred, String act) {
 		
 	String[] act_spans = act.split(" ");
 	String[] pred_spans = pred.split(" ");

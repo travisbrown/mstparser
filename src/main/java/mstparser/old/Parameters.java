@@ -23,16 +23,6 @@ public class Parameters {
 	lossType = "punc";
     }
 
-    public void setLoss(String lt) {
-	lossType = lt;
-    }
-
-    public void averageParams(double avVal) {
-	for(int j = 0; j < total.length; j++)
-	    total[j] *= 1.0/((double)avVal);		
-	parameters = total;
-    }
-
     protected double[] hildreth(mstparser.FeatureVector[] a, double[] b) {
 
 	int i;
@@ -105,13 +95,6 @@ public class Parameters {
 	}
 
 	return alpha;
-    }
-
-    
-    public double numErrors(mstparser.DependencyInstance inst, String pred, String act) {
-	if(lossType.equals("nopunc"))
-	    return numErrorsDepNoPunc(inst,pred,act)+numErrorsLabelNoPunc(inst,pred,act);
-	return numErrorsDep(inst,pred,act)+numErrorsLabel(inst,pred,act);
     }
 
     public double numErrorsDep(mstparser.DependencyInstance inst, String pred, String act) {

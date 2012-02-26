@@ -2,6 +2,7 @@ package mstparser
 
 import gnu.trove.list.TIntList
 import gnu.trove.list.array.TIntArrayList
+import gnu.trove.list.linked.TLinkedList;
 import gnu.trove.map.hash.TIntDoubleHashMap
 import gnu.trove.procedure.TObjectProcedure
 
@@ -14,7 +15,7 @@ object FeatureVector {
   }
 }
 
-class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) extends old.FeatureVector(fv1, fv2, negSecond) {
+class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) extends TLinkedList[Feature] {
   def this(fv1: FeatureVector, fv2: FeatureVector) = this(fv1, fv2, false)
   def this(fv1: FeatureVector) = this(fv1, null)
   def this() = this(null) 
@@ -127,77 +128,4 @@ class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) 
     })
   }
 }
-
-/*
-public class FeatureVector extends TLinkedList<Feature> {
-
-    public double dotProduct(FeatureVector fl2) {
-
-	TIntDoubleHashMap hm1 = new TIntDoubleHashMap(this.size());
-	addFeaturesToMap(hm1, false);
-	hm1.compact();
-
-	TIntDoubleHashMap hm2 = new TIntDoubleHashMap(fl2.size());
-	fl2.addFeaturesToMap(hm2, false);
-	hm2.compact();
-
-	int[] keys = hm1.keys();
-
-	double result = 0.0;
-	for(int i = 0; i < keys.length; i++)
-	    result += hm1.get(keys[i])*hm2.get(keys[i]);
-		
-	return result;
-		
-    }
-
-    private void addFeaturesToMap(TIntDoubleHashMap map, boolean negate) {
-	if (null != subfv1) {
-	    subfv1.addFeaturesToMap(map, negate);
-
-	    if (null != subfv2) {
-		if (negate) {
-		    subfv2.addFeaturesToMap(map, !negateSecondSubFV);
-		} else {
-		    subfv2.addFeaturesToMap(map, negateSecondSubFV);
-		}
-	    }
-	}
-
-	ListIterator it = listIterator();
-	if (negate) {
-	    while (it.hasNext()) {
-		Feature f = (Feature)it.next();
-		if (!map.adjustValue(f.getIndex(), -f.getValue()))
-		    map.put(f.getIndex(), -f.getValue());
-	    }
-	} else {
-	    while (it.hasNext()) {
-		Feature f = (Feature)it.next();
-		if (!map.adjustValue(f.getIndex(), f.getValue()))
-		    map.put(f.getIndex(), f.getValue());
-	    }
-	}
-    }
-
-
-    public final String toString() {
-	StringBuilder sb = new StringBuilder();
-	toString(sb);
-	return sb.toString();
-    }
-
-    private final void toString(StringBuilder sb) {
-	if (null != subfv1) {
-	    subfv1.toString(sb);
-
-	    if (null != subfv2)
-		subfv2.toString(sb);
-	}
-	ListIterator it = listIterator();
-	while (it.hasNext())
-	    sb.append(it.next().toString()).append(' ');
-    }
-
-}*/
 
