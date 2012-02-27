@@ -1,6 +1,11 @@
 package mstparser
 
-class Parameters(size: Int) extends old.Parameters(size) {
+class Parameters(size: Int) extends old.Parameters {
+  var parameters = Array.ofDim[Double](size)
+  private val total = Array.ofDim[Double](size)
+
+  private var lossType = "punc"
+
   def updateParamsMIRA(instance: DependencyInstance, d: Array[(FeatureVector, String)], update: Double) {
     val score = this.getScore(instance.getFeatureVector)
 
@@ -15,10 +20,6 @@ class Parameters(size: Int) extends old.Parameters(size) {
   }
 
   def getScore(f: FeatureVector) = f.getScore(this.parameters)
-
-  def setLoss(lossType: String) {
-    this.lossType = lossType
-  }
 
   def averageParams(v: Double) {
     this.total.zipWithIndex.foreach { case (t, i) => this.total(i) /= v }
@@ -43,14 +44,6 @@ class Parameters(size: Int) extends old.Parameters(size) {
     ((items.size - hs.filter(x => x).size) + (items.size - ls.filter(x => x).size)).toDouble
   }
 
-  /*def numErrorsLabel(instance: DependencyInstance, pred: String, gold: String) = {
-    val pairs = instance.pred.split(" ").zip(gold.split(" "))
-    val correct = pairs.filter {
-      case (p, g) => p.split(":")(1) == g.split(":")(1)
-    }.count
-
-    (pairs.size - correct).toDouble
-  }*/
 }
 
 /*    private double SCORE = 0.0;

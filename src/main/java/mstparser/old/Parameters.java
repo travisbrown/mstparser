@@ -5,26 +5,8 @@ import java.util.ArrayList;
 import java.util.ListIterator;
 import gnu.trove.*;
 
-public class Parameters {
-
-    private double SCORE = 0.0;
-
-    public double[] parameters;
-    public double[] total;
-    public String lossType = "punc";
-
-    public Parameters(int size) { 	
-	parameters = new double[size];
-	total = new double[size];
-	for(int i = 0; i < parameters.length; i++) {
-	    parameters[i] = 0.0;
-	    total[i] = 0.0;
-	}
-	lossType = "punc";
-    }
-
+public abstract class Parameters {
     protected double[] hildreth(mstparser.FeatureVector[] a, double[] b) {
-
 	int i;
 	int max_iter = 10000;
 	double eps = 0.00000001;
@@ -96,91 +78,5 @@ public class Parameters {
 
 	return alpha;
     }
-
-    public double numErrorsDep(mstparser.DependencyInstance inst, String pred, String act) {
-		
-	String[] act_spans = act.split(" ");
-	String[] pred_spans = pred.split(" ");
-
-	int correct = 0;
-		
-	for(int i = 0; i < pred_spans.length; i++) {
-	    String p = pred_spans[i].split(":")[0]; String a = act_spans[i].split(":")[0];
-	    if(p.equals(a)) {
-		correct++;
-	    }
-	}		
-
-	return ((double)act_spans.length - correct);
-		
-    }
-	
-    public double numErrorsLabel(mstparser.DependencyInstance inst, String pred, String act) {
-		
-	String[] act_spans = act.split(" ");
-	String[] pred_spans = pred.split(" ");
-
-	int correct = 0;
-		
-	for(int i = 0; i < pred_spans.length; i++) {
-	    String p = pred_spans[i].split(":")[1]; String a = act_spans[i].split(":")[1];
-	    if(p.equals(a)) {
-		correct++;
-	    }
-	}		
-
-	return ((double)act_spans.length - correct);
-		
-    }
-	
-    public double numErrorsDepNoPunc(mstparser.DependencyInstance inst, String pred, String act) {
-		
-	String[] act_spans = act.split(" ");
-	String[] pred_spans = pred.split(" ");
-	
-	String[] pos = inst.postags;
-	
-	int correct = 0;
-	int numPunc = 0;
-
-	for(int i = 0; i < pred_spans.length; i++) {
-	    String p = pred_spans[i].split(":")[0]; String a = act_spans[i].split(":")[0];
-	    if(pos[i+1].matches("[,:.'`]+")) {
-		numPunc++;
-		continue;
-	    }
-	    if(p.equals(a)) {
-		correct++;
-	    }
-	}		
-
-	return ((double)act_spans.length - numPunc - correct);
-		
-    }
-	
-    public double numErrorsLabelNoPunc(mstparser.DependencyInstance inst, String pred, String act) {
-		
-	String[] act_spans = act.split(" ");
-	String[] pred_spans = pred.split(" ");
-
-	String[] pos = inst.postags;
-	
-	int correct = 0;
-	int numPunc = 0;
-
-	for(int i = 0; i < pred_spans.length; i++) {
-	    String p = pred_spans[i].split(":")[1]; String a = act_spans[i].split(":")[1];
-	    if(pos[i+1].matches("[,:.'`]+")) {
-		numPunc++;
-		continue;
-	    }
-	    if(p.equals(a)) {
-		correct++;
-	    }
-	}		
-
-	return ((double)act_spans.length - numPunc - correct);
-		
-    }
-	
 }
+
