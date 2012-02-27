@@ -53,7 +53,7 @@ public class DependencyDecoder {
 	    static_types = getTypes(nt_probs,forms.length);
 	}
 
-	KBestParseForest pf = new KBestParseForest(0,forms.length-1,inst,K);
+	KBestParseForest pf = new KBestParseForest(forms.length-1,K);
 		
 	for(int s = 0; s < forms.length; s++) {
 	    pf.add(s,-1,0,0.0,new FeatureVector());

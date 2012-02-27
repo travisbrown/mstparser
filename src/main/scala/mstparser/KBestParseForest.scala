@@ -2,8 +2,8 @@ package mstparser
 
 import scala.collection.mutable.PriorityQueue
 
-class KBestParseForest(start: Int, end: Int, instance: DependencyInstance, k: Int)
-  extends old.KBestParseForest(start, end, instance, k) {
+class KBestParseForest(private val end: Int, private val k: Int) {
+  private val chart = Array.ofDim[ParseForestItem](this.end + 1, this.end + 1, 2, 2, this.k)
 
   def getItem(s: Int, t: Int, d: Int, c: Int): ParseForestItem = this.getItem(s, t, d, c, 0)
   def getItem(s: Int, t: Int, d: Int, c: Int, k: Int): ParseForestItem = this.chart(s)(t)(d)(c)(k)
@@ -52,6 +52,69 @@ class KBestParseForest(start: Int, end: Int, instance: DependencyInstance, k: In
     }
 
     result
+  }
+
+  def add(s: Int, label: Int, d: Int, score: Double, fv: FeatureVector) = {
+    if (this.chart(s)(s)(d)(0)(0) == null) {
+      this.chart(s)(s)(d)(0) = Array.fill(k)(new ParseForestItem(s, label, d))
+    }
+
+    if (this.chart(s)(s)(d)(0)(k - 1).prob > score) false
+    else {
+      var added = false
+      var i = 0
+
+      while (!added && i < this.k) {
+        if (this.chart(s)(s)(d)(0)(i).prob < score) {
+          var tmp = this.chart(s)(s)(d)(0)(i)
+          this.chart(s)(s)(d)(0)(i) = new ParseForestItem(s, label, d, score, fv)
+
+          var j = i + 1
+          while (j < this.k && tmp.prob > Double.NegativeInfinity) {
+		        val tmp1 = this.chart(s)(s)(d)(0)(j)
+            this.chart(s)(s)(d)(0)(j) = tmp
+            tmp = tmp1
+            j += 1
+          }
+		      added = true
+	      }
+        i += 1
+	    }
+
+      added
+    }
+  }
+
+  def add(s: Int, r: Int, t: Int, label: Int, d: Int, c: Int,
+    score: Double, fv: FeatureVector, p: ParseForestItem, q: ParseForestItem) = {
+    if (this.chart(s)(t)(d)(c)(0) == null) {
+      this.chart(s)(t)(d)(c) = Array.fill(k)(new ParseForestItem(s, r, t, label, d, c))
+    }
+
+    if (this.chart(s)(t)(d)(c)(k - 1).prob > score) false
+    else {
+      var added = false
+      var i = 0
+
+      while (!added && i < this.k) {
+        if (this.chart(s)(t)(d)(c)(i).prob < score) {
+          var tmp = this.chart(s)(t)(d)(c)(i)
+          this.chart(s)(t)(d)(c)(i) = new ParseForestItem(s, r, t, label, d, c, score, fv, Some(p, q))
+
+          var j = i + 1
+          while (j < this.k && tmp.prob > Double.NegativeInfinity) {
+		        val tmp1 = this.chart(s)(t)(d)(c)(j)
+            this.chart(s)(t)(d)(c)(j) = tmp
+            tmp = tmp1
+            j += 1
+          }
+		      added = true
+	      }
+        i += 1
+	    }
+
+      added
+    }
   }
 }
 
@@ -135,55 +198,6 @@ class KBestParseForest(start: Int, end: Int, instance: DependencyInstance, k: In
 	return added;
 		
     }
-    // returns pairs of indeces and -1,-1 if < K pairs
-    public int[][] getKBestPairs(ParseForestItem[] items1, ParseForestItem[] items2) {
-	// in this case K = items1.length
-
-	boolean[][] beenPushed = new boolean[K][K];
-		
-	int[][] result = new int[K][2];
-	for(int i = 0; i < K; i++) {
-	    result[i][0] = -1;
-	    result[i][1] = -1;
-	}
-
-	if(items1 == null || items2 == null || items1[0] == null || items2[0] == null)
-	    return result;
-		
-	BinaryHeap heap = new BinaryHeap(K+1);
-	int n = 0;
-	ValueIndexPair vip = new ValueIndexPair(items1[0].prob+items2[0].prob,0,0);
-
-	heap.add(vip);
-	beenPushed[0][0] = true;
-		
-	while(n < K) {
-	    vip = heap.removeMax();
-			
-	    if(vip.val == Double.NEGATIVE_INFINITY)
-		break;
-			
-	    result[n][0] = vip.i1;
-	    result[n][1] = vip.i2;
-
-	    n++;
-	    if(n >= K)
-		break;
-			
-	    if(!beenPushed[vip.i1+1][vip.i2]) {
-		heap.add(new ValueIndexPair(items1[vip.i1+1].prob+items2[vip.i2].prob,vip.i1+1,vip.i2));
-		beenPushed[vip.i1+1][vip.i2] = true;
-	    }
-	    if(!beenPushed[vip.i1][vip.i2+1]) {
-		heap.add(new ValueIndexPair(items1[vip.i1].prob+items2[vip.i2+1].prob,vip.i1,vip.i2+1));
-		beenPushed[vip.i1][vip.i2+1] = true;
-	    }
-
-	}
-		
-	return result;
-    }
-}
-	
+}	
 */
 

@@ -2,8 +2,9 @@ package mstparser
 
 import scala.collection.mutable.PriorityQueue
 
-class KBestParseForest2O(start: Int, end: Int, instance: DependencyInstance, k: Int)
-  extends old.KBestParseForest(start, end, instance, k) {
+class KBestParseForest2O(end: Int, k: Int) extends KBestParseForest(end, k)
+/*
+  extends old.KBestParseForest(start, end, k) {
 
   def getItem(s: Int, t: Int, d: Int, c: Int): ParseForestItem = this.getItem(s, t, d, c, 0)
   def getItem(s: Int, t: Int, d: Int, c: Int, k: Int): ParseForestItem = this.chart(s)(t)(d)(c)(k)
@@ -49,7 +50,38 @@ class KBestParseForest2O(start: Int, end: Int, instance: DependencyInstance, k: 
 
     result
   }
-}
+
+  def add(s: Int, label: Int, d: Int, score: Double, fv: FeatureVector) = {
+    if (this.chart(s)(s)(d)(0)(0) == null) {
+      this.chart(s)(s)(d)(0) = Array.fill(k)(new ParseForestItem(s, label, d))
+    }
+
+    if (this.chart(s)(s)(d)(0)(k - 1).prob > score) false
+    else {
+      var added = false
+      var i = 0
+
+      while (!added && i < this.k) {
+        if (this.chart(s)(s)(d)(0)(i).prob < score) {
+          var tmp = this.chart(s)(s)(d)(0)(i)
+          this.chart(s)(s)(d)(0)(i) = new ParseForestItem(s, label, d, score, fv)
+
+          var j = i + 1
+          while (j < this.k && tmp.prob > Double.NegativeInfinity) {
+		        val tmp1 = this.chart(s)(s)(d)(0)(j)
+            this.chart(s)(s)(d)(0)(j) = tmp
+            tmp = tmp1
+            j += 1
+          }
+		      added = true
+	      }
+        i += 1
+	    }
+
+      added
+    }
+  }
+}*/
 
 /*class KBestParseForest2O {
 
