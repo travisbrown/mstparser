@@ -1,5 +1,9 @@
 package mstparser
 
+import java.io.File
+import java.io.FileOutputStream
+import java.io.ObjectOutputStream
+
 import scala.reflect.BeanProperty
 
 import mstparser.io._
@@ -46,7 +50,6 @@ class DependencyPipe(
 
   def getType(typeIndex: Int) = this.types(typeIndex)
 
-
   def nextInstance = if (!this.depReader.hasNext) null else {
     val instance = this.depReader.next
     if (instance.forms == null) null else {
@@ -70,6 +73,123 @@ class DependencyPipe(
     val i = this.dataAlphabet.lookupIndex(f)
     if (i >= 0) fv.add(i, v)
   }
+
+  private def createAlphabet(file: String) {
+    print("Creating Alphabet ... ")
+
+    this.labeled = this.depReader.startReading(file)
+
+    depReader.foreach { instance =>
+      instance.deprels.foreach(this.typeAlphabet.lookupIndex(_))
+      this.createFeatureVector(instance)
+    }
+
+    this.closeAlphabets()
+    println("Done.")
+  }
+
+  def createFeatureVector(instance: DependencyInstance) = {
+    val fv = new FeatureVector
+
+    instance.heads.zip(instance.deprels).zipWithIndex.filter(_._1._1 > -1).foreach {
+      case ((h, l), i) =>
+        val small = math.min(h, i)
+        val large = math.max(h, i)
+        val attR = i >= h
+        this.addCoreFeatures(instance, small, large, attR, fv)
+        if (this.labeled) {
+          this.addLabeledFeatures(instance, i, l, attR, true, fv)
+          this.addLabeledFeatures(instance, h, l, attR, false, fv)
+        }
+    }
+
+    this.addExtendedFeatures(instance, fv)
+
+	  fv
+  }
+
+  def createInstances(file: String, featFile: File) = {
+    this.createAlphabet(file)
+
+    println("Num Features: " + dataAlphabet.size)
+
+    this.labeled = this.depReader.startReading(file)
+
+    val out = if (this.options.createForest)
+      new ObjectOutputStream(new FileOutputStream(featFile))
+    else null
+
+    println("Creating Feature Vector Instances: ")
+    val lengths = depReader.zipWithIndex.map { case (instance, i) =>
+	    print(i + " ")
+	    
+	    instance.setFeatureVector(this.createFeatureVector(instance))
+      instance.setParseTree(
+        instance.heads.tail.zip(instance.deprels.tail).zipWithIndex.map {
+          case ((h, l), j) => "%d|%d:%d".format(h, j + 1, this.typeAlphabet.lookupIndex(l))
+        }.mkString(" ")
+	    )
+
+	    if (this.options.createForest) this.writeInstance(instance, out)
+      instance.length
+    }.toArray
+
+    println()
+
+    this.closeAlphabets()
+
+    if (this.options.createForest) out.close()
+    lengths
+  }
+
+  protected def writeInstance(instance: DependencyInstance, out: ObjectOutputStream) {
+    (0 until instance.length).foreach { w1 =>
+      ((w1 + 1) until instance.length).foreach { w2 =>
+        val prodFV1 = new FeatureVector
+        this.addCoreFeatures(instance, w1, w2, true, prodFV1)
+        out.writeObject(prodFV1.keys)
+
+        val prodFV2 = new FeatureVector
+        this.addCoreFeatures(instance, w1, w2, false, prodFV2)
+        out.writeObject(prodFV2.keys)
+      }
+    }
+
+    out.writeInt(-3)
+
+    if (this.labeled) {
+      (0 until instance.length).foreach { w1 =>
+        this.types.foreach { t =>
+          val prodFV1 = new FeatureVector
+          this.addLabeledFeatures(instance, w1, t, true, true, prodFV1)
+          out.writeObject(prodFV1.keys)
+
+          val prodFV2 = new FeatureVector
+          this.addLabeledFeatures(instance, w1, t, true, false, prodFV2)
+          out.writeObject(prodFV2.keys)
+
+          val prodFV3 = new FeatureVector
+          this.addLabeledFeatures(instance, w1, t, false, true, prodFV3)
+          out.writeObject(prodFV3.keys)
+
+          val prodFV4 = new FeatureVector
+          this.addLabeledFeatures(instance, w1, t, false, false, prodFV4)
+          out.writeObject(prodFV4.keys)
+        }
+      }
+		  out.writeInt(-3)
+    }
+
+    this.writeExtendedFeatures(instance, out)
+
+    out.writeObject(instance.getFeatureVector.keys)
+    out.writeInt(-4)
+
+    out.writeObject(instance)
+    out.writeInt(-1)
+    out.reset()
+  }
+
 
 /*
     public Alphabet dataAlphabet;
@@ -97,124 +217,6 @@ class DependencyPipe(
 	typeAlphabet = new Alphabet();
 
 	depReader = DependencyReader.createDependencyReader(options.format, options.discourseMode);
-    }
-
-    public int[] createInstances(String file,
-				 File featFileName) throws IOException {
-
-	createAlphabet(file);
-
-	System.out.println("Num Features: " + dataAlphabet.size());
-
-	labeled = depReader.startReading(file);
-
-	TIntArrayList lengths = new TIntArrayList();
-
-	ObjectOutputStream out = options.createForest
-	    ? new ObjectOutputStream(new FileOutputStream(featFileName))
-	    : null;
-		
-	int num1 = 0;
-
-	System.out.println("Creating Feature Vector Instances: ");
-	while(depReader.hasNext()) {
-	    mstparser.DependencyInstance instance = depReader.next();
-	    System.out.print(num1 + " ");
-	    
-	    instance.setFeatureVector(createFeatureVector(instance));
-			
-	    String[] labs = instance.deprels;
-	    int[] heads = instance.heads;
-
-	    StringBuffer spans = new StringBuffer(heads.length*5);
-	    for(int i = 1; i < heads.length; i++) {
-		spans.append(heads[i]).append("|").append(i).append(":").append(typeAlphabet.lookupIndex(labs[i])).append(" ");
-	    }
-	    instance.setParseTree(spans.substring(0,spans.length()-1));
-
-	    lengths.add(instance.length());
-			
-	    if(options.createForest)
-		writeInstance(instance,out);
-	    instance = null;
-			
-
-	    num1++;
-	}
-
-	System.out.println();
-
-	closeAlphabets();
-		
-	if(options.createForest)
-	    out.close();
-
-	return lengths.toArray();
-		
-    }
-
-    private final void createAlphabet(String file) throws IOException {
-
-	System.out.print("Creating Alphabet ... ");
-
-	labeled = depReader.startReading(file);
-
-
-	while(depReader.hasNext()) {
-	    mstparser.DependencyInstance instance = depReader.next();
-	    
-	    String[] labs = instance.deprels;
-	    for(int i = 0; i < labs.length; i++)
-		typeAlphabet.lookupIndex(labs[i]);
-			
-	    createFeatureVector(instance);
-			
-	}
-
-	closeAlphabets();
-
-	System.out.println("Done.");
-    }
-	
-
-    // add with default 1.0
-    public final void add(String feat, FeatureVector fv) {
-	int num = dataAlphabet.lookupIndex(feat);
-	if(num >= 0)
-	    fv.add(num, 1.0);
-    }
-
-    public final void add(String feat, double val, FeatureVector fv) {
-	int num = dataAlphabet.lookupIndex(feat);
-	if(num >= 0)
-	    fv.add(num, val);
-    }
-
-	
-    public FeatureVector createFeatureVector(mstparser.DependencyInstance instance) {
-
-	final int instanceLength = instance.length();
-
-	String[] labs = instance.deprels;
-	int[] heads = instance.heads;
-
-	FeatureVector fv = new FeatureVector();
-	for(int i = 0; i < instanceLength; i++) {
-	    if(heads[i] == -1)
-		continue;
-	    int small = i < heads[i] ? i : heads[i];
-	    int large = i > heads[i] ? i : heads[i];
-	    boolean attR = i < heads[i] ? false : true;
-	    addCoreFeatures(instance,small,large,attR,fv);
-	    if(labeled) {
-		addLabeledFeatures(instance,i,labs[i],attR,true,fv);
-		addLabeledFeatures(instance,heads[i],labs[i],attR,false,fv);
-	    }
-	}
-
-	addExtendedFeatures(instance, fv);
-
-	return fv;
     }
 
     protected void addExtendedFeatures(mstparser.DependencyInstance instance, 
@@ -786,59 +788,6 @@ class DependencyPipe(
 	    }
 	}		
     }
-
-
-    protected void writeInstance(mstparser.DependencyInstance instance, ObjectOutputStream out) {
-
-	int instanceLength = instance.length();
-
-	try {
-
-	    for(int w1 = 0; w1 < instanceLength; w1++) {
-		for(int w2 = w1+1; w2 < instanceLength; w2++) {
-		    for(int ph = 0; ph < 2; ph++) {
-			boolean attR = ph == 0 ? true : false;
-			FeatureVector prodFV = new FeatureVector();
-			addCoreFeatures(instance,w1,w2,attR,prodFV);
-			out.writeObject(prodFV.keys());
-		    }
-		}
-	    }
-	    out.writeInt(-3);
-
-	    if(labeled) {
-		for(int w1 = 0; w1 < instanceLength; w1++) {		    
-		    for(int t = 0; t < types.length; t++) {
-			String type = types[t];			
-			for(int ph = 0; ph < 2; ph++) {
-			    boolean attR = ph == 0 ? true : false;
-			    for(int ch = 0; ch < 2; ch++) {
-				boolean child = ch == 0 ? true : false;
-				FeatureVector prodFV = new FeatureVector();
-				addLabeledFeatures(instance,w1,
-						   type, attR,child,prodFV);
-				out.writeObject(prodFV.keys());
-			    }
-			}
-		    }
-		}
-		out.writeInt(-3);
-	    }
-
-	    writeExtendedFeatures(instance, out);
-
-	    out.writeObject(instance.getFeatureVector().keys());
-	    out.writeInt(-4);
-
-	    out.writeObject(instance);
-	    out.writeInt(-1);
-
-	    out.reset();
-
-	} catch (IOException e) {}
-		
-    }
-	
 
     protected void writeExtendedFeatures (mstparser.DependencyInstance instance, ObjectOutputStream out) 
 	throws IOException {}
