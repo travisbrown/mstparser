@@ -15,6 +15,7 @@ public class KBestParseForest {
     public KBestParseForest(int start, int end, mstparser.DependencyInstance inst, int K) {
 	this.K = K;
 	chart = new ParseForestItem[end+1][end+1][2][2][K];
+	//chart = new ParseForestItem[end+1][end+1][2][3][K];
 	this.start = start;
 	this.end = end;
 	this.sent = inst.forms;

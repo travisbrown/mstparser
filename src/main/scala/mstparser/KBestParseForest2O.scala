@@ -3,7 +3,7 @@ package mstparser
 import scala.collection.mutable.PriorityQueue
 
 class KBestParseForest2O(start: Int, end: Int, instance: DependencyInstance, k: Int)
-  extends old.KBestParseForest2O(start, end, instance, k) {
+  extends old.KBestParseForest(start, end, instance, k) {
 
   def getItem(s: Int, t: Int, d: Int, c: Int): ParseForestItem = this.getItem(s, t, d, c, 0)
   def getItem(s: Int, t: Int, d: Int, c: Int, k: Int): ParseForestItem = this.chart(s)(t)(d)(c)(k)
