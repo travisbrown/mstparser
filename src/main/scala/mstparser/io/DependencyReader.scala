@@ -149,7 +149,8 @@ class MSTReader extends DependencyReader {
         "<root-POS>" +: pos,
         Array.ofDim[String](0, 0),
         "<no-type>" +: deprels,
-        -1 +: heads
+        -1 +: heads,
+        null
       )
   }
 

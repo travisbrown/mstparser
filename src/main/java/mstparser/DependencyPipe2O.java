@@ -16,7 +16,7 @@ public class DependencyPipe2O extends DependencyPipe {
 				       FeatureVector fv) {
 	    
 	final int instanceLength = instance.length();
-	int[] heads = instance.heads;
+	int[] heads = instance.heads();
 
 	// find all trip features
 	for(int i = 0; i < instanceLength; i++) {
@@ -97,8 +97,8 @@ public class DependencyPipe2O extends DependencyPipe {
 					  boolean isST,
 					  FeatureVector fv) {
 
-	String[] forms = instance.forms;
-	String[] pos = instance.postags;
+	String[] forms = instance.forms();
+	String[] pos = instance.postags();
 		
 	// ch1 is always the closes to par
 	String dir = ch1 > ch2 ? "RA" : "LA";
@@ -144,7 +144,7 @@ public class DependencyPipe2O extends DependencyPipe {
 				       int ch1, int ch2,
 				       FeatureVector fv) {
 
-	String[] pos = instance.postags;
+	String[] pos = instance.postags();
 		
 	// ch1 is always the closest to par
 	String dir = par > ch2 ? "RA" : "LA";

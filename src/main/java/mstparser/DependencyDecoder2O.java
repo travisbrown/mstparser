@@ -86,8 +86,8 @@ public class DependencyDecoder2O extends DependencyDecoder {
 					  FeatureVector[][][][] nt_fvs,
 					  double[][][][] nt_probs, int K) {
 
-	String[] forms = inst.forms;
-	String[] pos = inst.postags;
+	String[] forms = inst.forms();
+	String[] pos = inst.postags();
 
 	Tuple2<FeatureVector, String>[] orig = decodeProjective(inst,fvs,probs,fvs_trips,probs_trips,fvs_sibs,probs_sibs,nt_fvs,nt_probs,1);
 	String[] o = orig[0]._2().split(" ");
@@ -106,11 +106,11 @@ public class DependencyDecoder2O extends DependencyDecoder {
 	for(int i = 1; i < par.length; i++)
 	    pars += par[i]+"|"+i+":"+labs[i]+" ";
 
-	inst.heads = par;
+	inst.setHeads(par);
 
-	inst.deprels = new String[labs.length];
+	inst.setDeprels(new String[labs.length]);
 	for(int i = 0; i < labs.length; i++)
-	    inst.deprels[i] = pipe.getType(labs[i]);
+	    inst.deprels()[i] = pipe.getType(labs[i]);
 
 	orig[0] = new Tuple2<FeatureVector, String>(((DependencyPipe2O)pipe).createFeatureVector(inst), pars);
 
@@ -170,8 +170,8 @@ public class DependencyDecoder2O extends DependencyDecoder {
 				       FeatureVector[][][][] nt_fvs,
 				       double[][][][] nt_probs, int K) {
 		
-	String[] forms = inst.forms;
-	String[] pos = inst.postags;
+	String[] forms = inst.forms();
+	String[] pos = inst.postags();
 		
 	int[][] static_types = null;
 	if(pipe.getLabeled()) {

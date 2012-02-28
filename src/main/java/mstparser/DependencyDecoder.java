@@ -45,8 +45,8 @@ public class DependencyDecoder {
 				       FeatureVector[][][][] nt_fvs,
 				       double[][][][] nt_probs, int K) {
 
-	String[] forms = inst.forms;
-	String[] pos = inst.postags;
+	String[] forms = inst.forms();
+	String[] pos = inst.postags();
 
 	int[][] static_types = null;
 	if(pipe.getLabeled()) {
@@ -182,7 +182,7 @@ public class DependencyDecoder {
 					  FeatureVector[][][][] nt_fvs,
 					  double[][][][] nt_probs, int K) {
 
-	String[] pos = inst.postags;
+	String[] pos = inst.postags();
 		
 	int numWords = inst.length();
 

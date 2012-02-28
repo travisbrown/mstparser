@@ -168,7 +168,7 @@ class DependencyParser(
         heads(j) = trip(0).toInt
       }
 
-      pipe.outputInstance(new DependencyInstance(formsNoRoot, null, null, posNoRoot, null, labels, heads))
+      pipe.outputInstance(new DependencyInstance(formsNoRoot, null, null, posNoRoot, null, labels, heads, null))
     }
     pipe.close()
 		

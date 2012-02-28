@@ -297,168 +297,135 @@ class DependencyPipe(
     } catch { case e: ClassNotFoundException => println("Error reading file."); sys.exit(0) } 
 	} 
 
-/*
-    public Alphabet dataAlphabet;
-	
-    public Alphabet typeAlphabet;
+  private def addCoreFeatures(instance: DependencyInstance, small: Int, large: Int, attR: Boolean, fv: FeatureVector) {
+	  val attDist = "&%s&%d".format(
+      if (attR) "RA" else "LA",
+      math.abs(large - small) match {
+        case dist if dist > 10 => 10
+        case dist if dist > 5 => 5
+        case dist => dist - 1
+      }
+    )
 
-    private DependencyReader depReader;
-    private DependencyWriter depWriter;
+    this.addLinearFeatures("POS", instance.postags, small, large, attDist, fv)
+    this.addLinearFeatures("CPOS", instance.cpostags, small, large, attDist, fv)
 
-    public String[] types;
-    public int[] typesInt;
-	
-    public boolean labeled = false;
-    private boolean isCONLL = true;
+    val (headIndex, childIndex) = if (attR) (small, large) else (large, small)
 
-    private ParserOptions options;
+    this.addTwoObsFeatures("HC",
+      instance.forms(headIndex),
+      instance.postags(headIndex),
+      instance.forms(childIndex),
+      instance.postags(childIndex),
+      attDist,
+      fv
+    )
 
-    public DependencyPipe (ParserOptions options) throws IOException {
-	this.options = options;
+    if (this.options.format == "CONLL") {
+      this.addTwoObsFeatures("HCA",
+        instance.forms(headIndex),
+        instance.cpostags(headIndex),
+        instance.forms(childIndex),
+        instance.cpostags(childIndex),
+        attDist,
+        fv
+      )
 
-	if (!options.format.equals("CONLL"))
-	    isCONLL = false;
+      this.addTwoObsFeatures("HCC",
+        instance.lemmas(headIndex),
+        instance.postags(headIndex),
+        instance.lemmas(childIndex),
+        instance.postags(childIndex),
+        attDist,
+        fv
+      )
 
-	dataAlphabet = new Alphabet();
-	typeAlphabet = new Alphabet();
+      this.addTwoObsFeatures("HCD",
+        instance.lemmas(headIndex),
+        instance.cpostags(headIndex),
+        instance.lemmas(childIndex),
+        instance.cpostags(childIndex),
+        attDist,
+        fv
+      )
 
-	depReader = DependencyReader.createDependencyReader(options.format, options.discourseMode);
-    }
-
-    public void addCoreFeatures(mstparser.DependencyInstance instance,
-				int small,
-				int large,
-				boolean attR,
-				FeatureVector fv) {
-
-	String[] forms = instance.forms;
-	String[] pos = instance.postags;
-	String[] posA = instance.cpostags;
-
-	String att = attR ? "RA" : "LA";
-
-	int dist = Math.abs(large-small);
-	String distBool = "0";
-	if (dist > 10)
-	    distBool = "10";
-	else if (dist > 5)
-	    distBool = "5";
-	else
-	    distBool = Integer.toString(dist-1);
-		
-	String attDist = "&"+att+"&"+distBool;
-
-	addLinearFeatures("POS", pos, small, large, attDist, fv);
-	addLinearFeatures("CPOS", posA, small, large, attDist, fv);
-		
-
-	//////////////////////////////////////////////////////////////////////
-	
-	int headIndex = small;
-	int childIndex = large;
-	if (!attR) {
-	    headIndex = large;
-	    childIndex = small;
-	}
-
-	addTwoObsFeatures("HC", forms[headIndex], pos[headIndex], 
-			  forms[childIndex], pos[childIndex], attDist, fv);
-
-	if (isCONLL) {
-
-	    addTwoObsFeatures("HCA", forms[headIndex], posA[headIndex], 
-	    		      forms[childIndex], posA[childIndex], attDist, fv);
-	    
-	    addTwoObsFeatures("HCC", instance.lemmas[headIndex], pos[headIndex], 
-	    		      instance.lemmas[childIndex], pos[childIndex], 
-	    		      attDist, fv);
-	    
-	    addTwoObsFeatures("HCD", instance.lemmas[headIndex], posA[headIndex], 
-			      instance.lemmas[childIndex], posA[childIndex], 
-			      attDist, fv);
-
-	    if (options.discourseMode) {
-		// Note: The features invoked here are designed for
-		// discourse parsing (as opposed to sentential
-		// parsing). It is conceivable that they could help for
-		// sentential parsing, but current testing indicates that
-		// they hurt sentential parsing performance.
-
-		addDiscourseFeatures(instance, small, large,
-				     headIndex, childIndex, 
-				     attDist, fv);
-
-	    } else {
-		// Add in features from the feature lists. It assumes
-		// the feature lists can have different lengths for
-		// each item. For example, nouns might have a
-		// different number of morphological features than
-		// verbs.
-	    
-		for (int i=0; i<instance.feats[headIndex].length; i++) {
-		    for (int j=0; j<instance.feats[childIndex].length; j++) {
-			addTwoObsFeatures("FF"+i+"*"+j, 
-					  instance.forms[headIndex], 
-					  instance.feats[headIndex][i],
-					  instance.forms[childIndex], 
-					  instance.feats[childIndex][j], 
-					  attDist, fv);
+      if (options.discourseMode) {
+        /* Note: The features invoked here are designed for discourse parsing
+         * (as opposed to sentential parsing). It is conceivable that they
+         * could help for sentential parsing, but current testing indicates
+         * that they hurt sentential parsing performance.
+         */
+         this.addDiscourseFeatures(instance, small, large, headIndex, childIndex, attDist, fv)
+      } else {
+        /* Add in features from the feature lists. It assumes the feature
+         * lists can have different lengths for each item. For example, nouns
+         * might have a different number of morphological features than verbs.
+         */
+        for {
+          i <- 0 until instance.feats(headIndex).length
+          j <- 0 until instance.feats(childIndex).length
+        } {
+          this.addTwoObsFeatures("FF" + i + "*" + j,
+            instance.forms(headIndex),
+            instance.feats(headIndex)(i),
+            instance.forms(childIndex),
+            instance.feats(childIndex)(j),
+            attDist, fv
+          )
 			
-			addTwoObsFeatures("LF"+i+"*"+j, 
-					  instance.lemmas[headIndex], 
-					  instance.feats[headIndex][i],
-					  instance.lemmas[childIndex], 
-					  instance.feats[childIndex][j], 
-					  attDist, fv);
+          this.addTwoObsFeatures("LF" + i + "*" + j,
+            instance.lemmas(headIndex),
+            instance.feats(headIndex)(i),
+            instance.lemmas(childIndex),
+            instance.feats(childIndex)(j),
+            attDist, fv
+          )
 		    }
-		}
-	    }
-
-	} else {
-	    // We are using the old MST format.  Pick up stem features
-	    // the way they used to be done. This is kept for
-	    // replicability of results for old versions.
-	    int hL = forms[headIndex].length();
-	    int cL = forms[childIndex].length();
-	    if (hL > 5 || cL > 5) {
-		addOldMSTStemFeatures(instance.lemmas[headIndex], 
-				      pos[headIndex],
-				      instance.lemmas[childIndex], 
-				      pos[childIndex],
-				      attDist, hL, cL, fv);
-	    }
-	}				       
-		
+		  }
+    } else {
+	    /* We are using the old MST format. Pick up stem features the way they
+       * used to be done. This is kept for replicability of results for old
+       * versions.
+       */
+	    val hL = instance.forms(headIndex).length
+	    val cL = instance.forms(childIndex).length
+      if (hL > 5 || cL > 5) {
+        this.addOldMSTStemFeatures(
+          instance.lemmas(headIndex),
+          instance.postags(headIndex),
+          instance.lemmas(childIndex),
+          instance.postags(childIndex),
+          attDist, hL, cL, fv
+        )
+      }
     }
+  }
  
-    private final void addLinearFeatures(String type, String[] obsVals, 
-					 int first, int second,
-					 String attachDistance,
-					 FeatureVector fv) {
+  protected def addLinearFeatures(
+    label: String,
+    vals: Array[String],
+    first: Int,
+    second: Int,
+    attDist: String,
+    fv: FeatureVector
+  ) {
 	
-	String pLeft = first > 0 ? obsVals[first-1] : "STR";
-	String pRight = second < obsVals.length-1 ? obsVals[second+1] : "END";
-	String pLeftRight = first < second-1 ? obsVals[first+1] : "MID";
-	String pRightLeft = second > first+1 ? obsVals[second-1] : "MID";
+	  val pL = if (first > 0) vals(first - 1) else "STR"
+    val pR = if (second < vals.length - 1) vals(second + 1) else "END"
+    val pLR = if (first < second - 1) vals(first + 1) else "MID"
+    val pRL = if (second > first + 1) vals(second - 1) else "MID"
 
-	// feature posR posMid posL
-	StringBuilder featPos = 
-	    new StringBuilder(type+"PC="+obsVals[first]+" "+obsVals[second]);
+    val pos = label + "PC=" + vals(first) + " " + vals(second)
 
-	for(int i = first+1; i < second; i++) {
-	    String allPos = featPos.toString() + ' ' + obsVals[i];
-	    add(allPos, fv);
-	    add(allPos+attachDistance, fv);
-
-	}
-
-	addCorePosFeatures(type+"PT", pLeft, obsVals[first], pLeftRight, 
-				pRightLeft, obsVals[second], pRight, attachDistance, fv);
-
+    vals.drop(first + 1).take(second - first - 1).map(pos + " " + _).foreach { allPos =>
+	    this.add(allPos, fv)
+	    this.add(allPos + attDist, fv)
     }
 
+    this.addCorePosFeatures(label + "PT", pL, vals(first), pLR, pRL, vals(second), pR, attDist, fv)
+  }
 
-    private final void 
+  /*  private final void 
 	addCorePosFeatures(String prefix,
 			   String leftOf1, String one, String rightOf1, 
 			   String leftOf2, String two, String rightOf2, 

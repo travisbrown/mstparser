@@ -6,144 +6,16 @@ import java.io.*;
 import java.util.*;
 
 public abstract class DependencyPipe {
-    public abstract ParserOptions getOptions();
-    public abstract void add(String feat, mstparser.FeatureVector fv);
-    public abstract void add(String feat, double val, mstparser.FeatureVector fv);
+  public abstract ParserOptions getOptions();
+  public abstract void add(String feat, mstparser.FeatureVector fv);
+  public abstract void add(String feat, double val, mstparser.FeatureVector fv);
 
-    public void addCoreFeatures(mstparser.DependencyInstance instance,
-				int small,
-				int large,
-				boolean attR,
-				mstparser.FeatureVector fv) {
-
-	String[] forms = instance.forms;
-	String[] pos = instance.postags;
-	String[] posA = instance.cpostags;
-
-	String att = attR ? "RA" : "LA";
-
-	int dist = Math.abs(large-small);
-	String distBool = "0";
-	if (dist > 10)
-	    distBool = "10";
-	else if (dist > 5)
-	    distBool = "5";
-	else
-	    distBool = Integer.toString(dist-1);
-		
-	String attDist = "&"+att+"&"+distBool;
-
-	addLinearFeatures("POS", pos, small, large, attDist, fv);
-	addLinearFeatures("CPOS", posA, small, large, attDist, fv);
-		
-
-	//////////////////////////////////////////////////////////////////////
-	
-	int headIndex = small;
-	int childIndex = large;
-	if (!attR) {
-	    headIndex = large;
-	    childIndex = small;
-	}
-
-	addTwoObsFeatures("HC", forms[headIndex], pos[headIndex], 
-			  forms[childIndex], pos[childIndex], attDist, fv);
-
-	if (this.getOptions().format.equals("CONLL")) {
-
-	    addTwoObsFeatures("HCA", forms[headIndex], posA[headIndex], 
-	    		      forms[childIndex], posA[childIndex], attDist, fv);
-	    
-	    addTwoObsFeatures("HCC", instance.lemmas[headIndex], pos[headIndex], 
-	    		      instance.lemmas[childIndex], pos[childIndex], 
-	    		      attDist, fv);
-	    
-	    addTwoObsFeatures("HCD", instance.lemmas[headIndex], posA[headIndex], 
-			      instance.lemmas[childIndex], posA[childIndex], 
-			      attDist, fv);
-
-	    if (this.getOptions().discourseMode) {
-		// Note: The features invoked here are designed for
-		// discourse parsing (as opposed to sentential
-		// parsing). It is conceivable that they could help for
-		// sentential parsing, but current testing indicates that
-		// they hurt sentential parsing performance.
-
-		addDiscourseFeatures(instance, small, large,
-				     headIndex, childIndex, 
-				     attDist, fv);
-
-	    } else {
-		// Add in features from the feature lists. It assumes
-		// the feature lists can have different lengths for
-		// each item. For example, nouns might have a
-		// different number of morphological features than
-		// verbs.
-	    
-		for (int i=0; i<instance.feats[headIndex].length; i++) {
-		    for (int j=0; j<instance.feats[childIndex].length; j++) {
-			addTwoObsFeatures("FF"+i+"*"+j, 
-					  instance.forms[headIndex], 
-					  instance.feats[headIndex][i],
-					  instance.forms[childIndex], 
-					  instance.feats[childIndex][j], 
-					  attDist, fv);
-			
-			addTwoObsFeatures("LF"+i+"*"+j, 
-					  instance.lemmas[headIndex], 
-					  instance.feats[headIndex][i],
-					  instance.lemmas[childIndex], 
-					  instance.feats[childIndex][j], 
-					  attDist, fv);
-		    }
-		}
-	    }
-
-	} else {
-	    // We are using the old MST format.  Pick up stem features
-	    // the way they used to be done. This is kept for
-	    // replicability of results for old versions.
-	    int hL = forms[headIndex].length();
-	    int cL = forms[childIndex].length();
-	    if (hL > 5 || cL > 5) {
-		addOldMSTStemFeatures(instance.lemmas[headIndex], 
-				      pos[headIndex],
-				      instance.lemmas[childIndex], 
-				      pos[childIndex],
-				      attDist, hL, cL, fv);
-	    }
-	}				       
-		
-    }
- 
-    private final void addLinearFeatures(String type, String[] obsVals, 
+  protected abstract void addLinearFeatures(String type, String[] obsVals, 
 					 int first, int second,
 					 String attachDistance,
-					 mstparser.FeatureVector fv) {
-	
-	String pLeft = first > 0 ? obsVals[first-1] : "STR";
-	String pRight = second < obsVals.length-1 ? obsVals[second+1] : "END";
-	String pLeftRight = first < second-1 ? obsVals[first+1] : "MID";
-	String pRightLeft = second > first+1 ? obsVals[second-1] : "MID";
+					 mstparser.FeatureVector fv);
 
-	// feature posR posMid posL
-	StringBuilder featPos = 
-	    new StringBuilder(type+"PC="+obsVals[first]+" "+obsVals[second]);
-
-	for(int i = first+1; i < second; i++) {
-	    String allPos = featPos.toString() + ' ' + obsVals[i];
-	    add(allPos, fv);
-	    add(allPos+attachDistance, fv);
-
-	}
-
-	addCorePosFeatures(type+"PT", pLeft, obsVals[first], pLeftRight, 
-				pRightLeft, obsVals[second], pRight, attachDistance, fv);
-
-    }
-
-
-    private final void 
+    protected final void 
 	addCorePosFeatures(String prefix,
 			   String leftOf1, String one, String rightOf1, 
 			   String leftOf2, String two, String rightOf2, 
@@ -233,7 +105,7 @@ public abstract class DependencyPipe {
      * add other features more easily based on other items and
      * observations.)
      **/
-    private final void addTwoObsFeatures(String prefix, 
+    protected final void addTwoObsFeatures(String prefix, 
 					 String item1F1, String item1F2, 
 					 String item2F1, String item2F2, 
 					 String attachDistance,
@@ -314,8 +186,8 @@ public abstract class DependencyPipe {
 				   boolean childFeatures,
 				   mstparser.FeatureVector fv) {
 		
-	String[] forms = instance.forms;
-	String[] pos = instance.postags;
+	String[] forms = instance.forms();
+	String[] pos = instance.postags();
 	    
 	String att = "";
 	if(attR)
@@ -348,7 +220,7 @@ public abstract class DependencyPipe {
     }
 
 
-    private void addDiscourseFeatures (mstparser.DependencyInstance instance, 
+    protected void addDiscourseFeatures (mstparser.DependencyInstance instance, 
 				       int small,
 				       int large,
 				       int headIndex,
@@ -356,113 +228,113 @@ public abstract class DependencyPipe {
 				       String attDist,
 				       mstparser.FeatureVector fv) {
     
-	addLinearFeatures("FORM", instance.forms, small, large, attDist, fv);
-	addLinearFeatures("LEMMA", instance.lemmas, small, large, attDist, fv);
+	addLinearFeatures("FORM", instance.forms(), small, large, attDist, fv);
+	addLinearFeatures("LEMMA", instance.lemmas(), small, large, attDist, fv);
 	
-	addTwoObsFeatures("HCB1", instance.forms[headIndex], 
-			  instance.lemmas[headIndex],
-			  instance.forms[childIndex], 
-			  instance.lemmas[childIndex], 
+	addTwoObsFeatures("HCB1", instance.forms()[headIndex], 
+			  instance.lemmas()[headIndex],
+			  instance.forms()[childIndex], 
+			  instance.lemmas()[childIndex], 
 			  attDist, fv);
 	
-	addTwoObsFeatures("HCB2", instance.forms[headIndex], 
-			  instance.lemmas[headIndex],
-			  instance.forms[childIndex], 
-			  instance.postags[childIndex], 
+	addTwoObsFeatures("HCB2", instance.forms()[headIndex], 
+			  instance.lemmas()[headIndex],
+			  instance.forms()[childIndex], 
+			  instance.postags()[childIndex], 
 			  attDist, fv);
 	
-	addTwoObsFeatures("HCB3", instance.forms[headIndex], 
-			  instance.lemmas[headIndex],
-			  instance.forms[childIndex], 
-			  instance.cpostags[childIndex], 
+	addTwoObsFeatures("HCB3", instance.forms()[headIndex], 
+			  instance.lemmas()[headIndex],
+			  instance.forms()[childIndex], 
+			  instance.cpostags()[childIndex], 
 			  attDist, fv);
 	
-	addTwoObsFeatures("HC2", instance.forms[headIndex], 
-			  instance.postags[headIndex], 
-			  instance.forms[childIndex], 
-			  instance.cpostags[childIndex], attDist, fv);
+	addTwoObsFeatures("HC2", instance.forms()[headIndex], 
+			  instance.postags()[headIndex], 
+			  instance.forms()[childIndex], 
+			  instance.cpostags()[childIndex], attDist, fv);
 	
-	addTwoObsFeatures("HCC2", instance.lemmas[headIndex], 
-			  instance.postags[headIndex], 
-			  instance.lemmas[childIndex], 
-			  instance.cpostags[childIndex], 
+	addTwoObsFeatures("HCC2", instance.lemmas()[headIndex], 
+			  instance.postags()[headIndex], 
+			  instance.lemmas()[childIndex], 
+			  instance.cpostags()[childIndex], 
 			  attDist, fv);
 	
 	
 	//// Use this if your extra feature lists all have the same length.
-	for (int i=0; i<instance.feats.length; i++) {
+	for (int i=0; i<instance.feats().length; i++) {
 	
-		addLinearFeatures("F"+i, instance.feats[i], small, large, attDist, fv);
+		addLinearFeatures("F"+i, instance.feats()[i], small, large, attDist, fv);
 	
 		addTwoObsFeatures("FF"+i, 
-				  instance.forms[headIndex], 
-				  instance.feats[i][headIndex],
-				  instance.forms[childIndex], 
-				  instance.feats[i][childIndex],
+				  instance.forms()[headIndex], 
+				  instance.feats()[i][headIndex],
+				  instance.forms()[childIndex], 
+				  instance.feats()[i][childIndex],
 				  attDist, fv);
 		
 		addTwoObsFeatures("LF"+i, 
-				  instance.lemmas[headIndex], 
-				  instance.feats[i][headIndex],
-				  instance.lemmas[childIndex], 
-				  instance.feats[i][childIndex],
+				  instance.lemmas()[headIndex], 
+				  instance.feats()[i][headIndex],
+				  instance.lemmas()[childIndex], 
+				  instance.feats()[i][childIndex],
 				  attDist, fv);
 		
 		addTwoObsFeatures("PF"+i, 
-				  instance.postags[headIndex], 
-				  instance.feats[i][headIndex],
-				  instance.postags[childIndex], 
-				  instance.feats[i][childIndex],
+				  instance.postags()[headIndex], 
+				  instance.feats()[i][headIndex],
+				  instance.postags()[childIndex], 
+				  instance.feats()[i][childIndex],
 				  attDist, fv);
 		
 		addTwoObsFeatures("CPF"+i, 
-				  instance.cpostags[headIndex], 
-				  instance.feats[i][headIndex],
-				  instance.cpostags[childIndex], 
-				  instance.feats[i][childIndex],
+				  instance.cpostags()[headIndex], 
+				  instance.feats()[i][headIndex],
+				  instance.cpostags()[childIndex], 
+				  instance.feats()[i][childIndex],
 				  attDist, fv);
 		
 		
-		for (int j=i+1; j<instance.feats.length; j++) {
+		for (int j=i+1; j<instance.feats().length; j++) {
 		
 		    addTwoObsFeatures("CPF"+i+"_"+j, 
-				      instance.feats[i][headIndex],
-				      instance.feats[j][headIndex],
-				      instance.feats[i][childIndex],
-				      instance.feats[j][childIndex],
+				      instance.feats()[i][headIndex],
+				      instance.feats()[j][headIndex],
+				      instance.feats()[i][childIndex],
+				      instance.feats()[j][childIndex],
 				      attDist, fv);
 		
 		}
 	
-		for (int j=0; j<instance.feats.length; j++) {
+		for (int j=0; j<instance.feats().length; j++) {
 	
 		    addTwoObsFeatures("XFF"+i+"_"+j, 
-				      instance.forms[headIndex],
-				      instance.feats[i][headIndex],
-				      instance.forms[childIndex],
-				      instance.feats[j][childIndex],
+				      instance.forms()[headIndex],
+				      instance.feats()[i][headIndex],
+				      instance.forms()[childIndex],
+				      instance.feats()[j][childIndex],
 				      attDist, fv);
 	
 		    addTwoObsFeatures("XLF"+i+"_"+j, 
-				      instance.lemmas[headIndex],
-				      instance.feats[i][headIndex],
-				      instance.lemmas[childIndex],
-				      instance.feats[j][childIndex],
+				      instance.lemmas()[headIndex],
+				      instance.feats()[i][headIndex],
+				      instance.lemmas()[childIndex],
+				      instance.feats()[j][childIndex],
 				      attDist, fv);
 	
 		    addTwoObsFeatures("XPF"+i+"_"+j, 
-				      instance.postags[headIndex],
-				      instance.feats[i][headIndex],
-				      instance.postags[childIndex],
-				      instance.feats[j][childIndex],
+				      instance.postags()[headIndex],
+				      instance.feats()[i][headIndex],
+				      instance.postags()[childIndex],
+				      instance.feats()[j][childIndex],
 				      attDist, fv);
 	
 	
 		    addTwoObsFeatures("XCF"+i+"_"+j, 
-				      instance.cpostags[headIndex],
-				      instance.feats[i][headIndex],
-				      instance.cpostags[childIndex],
-				      instance.feats[j][childIndex],
+				      instance.cpostags()[headIndex],
+				      instance.feats()[i][headIndex],
+				      instance.cpostags()[childIndex],
+				      instance.feats()[j][childIndex],
 				      attDist, fv);
 	
 	
@@ -476,52 +348,52 @@ public abstract class DependencyPipe {
 
 	    //for (int rf_index=0; rf_index<2; rf_index++) {
 	    for (int rf_index=0; 
-		 rf_index<instance.relFeats.length; 
+		 rf_index<instance.relFeats().length; 
 		 rf_index++) {
 		
 		String headToChild = 
-		    "H2C"+rf_index+instance.relFeats[rf_index].getFeature(headIndex, childIndex);
+		    "H2C"+rf_index+instance.relFeats()[rf_index].getFeature(headIndex, childIndex);
 	    
 		addTwoObsFeatures("RFA1",
-				  instance.forms[headIndex], 
-				  instance.lemmas[headIndex],
-				  instance.postags[childIndex],
+				  instance.forms()[headIndex], 
+				  instance.lemmas()[headIndex],
+				  instance.postags()[childIndex],
 				  headToChild,
 				  attDist, fv);
 		
 		addTwoObsFeatures("RFA2",
-				  instance.postags[headIndex], 
-				  instance.cpostags[headIndex],
-				  instance.forms[childIndex],
+				  instance.postags()[headIndex], 
+				  instance.cpostags()[headIndex],
+				  instance.forms()[childIndex],
 				  headToChild,
 				  attDist, fv);
 	    
 	    	addTwoObsFeatures("RFA3",
-				  instance.lemmas[headIndex], 
-				  instance.postags[headIndex],
-				  instance.forms[childIndex],
+				  instance.lemmas()[headIndex], 
+				  instance.postags()[headIndex],
+				  instance.forms()[childIndex],
 				  headToChild,
 				  attDist, fv);
 	    	
 	    	addTwoObsFeatures("RFB1",
 				  headToChild,
-				  instance.postags[headIndex],
-				  instance.forms[childIndex], 
-				  instance.lemmas[childIndex],
+				  instance.postags()[headIndex],
+				  instance.forms()[childIndex], 
+				  instance.lemmas()[childIndex],
 				  attDist, fv);
 	    	
 	    	addTwoObsFeatures("RFB2",
 				  headToChild,
-				  instance.forms[headIndex],
-				  instance.postags[childIndex], 
-				  instance.cpostags[childIndex],
+				  instance.forms()[headIndex],
+				  instance.postags()[childIndex], 
+				  instance.cpostags()[childIndex],
 				  attDist, fv);
 	    	
 	    	addTwoObsFeatures("RFB3",
 				  headToChild,
-				  instance.forms[headIndex],
-				  instance.lemmas[childIndex], 
-				  instance.postags[childIndex],
+				  instance.forms()[headIndex],
+				  instance.lemmas()[childIndex], 
+				  instance.postags()[childIndex],
 				  attDist, fv);
 		
 	    }
@@ -535,7 +407,7 @@ public abstract class DependencyPipe {
      * adding features.
      *
      */
-    private final void
+    protected final void
 	addOldMSTStemFeatures(String hLemma, String headP, 
 			      String cLemma, String childP, String attDist, 
 			      int hL, int cL, mstparser.FeatureVector fv) {
@@ -575,6 +447,6 @@ public abstract class DependencyPipe {
 	    add("SJJ="+hLemma,fv); //this
 	}
 
-    }
-		
+    }		
 }
+
