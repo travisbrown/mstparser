@@ -91,10 +91,7 @@ public abstract class DependencyPipe {
 	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
 	add(feat.toString(), fv);
-
     }
-
-
 
     /**
      * Add features for two items, each with two observations, e.g. head,
@@ -176,7 +173,6 @@ public abstract class DependencyPipe {
 	add(feat.toString(), fv);
 	feat.append('*').append(attachDistance);
 	add(feat.toString(), fv);
-	
     }
 
     protected void addLabeledFeatures(mstparser.DependencyInstance instance,
@@ -218,7 +214,6 @@ public abstract class DependencyPipe {
 
 	}
     }
-
 
     protected void addDiscourseFeatures (mstparser.DependencyInstance instance, 
 				       int small,
@@ -294,7 +289,6 @@ public abstract class DependencyPipe {
 				  instance.feats()[i][childIndex],
 				  attDist, fv);
 		
-		
 		for (int j=i+1; j<instance.feats().length; j++) {
 		
 		    addTwoObsFeatures("CPF"+i+"_"+j, 
@@ -303,7 +297,6 @@ public abstract class DependencyPipe {
 				      instance.feats()[i][childIndex],
 				      instance.feats()[j][childIndex],
 				      attDist, fv);
-		
 		}
 	
 		for (int j=0; j<instance.feats().length; j++) {
@@ -336,12 +329,8 @@ public abstract class DependencyPipe {
 				      instance.cpostags()[childIndex],
 				      instance.feats()[j][childIndex],
 				      attDist, fv);
-	
-	
 		}
-	
 	}
-
 
 	// Test out relational features
 	if (this.getOptions().useRelationalFeatures) {
@@ -446,7 +435,6 @@ public abstract class DependencyPipe {
 	    add("SHH="+hLemma+" "+headP,fv);
 	    add("SJJ="+hLemma,fv); //this
 	}
-
     }		
 }
 
