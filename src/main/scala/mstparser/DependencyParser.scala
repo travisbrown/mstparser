@@ -17,32 +17,32 @@ class DependencyParser(
 	val params = new Parameters(this.pipe.dataAlphabet.size)
   val decoder = if (options.secondOrder) new DependencyDecoder2O(this.pipe) else new DependencyDecoder(this.pipe)
 
-  def train(instanceLengths: Seq[Int], trainfile: String, train_forest: File) {
+  def train(instances: Seq[DependencyInstance], trainfile: String, train_forest: File) {
     (0 until options.numIters).map { i =>
       print(" Iteration %d[".format(i))
       val start = System.currentTimeMillis()
-      this.trainingIter(instanceLengths, trainfile, train_forest, i + 1)
+      this.trainingIter(instances, trainfile, train_forest, i + 1)
       val end = System.currentTimeMillis()
       println("|Time:%d]".format(end - start))
       end - start
     }
 
-    this.params.averageParams(options.numIters * instanceLengths.length)
+    this.params.averageParams(options.numIters * instances.size)
   }
 
-  private def trainingIter(instanceLengths: Seq[Int], trainfile: String, train_forest: File, iter: Int) {
-    val in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(train_forest)))
+  private def trainingIter(instances: Seq[DependencyInstance], trainfile: String, train_forest: File, iter: Int) {
+    val in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(train_forest), 65536))
 
-    instanceLengths.zipWithIndex.foreach { case (length, i) =>
+    instances.zipWithIndex.foreach { case (instance, i) =>
       if ((i + 1) % 500 == 0) print("%d,".format(i + 1))
 
-      val (fvs, probs, nt_fvs, nt_probs, fvs_trips, probs_trips, fvs_sibs, probs_sibs) = this.createArrays(length)
+      val (fvs, probs, nt_fvs, nt_probs, fvs_trips, probs_trips, fvs_sibs, probs_sibs) = this.createArrays(instance.length)
 
-      val instance = if (options.secondOrder) this.pipe.asInstanceOf[DependencyPipe2O].readInstance(
-        in, length, fvs, probs, fvs_trips, probs_trips, fvs_sibs, probs_sibs, nt_fvs, nt_probs, params
-      ) else this.pipe.readInstance(in, length, fvs, probs, nt_fvs, nt_probs, params)
+      if (options.secondOrder) this.pipe.asInstanceOf[DependencyPipe2O].readInstance(
+        in, instance.length, fvs, probs, fvs_trips, probs_trips, fvs_sibs, probs_sibs, nt_fvs, nt_probs, params
+      ) else this.pipe.readInstance(in, instance.length, fvs, probs, nt_fvs, nt_probs, params)
 
-      val upd = (options.numIters * instanceLengths.length - (instanceLengths.length * (iter - 1) + (i + 1)) + 1).toDouble
+      val upd = (options.numIters * instances.size - (instances.size * (iter - 1) + (i + 1)) + 1).toDouble
 
       val d = options.decodeType match {
         case "proj" =>
@@ -68,7 +68,7 @@ class DependencyParser(
 
       this.params.updateParamsMIRA(instance, d, upd)
     }
-    System.out.print(instanceLengths.length)
+    System.out.print(instances.size)
     in.close()
   }
 
@@ -186,7 +186,7 @@ object DependencyParser {
         if (options.secondOrder) new DependencyPipe2O(options)
         else new DependencyPipe(options)
 
-      val instanceLengths = pipe.createInstances(options.trainfile, options.trainforest)
+      val instances = pipe.createInstances(options.trainfile, options.trainforest)
 	  	pipe.closeAlphabets()
 
       val dp = new DependencyParser(pipe, options)
@@ -195,7 +195,7 @@ object DependencyParser {
       val numTypes = pipe.typeAlphabet.size
       println("Num Feats: %d.\tNum Edge Labels: %d".format(numFeats, numTypes))
 
-      dp.train(instanceLengths, options.trainfile, options.trainforest)
+      dp.train(instances, options.trainfile, options.trainforest)
 
       print("Saving model...")
       dp.saveModel(options.modelName)

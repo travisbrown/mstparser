@@ -58,17 +58,13 @@ class DependencyPipe(
 
   def nextInstance = if (!this.depReader.hasNext) null else {
     val instance = this.depReader.next
-    if (instance.forms == null) null else {
-      instance.setFeatureVector(this.createFeatureVector(instance))
-
-      val spans = new StringBuffer(instance.heads.length * 5)
-      instance.heads.zip(instance.deprels).zipWithIndex.tail.foreach { case ((head, label), i) =>
-	      spans.append(head).append("|").append(i).append(":").append(this.typeAlphabet.lookupIndex(label)).append(" ")
-      }
-
-      instance.setParseTree(spans.substring(0, spans.length - 1))
-      instance
-    }
+	  instance.setFeatureVector(this.createFeatureVector(instance))
+    instance.setParseTree(
+      instance.heads.tail.zip(instance.deprels.tail).zipWithIndex.map {
+        case ((h, l), j) => "%d|%d:%d".format(h, j + 1, this.typeAlphabet.lookupIndex(l))
+      }.mkString(" ")
+	  )
+    instance
   }
 
   def add(f: String, fv: FeatureVector) {
@@ -124,7 +120,7 @@ class DependencyPipe(
     this.labeled = this.depReader.startReading(file)
 
     val out = if (this.options.createForest)
-      new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(featFile)))
+      new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(featFile), 65536))
     else null
 
     println("Creating Feature Vector Instances: ")
@@ -147,7 +143,7 @@ class DependencyPipe(
     this.closeAlphabets()
 
     if (this.options.createForest) out.close()
-    this.instances.map(_.length)
+    this.instances
   }
 
   protected def writeInstance(instance: DependencyInstance, out: ObjectOutputStream) {
@@ -198,11 +194,6 @@ class DependencyPipe(
 
     this.writeExtendedFeatures(instance, out)
 
-    out.writeObject(instance.getFeatureVector.keys)
-    out.writeInt(-4)
-
-    out.writeObject(instance)
-    out.writeInt(-1)
     out.reset()
 
     println("Written: " + c.toString)
@@ -264,7 +255,7 @@ class DependencyPipe(
     fvsNt: Array[Array[Array[Array[FeatureVector]]]],
     probsNt: Array[Array[Array[Array[Double]]]],
     params: Parameters
-  ) = {
+  ) {
 	  try {
       (0 until length).foreach { w1 =>
         ((w1 + 1) until length).foreach { w2 =>
@@ -303,16 +294,6 @@ class DependencyPipe(
 
 	      if (in.readInt() != -3) { println("Error reading file."); sys.exit(0) }
       }
-
-			val nFv = FeatureVector.fromKeys(in.readObject().asInstanceOf[Array[Int]])
-	    if (in.readInt() != -4) { println("Error reading file."); sys.exit(0) }
-
-	    val instance = in.readObject().asInstanceOf[DependencyInstance]
-	    instance.setFeatureVector(nFv)
-
-	    if (in.readInt() != -1) { println("Error reading file."); sys.exit(0) }
-
-	    instance
     } catch { case e: ClassNotFoundException => println("Error reading file."); sys.exit(0) } 
 	} 
 
