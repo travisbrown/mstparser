@@ -232,10 +232,10 @@ public class DependencyPipe2O extends DependencyPipe {
 	    int last = in.readInt();
 	    if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
 
-	    if(labeled) {
+	    if(this.labeled()) {
 		for(int w1 = 0; w1 < length; w1++) {
-		    for(int t = 0; t < types.length; t++) {
-			String type = types[t];
+		    for(int t = 0; t < this.types().length; t++) {
+			String type = this.types()[t];
 			for(int ph = 0; ph < 2; ph++) {						
 			    for(int ch = 0; ch < 2; ch++) {
 			  FeatureVector prodFV = FeatureVector.fromKeys((int[])in.readObject());

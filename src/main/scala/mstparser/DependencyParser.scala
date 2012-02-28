@@ -1,5 +1,6 @@
 package mstparser
 
+import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -16,7 +17,7 @@ class DependencyParser(
 	val params = new Parameters(this.pipe.dataAlphabet.size)
   val decoder = if (options.secondOrder) new DependencyDecoder2O(this.pipe) else new DependencyDecoder(this.pipe)
 
-  def train(instanceLengths: Array[Int], trainfile: String, train_forest: File) {
+  def train(instanceLengths: Seq[Int], trainfile: String, train_forest: File) {
     (0 until options.numIters).map { i =>
       print(" Iteration %d[".format(i))
       val start = System.currentTimeMillis()
@@ -29,8 +30,8 @@ class DependencyParser(
     this.params.averageParams(options.numIters * instanceLengths.length)
   }
 
-  private def trainingIter(instanceLengths: Array[Int], trainfile: String, train_forest: File, iter: Int) {
-    val in = new ObjectInputStream(new FileInputStream(train_forest))
+  private def trainingIter(instanceLengths: Seq[Int], trainfile: String, train_forest: File, iter: Int) {
+    val in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(train_forest)))
 
     instanceLengths.zipWithIndex.foreach { case (length, i) =>
       if ((i + 1) % 500 == 0) print("%d,".format(i + 1))
@@ -93,7 +94,7 @@ class DependencyParser(
   }
 
   def loadModel(file: String) {
-    val in = new ObjectInputStream(new FileInputStream(file))
+    val in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file)))
     this.params.parameters = in.readObject().asInstanceOf[Array[Double]]
     //this.pipe = new DependencyPipe(this.options, in.readObject().asInstanceOf[Alphabet], in.readObject().asInstanceOf[Alphabet])
     this.pipe.setDataAlphabet(in.readObject().asInstanceOf[Alphabet])

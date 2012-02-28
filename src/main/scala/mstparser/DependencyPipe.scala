@@ -1,7 +1,9 @@
 package mstparser
 
+import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
 import scala.reflect.BeanProperty
@@ -15,7 +17,11 @@ class DependencyPipe(
 ) extends old.DependencyPipe {
   def this(options: ParserOptions) = this(options, new Alphabet(), new Alphabet())
 
-  this.depReader = DependencyReader.createDependencyReader(this.options.format, this.options.discourseMode)
+  private val depReader = DependencyReader.createDependencyReader(this.options.format, this.options.discourseMode)
+  private var depWriter: DependencyWriter = _
+  protected var types: Array[String] = _
+  protected var labeled: Boolean = _
+  private var instances: IndexedSeq[DependencyInstance] = _
 
   def getLabeled = this.labeled
   def getTypes = this.types
@@ -107,6 +113,8 @@ class DependencyPipe(
 
 	  fv
   }
+  
+  private def addExtendedFeatures(instance: DependencyInstance, fv: FeatureVector) {}
 
   def createInstances(file: String, featFile: File) = {
     this.createAlphabet(file)
@@ -116,11 +124,11 @@ class DependencyPipe(
     this.labeled = this.depReader.startReading(file)
 
     val out = if (this.options.createForest)
-      new ObjectOutputStream(new FileOutputStream(featFile))
+      new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(featFile)))
     else null
 
     println("Creating Feature Vector Instances: ")
-    val lengths = depReader.zipWithIndex.map { case (instance, i) =>
+    this.instances = depReader.zipWithIndex.map { case (instance, i) =>
 	    print(i + " ")
 	    
 	    instance.setFeatureVector(this.createFeatureVector(instance))
@@ -131,27 +139,31 @@ class DependencyPipe(
 	    )
 
 	    if (this.options.createForest) this.writeInstance(instance, out)
-      instance.length
-    }.toArray
+      instance
+    }.toIndexedSeq
 
     println()
 
     this.closeAlphabets()
 
     if (this.options.createForest) out.close()
-    lengths
+    this.instances.map(_.length)
   }
 
   protected def writeInstance(instance: DependencyInstance, out: ObjectOutputStream) {
+    var c = 0
+
     (0 until instance.length).foreach { w1 =>
       ((w1 + 1) until instance.length).foreach { w2 =>
         val prodFV1 = new FeatureVector
         this.addCoreFeatures(instance, w1, w2, true, prodFV1)
         out.writeObject(prodFV1.keys)
+        c += prodFV1.keys.length
 
         val prodFV2 = new FeatureVector
         this.addCoreFeatures(instance, w1, w2, false, prodFV2)
         out.writeObject(prodFV2.keys)
+        c += prodFV2.keys.length
       }
     }
 
@@ -163,18 +175,22 @@ class DependencyPipe(
           val prodFV1 = new FeatureVector
           this.addLabeledFeatures(instance, w1, t, true, true, prodFV1)
           out.writeObject(prodFV1.keys)
+          c += prodFV1.keys.length
 
           val prodFV2 = new FeatureVector
           this.addLabeledFeatures(instance, w1, t, true, false, prodFV2)
           out.writeObject(prodFV2.keys)
+          c += prodFV2.keys.length
 
           val prodFV3 = new FeatureVector
           this.addLabeledFeatures(instance, w1, t, false, true, prodFV3)
           out.writeObject(prodFV3.keys)
+          c += prodFV3.keys.length
 
           val prodFV4 = new FeatureVector
           this.addLabeledFeatures(instance, w1, t, false, false, prodFV4)
           out.writeObject(prodFV4.keys)
+          c += prodFV4.keys.length
         }
       }
 		  out.writeInt(-3)
@@ -188,8 +204,117 @@ class DependencyPipe(
     out.writeObject(instance)
     out.writeInt(-1)
     out.reset()
+
+    println("Written: " + c.toString)
   }
 
+  private def writeExtendedFeatures(instance: DependencyInstance, out: ObjectOutputStream) {}
+
+  def fillFeatureVectors(instance: DependencyInstance,
+    fvs: Array[Array[Array[FeatureVector]]],
+    probs: Array[Array[Array[Double]]],
+    fvsNt: Array[Array[Array[Array[FeatureVector]]]],
+    probsNt: Array[Array[Array[Array[Double]]]],
+    params: Parameters
+  ) {
+    (0 until instance.length).foreach { w1 =>
+      ((w1 + 1) until instance.length).foreach { w2 =>
+        val prodFV1 = new FeatureVector
+        this.addCoreFeatures(instance, w1, w2, true, prodFV1)
+        fvs(w1)(w2)(0) = prodFV1
+        probs(w1)(w2)(0) = params.getScore(prodFV1)
+
+        val prodFV2 = new FeatureVector
+        this.addCoreFeatures(instance, w1, w2, false, prodFV2)
+        fvs(w1)(w2)(1) = prodFV2
+        probs(w1)(w2)(1) = params.getScore(prodFV2)
+      }
+    }
+
+    if (this.labeled) {
+      (0 until instance.length).foreach { w1 =>
+        this.types.zipWithIndex.foreach { case (t, i) =>
+          val prodFV1 = new FeatureVector
+          this.addLabeledFeatures(instance, w1, t, true, true, prodFV1)
+          fvsNt(w1)(i)(0)(0) = prodFV1
+          probsNt(w1)(i)(0)(0) = params.getScore(prodFV1)
+
+          val prodFV2 = new FeatureVector
+          this.addLabeledFeatures(instance, w1, t, true, false, prodFV2)
+          fvsNt(w1)(i)(0)(1) = prodFV2
+          probsNt(w1)(i)(0)(1) = params.getScore(prodFV2)
+
+          val prodFV3 = new FeatureVector
+          this.addLabeledFeatures(instance, w1, t, false, true, prodFV3)
+          fvsNt(w1)(i)(1)(0) = prodFV3
+          probsNt(w1)(i)(1)(0) = params.getScore(prodFV3)
+
+          val prodFV4 = new FeatureVector
+          this.addLabeledFeatures(instance, w1, t, false, false, prodFV4)
+          fvsNt(w1)(i)(1)(1) = prodFV4
+          probsNt(w1)(i)(1)(1) = params.getScore(prodFV4)
+        }
+      }
+    }
+  }
+
+  def readInstance(in: ObjectInputStream, length: Int,
+    fvs: Array[Array[Array[FeatureVector]]],
+    probs: Array[Array[Array[Double]]],
+    fvsNt: Array[Array[Array[Array[FeatureVector]]]],
+    probsNt: Array[Array[Array[Array[Double]]]],
+    params: Parameters
+  ) = {
+	  try {
+      (0 until length).foreach { w1 =>
+        ((w1 + 1) until length).foreach { w2 =>
+			    val prodFV1 = FeatureVector.fromKeys(in.readObject().asInstanceOf[Array[Int]])
+          fvs(w1)(w2)(0) = prodFV1
+          probs(w1)(w2)(0) = params.getScore(prodFV1)
+
+			    val prodFV2 = FeatureVector.fromKeys(in.readObject().asInstanceOf[Array[Int]])
+          fvs(w1)(w2)(1) = prodFV2
+          probs(w1)(w2)(1) = params.getScore(prodFV2)
+        }
+      }
+
+	    if (in.readInt() != -3) { println("Error reading file."); sys.exit(0) }
+
+      if (this.labeled) {
+        (0 until length).foreach { w1 =>
+          this.types.zipWithIndex.foreach { case (t, i) =>
+			      val prodFV1 = FeatureVector.fromKeys(in.readObject().asInstanceOf[Array[Int]])
+            fvsNt(w1)(i)(0)(0) = prodFV1
+            probsNt(w1)(i)(0)(0) = params.getScore(prodFV1)
+
+			      val prodFV2 = FeatureVector.fromKeys(in.readObject().asInstanceOf[Array[Int]])
+            fvsNt(w1)(i)(0)(1) = prodFV2
+            probsNt(w1)(i)(0)(1) = params.getScore(prodFV2)
+
+			      val prodFV3 = FeatureVector.fromKeys(in.readObject().asInstanceOf[Array[Int]])
+            fvsNt(w1)(i)(1)(0) = prodFV3
+            probsNt(w1)(i)(1)(0) = params.getScore(prodFV3)
+
+			      val prodFV4 = FeatureVector.fromKeys(in.readObject().asInstanceOf[Array[Int]])
+            fvsNt(w1)(i)(1)(1) = prodFV4
+            probsNt(w1)(i)(1)(1) = params.getScore(prodFV4)
+          }
+        }
+
+	      if (in.readInt() != -3) { println("Error reading file."); sys.exit(0) }
+      }
+
+			val nFv = FeatureVector.fromKeys(in.readObject().asInstanceOf[Array[Int]])
+	    if (in.readInt() != -4) { println("Error reading file."); sys.exit(0) }
+
+	    val instance = in.readObject().asInstanceOf[DependencyInstance]
+	    instance.setFeatureVector(nFv)
+
+	    if (in.readInt() != -1) { println("Error reading file."); sys.exit(0) }
+
+	    instance
+    } catch { case e: ClassNotFoundException => println("Error reading file."); sys.exit(0) } 
+	} 
 
 /*
     public Alphabet dataAlphabet;
@@ -218,10 +343,6 @@ class DependencyPipe(
 
 	depReader = DependencyReader.createDependencyReader(options.format, options.discourseMode);
     }
-
-    protected void addExtendedFeatures(mstparser.DependencyInstance instance, 
-				       FeatureVector fv) {}
-
 
     public void addCoreFeatures(mstparser.DependencyInstance instance,
 				int small,
@@ -735,128 +856,6 @@ class DependencyPipe(
 	}
     }
 
-
-    public void fillFeatureVectors(mstparser.DependencyInstance instance,
-				   FeatureVector[][][] fvs,
-				   double[][][] probs,
-				   FeatureVector[][][][] nt_fvs,
-				   double[][][][] nt_probs, Parameters params) {
-
-	final int instanceLength = instance.length();
-
-	// Get production crap.		
-	for(int w1 = 0; w1 < instanceLength; w1++) {
-	    for(int w2 = w1+1; w2 < instanceLength; w2++) {
-		for(int ph = 0; ph < 2; ph++) {
-		    boolean attR = ph == 0 ? true : false;
-		    
-		    int childInt = attR ? w2 : w1;
-		    int parInt = attR ? w1 : w2;
-		    
-		    FeatureVector prodFV = new FeatureVector();
-		    addCoreFeatures(instance,w1,w2,attR, prodFV)
-;
-		    double prodProb = params.getScore(prodFV);
-		    fvs[w1][w2][ph] = prodFV;
-		    probs[w1][w2][ph] = prodProb;
-		}
-	    }
-	}
-
-	if(labeled) {
-	    for(int w1 = 0; w1 < instanceLength; w1++) {
-		for(int t = 0; t < types.length; t++) {
-		    String type = types[t];
-		    for(int ph = 0; ph < 2; ph++) {
-
-			boolean attR = ph == 0 ? true : false;
-			for(int ch = 0; ch < 2; ch++) {
-
-			    boolean child = ch == 0 ? true : false;
-
-			    FeatureVector prodFV = new FeatureVector();
-			    addLabeledFeatures(instance,w1,
-					       type,attR,child, prodFV);
-			    
-			    double nt_prob = params.getScore(prodFV);
-			    nt_fvs[w1][t][ph][ch] = prodFV;
-			    nt_probs[w1][t][ph][ch] = nt_prob;
-			    
-			}
-		    }
-		}
-	    }
-	}		
-    }
-
-    protected void writeExtendedFeatures (mstparser.DependencyInstance instance, ObjectOutputStream out) 
-	throws IOException {}
-
-
-    public mstparser.DependencyInstance readInstance(ObjectInputStream in,
-					   int length,
-					   FeatureVector[][][] fvs,
-					   double[][][] probs,
-					   FeatureVector[][][][] nt_fvs,
-					   double[][][][] nt_probs,
-					   Parameters params) throws IOException {
-
-	try {
-
-	    // Get production crap.		
-	    for(int w1 = 0; w1 < length; w1++) {
-		for(int w2 = w1+1; w2 < length; w2++) {
-		    for(int ph = 0; ph < 2; ph++) {
-			FeatureVector prodFV = new FeatureVector((int[])in.readObject());
-			double prodProb = params.getScore(prodFV);
-			fvs[w1][w2][ph] = prodFV;
-			probs[w1][w2][ph] = prodProb;
-		    }
-		}
-	    }
-	    int last = in.readInt();
-	    if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
-	    
-	    if(labeled) {
-		for(int w1 = 0; w1 < length; w1++) {
-		    for(int t = 0; t < types.length; t++) {
-			String type = types[t];
-			
-			for(int ph = 0; ph < 2; ph++) {						
-			    for(int ch = 0; ch < 2; ch++) {
-				FeatureVector prodFV = new FeatureVector((int[])in.readObject());
-				double nt_prob = params.getScore(prodFV);
-				nt_fvs[w1][t][ph][ch] = prodFV;
-				nt_probs[w1][t][ph][ch] = nt_prob;
-			    }
-			}
-		    }
-		}
-		last = in.readInt();
-		if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
-	    }
-
-	    FeatureVector nfv = new FeatureVector((int[])in.readObject());
-	    last = in.readInt();
-	    if(last != -4) { System.out.println("Error reading file."); System.exit(0); }
-
-	    mstparser.DependencyInstance marshalledDI;
-	    marshalledDI = (mstparser.DependencyInstance)in.readObject();
-	    marshalledDI.setFeatureVector(nfv);	
-
-	    last = in.readInt();
-	    if(last != -1) { System.out.println("Error reading file."); System.exit(0); }
-
-	    return marshalledDI;
-
-	} catch(ClassNotFoundException e) { 
-	    System.out.println("Error reading file."); System.exit(0); 
-	} 
-
-	// this won't happen, but it takes care of compilation complaints
-	return null;
-    }
-	
     private final void
 	addOldMSTStemFeatures(String hLemma, String headP, 
 			      String cLemma, String childP, String attDist, 

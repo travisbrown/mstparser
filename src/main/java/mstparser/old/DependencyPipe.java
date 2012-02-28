@@ -1,30 +1,14 @@
 package mstparser.old;
 
-import mstparser.Alphabet;
 import mstparser.ParserOptions;
 import mstparser.io.*;
 import java.io.*;
-import gnu.trove.list.array.TIntArrayList;
 import java.util.*;
 
 public abstract class DependencyPipe {
-    protected DependencyReader depReader;
-    protected DependencyWriter depWriter;
-
-    protected String[] types;
-	
-    protected boolean labeled = false;
-
     public abstract ParserOptions getOptions();
-    public abstract Alphabet getDataAlphabet();
-    public abstract Alphabet getTypeAlphabet();
-    public abstract void closeAlphabets() throws IOException;
     public abstract void add(String feat, mstparser.FeatureVector fv);
     public abstract void add(String feat, double val, mstparser.FeatureVector fv);
-
-    protected void addExtendedFeatures(mstparser.DependencyInstance instance, 
-				       mstparser.FeatureVector fv) {}
-
 
     public void addCoreFeatures(mstparser.DependencyInstance instance,
 				int small,
@@ -323,16 +307,13 @@ public abstract class DependencyPipe {
 	
     }
 
-    public void addLabeledFeatures(mstparser.DependencyInstance instance,
+    protected void addLabeledFeatures(mstparser.DependencyInstance instance,
 				   int word,
 				   String type,
 				   boolean attR,
 				   boolean childFeatures,
 				   mstparser.FeatureVector fv) {
 		
-	if(!labeled) 
-	    return;
-
 	String[] forms = instance.forms;
 	String[] pos = instance.postags;
 	    
@@ -545,137 +526,6 @@ public abstract class DependencyPipe {
 		
 	    }
 	}
-    }
-
-
-    public void fillFeatureVectors(mstparser.DependencyInstance instance,
-				   mstparser.FeatureVector[][][] fvs,
-				   double[][][] probs,
-				   mstparser.FeatureVector[][][][] nt_fvs,
-				   double[][][][] nt_probs, mstparser.Parameters params) {
-
-	final int instanceLength = instance.length();
-
-	// Get production crap.		
-	for(int w1 = 0; w1 < instanceLength; w1++) {
-	    for(int w2 = w1+1; w2 < instanceLength; w2++) {
-		for(int ph = 0; ph < 2; ph++) {
-		    boolean attR = ph == 0 ? true : false;
-		    
-		    int childInt = attR ? w2 : w1;
-		    int parInt = attR ? w1 : w2;
-		    
-		    mstparser.FeatureVector prodFV = new mstparser.FeatureVector();
-		    addCoreFeatures(instance,w1,w2,attR, prodFV)
-;
-		    double prodProb = params.getScore(prodFV);
-		    fvs[w1][w2][ph] = prodFV;
-		    probs[w1][w2][ph] = prodProb;
-		}
-	    }
-	}
-
-	if(labeled) {
-	    for(int w1 = 0; w1 < instanceLength; w1++) {
-		for(int t = 0; t < types.length; t++) {
-		    String type = types[t];
-		    for(int ph = 0; ph < 2; ph++) {
-
-			boolean attR = ph == 0 ? true : false;
-			for(int ch = 0; ch < 2; ch++) {
-
-			    boolean child = ch == 0 ? true : false;
-
-			    mstparser.FeatureVector prodFV = new mstparser.FeatureVector();
-			    addLabeledFeatures(instance,w1,
-					       type,attR,child, prodFV);
-			    
-			    double nt_prob = params.getScore(prodFV);
-			    nt_fvs[w1][t][ph][ch] = prodFV;
-			    nt_probs[w1][t][ph][ch] = nt_prob;
-			    
-			}
-		    }
-		}
-	    }
-	}		
-    }
-
-    /**
-     * Override this method if you have extra features that need to be
-     * written to disk. For the basic DependencyPipe, nothing happens.
-     *
-     */
-    protected void writeExtendedFeatures (mstparser.DependencyInstance instance, ObjectOutputStream out) 
-	throws IOException {}
-
-
-    /**
-     * Read an instance from an input stream.
-     *
-     **/
-    public mstparser.DependencyInstance readInstance(ObjectInputStream in,
-					   int length,
-					   mstparser.FeatureVector[][][] fvs,
-					   double[][][] probs,
-					   mstparser.FeatureVector[][][][] nt_fvs,
-					   double[][][][] nt_probs,
-					   mstparser.Parameters params) throws IOException {
-
-	try {
-
-	    // Get production crap.		
-	    for(int w1 = 0; w1 < length; w1++) {
-		for(int w2 = w1+1; w2 < length; w2++) {
-		    for(int ph = 0; ph < 2; ph++) {
-			mstparser.FeatureVector prodFV = mstparser.FeatureVector.fromKeys((int[])in.readObject());
-			double prodProb = params.getScore(prodFV);
-			fvs[w1][w2][ph] = prodFV;
-			probs[w1][w2][ph] = prodProb;
-		    }
-		}
-	    }
-	    int last = in.readInt();
-	    if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
-	    
-	    if(labeled) {
-		for(int w1 = 0; w1 < length; w1++) {
-		    for(int t = 0; t < types.length; t++) {
-			String type = types[t];
-			
-			for(int ph = 0; ph < 2; ph++) {						
-			    for(int ch = 0; ch < 2; ch++) {
-			  mstparser.FeatureVector prodFV = mstparser.FeatureVector.fromKeys((int[])in.readObject());
-				double nt_prob = params.getScore(prodFV);
-				nt_fvs[w1][t][ph][ch] = prodFV;
-				nt_probs[w1][t][ph][ch] = nt_prob;
-			    }
-			}
-		    }
-		}
-		last = in.readInt();
-		if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
-	    }
-
-			mstparser.FeatureVector nfv = mstparser.FeatureVector.fromKeys((int[])in.readObject());
-	    last = in.readInt();
-	    if(last != -4) { System.out.println("Error reading file."); System.exit(0); }
-
-	    mstparser.DependencyInstance marshalledDI;
-	    marshalledDI = (mstparser.DependencyInstance)in.readObject();
-	    marshalledDI.setFeatureVector(nfv);	
-
-	    last = in.readInt();
-	    if(last != -1) { System.out.println("Error reading file."); System.exit(0); }
-
-	    return marshalledDI;
-
-	} catch(ClassNotFoundException e) { 
-	    System.out.println("Error reading file."); System.exit(0); 
-	} 
-
-	// this won't happen, but it takes care of compilation complaints
-	return null;
     }
 		
     /**
