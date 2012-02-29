@@ -10,7 +10,7 @@
 // available from their website at http://www.opensource.org.
 ///////////////////////////////////////////////////////////////////////////////
 
-package mstparser;
+package mstparser.old;
 
 import java.io.File;
 
@@ -25,7 +25,7 @@ import java.io.File;
  * @version $Id: CONLLReader.java 103 2007-01-21 20:26:39Z jasonbaldridge $
  * @see mstparser.io.DependencyReader
  */
-public final class ParserOptions {
+public class ParserOptions {
     
     public String trainfile = null;
     public String testfile = null;
@@ -49,7 +49,7 @@ public final class ParserOptions {
     public boolean discourseMode = false;
 
 
-    public ParserOptions (String[] args) {
+/*    public ParserOptions (String[] args) {
 
 	for(int i = 0; i < args.length; i++) {
 	    String[] pair = args[i].split(":");
@@ -125,46 +125,6 @@ public final class ParserOptions {
 	    System.out.println(e);
 	    System.exit(0);
 	}
-    }
-
-
-    public String toString () {
-	StringBuilder sb = new StringBuilder();
-	sb.append("FLAGS [");
-	sb.append("train-file: " + trainfile);
-	sb.append(" | ");
-	sb.append("test-file: " + testfile);
-	sb.append(" | ");
-	sb.append("gold-file: " + goldfile);
-	sb.append(" | ");
-	sb.append("output-file: " + outfile);
-	sb.append(" | ");
-	sb.append("model-name: " + modelName);
-	sb.append(" | ");
-	sb.append("train: " + train);
-	sb.append(" | ");
-	sb.append("test: " + test);
-	sb.append(" | ");
-	sb.append("eval: " + eval);
-	sb.append(" | ");
-	sb.append("loss-type: " + lossType);
-	sb.append(" | ");
-	sb.append("second-order: " + secondOrder);
-	sb.append(" | ");
-	sb.append("training-iterations: " + numIters);
-	sb.append(" | ");
-	sb.append("training-k: " + trainK);
-	sb.append(" | ");
-	sb.append("decode-type: " + decodeType);
-	sb.append(" | ");
-	sb.append("create-forest: " + createForest);
-	sb.append(" | ");
-	sb.append("format: " + format);
-	sb.append(" | ");
-	sb.append("relational-features: " + useRelationalFeatures);
-	sb.append(" | ");
-	sb.append("discourse-mode: " + discourseMode);
-	sb.append("]\n");
-	return sb.toString();
-    }
+    }*/
 }
+

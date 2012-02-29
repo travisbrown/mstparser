@@ -181,6 +181,9 @@ class DependencyParser(
 object DependencyParser {
   def main(args: Array[String]) {
     val options = new ParserOptions(args)
+    val pw = new java.io.PrintWriter("opts.txt")
+    pw.write(options.toString)
+    pw.close
     if (options.train) {
       val pipe =
         if (options.secondOrder) new DependencyPipe2O(options)
