@@ -12,144 +12,16 @@ import gnu.trove.map.hash.TIntIntHashMap;
 import scala.Tuple2;
 
 public abstract class DependencyDecoder {
-  protected abstract mstparser.DependencyPipe pipe(); 
+  public abstract mstparser.DependencyPipe pipe(); 
   protected abstract int[][] getTypes(double[][][][] nt_probs, int len);
   protected abstract boolean[][] calcChilds(int[] par);
 
     // static type for each edge: run time O(n^3 + Tn^2) T is number of types
-    public Tuple2<FeatureVector, String>[] decodeProjective(int len,
+    public abstract Tuple2<FeatureVector, String>[] decodeProjective(int len,
 				       FeatureVector[][][] fvs,
 				       double[][][] probs,
 				       FeatureVector[][][][] nt_fvs,
-				       double[][][][] nt_probs, int K) {
-
-	int[][] static_types = null;
-	if(this.pipe().getLabeled()) {
-	    static_types = getTypes(nt_probs,len);
-	}
-
-	KBestParseForest pf = new KBestParseForest(len-1,K);
-		
-	for(int s = 0; s < len; s++) {
-	    pf.add(s,-1,0,0.0,new FeatureVector());
-	    pf.add(s,-1,1,0.0,new FeatureVector());
-	}
-			
-	for(int j = 1; j < len; j++) {
-	    for(int s = 0; s < len && s+j < len; s++) {
-		int t = s+j;
-				
-		FeatureVector prodFV_st = fvs[s][t][0];
-		FeatureVector prodFV_ts = fvs[s][t][1];				
-		double prodProb_st = probs[s][t][0];
-		double prodProb_ts = probs[s][t][1];
-				
-		int type1 = this.pipe().getLabeled() ? static_types[s][t] : 0;
-		int type2 = this.pipe().getLabeled() ? static_types[t][s] : 0;
-		
-		FeatureVector nt_fv_s_01 = nt_fvs[s][type1][0][1];
-		FeatureVector nt_fv_s_10 = nt_fvs[s][type2][1][0];
-		FeatureVector nt_fv_t_00 = nt_fvs[t][type1][0][0];
-		FeatureVector nt_fv_t_11 = nt_fvs[t][type2][1][1];
-		double nt_prob_s_01 = nt_probs[s][type1][0][1];
-		double nt_prob_s_10 = nt_probs[s][type2][1][0];
-		double nt_prob_t_00 = nt_probs[t][type1][0][0];
-		double nt_prob_t_11 = nt_probs[t][type2][1][1];
-					
-		double prodProb = 0.0;
-				
-		for(int r = s; r <= t; r++) {
-					
-		    /** first is direction, second is complete*/
-		    /** _s means s is the parent*/
-		    if(r != t) {
-			ParseForestItem[] b1 = pf.getItems(s,r,0,0);
-			ParseForestItem[] c1 = pf.getItems(r+1,t,1,0);
-						
-			if(b1 != null && c1 != null) {
-			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
-			    for(int k = 0; k < pairs.length; k++) {
-								
-				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
-				    break;
-								
-				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
-								
-				double bc = b1[comp1].prob()+c1[comp2].prob();
-								
-				double prob_fin = bc+prodProb_st;
-				FeatureVector fv_fin = prodFV_st;
-				if(this.pipe().getLabeled()) {
-				    fv_fin = nt_fv_s_01.cat(nt_fv_t_00.cat(fv_fin));
-				    prob_fin += nt_prob_s_01+nt_prob_t_00;
-				}
-				pf.add(s,r,t,type1,0,1,prob_fin,fv_fin,b1[comp1],c1[comp2]);
-								
-				prob_fin = bc+prodProb_ts;
-				fv_fin = prodFV_ts;
-				if(this.pipe().getLabeled()) {
-				    fv_fin = nt_fv_t_11.cat(nt_fv_s_10.cat(fv_fin));
-				    prob_fin += nt_prob_t_11+nt_prob_s_10;
-				}
-				pf.add(s,r,t,type2,1,1,prob_fin,fv_fin,b1[comp1],c1[comp2]);
-
-			    }
-			}						
-		    }					
-		}
-				
-				
-		for(int r = s; r <= t; r++) {
-					
-		    if(r != s) {
-			ParseForestItem[] b1 = pf.getItems(s,r,0,1);
-			ParseForestItem[] c1 = pf.getItems(r,t,0,0);
-			if(b1 != null && c1 != null) {
-			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
-			    for(int k = 0; k < pairs.length; k++) {
-								
-				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
-				    break;
-								
-				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
-									
-				double bc = b1[comp1].prob()+c1[comp2].prob();
-									
-				if(!pf.add(s,r,t,-1,0,0,bc,
-					   new FeatureVector(),
-					   b1[comp1],c1[comp2]))
-				    break;
-			    }
-			}
-		    }
-						
-		    if(r != t) {
-			ParseForestItem[] b1 = pf.getItems(s,r,1,0);
-			ParseForestItem[] c1 = pf.getItems(r,t,1,1);
-			if(b1 != null && c1 != null) {
-			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
-			    for(int k = 0; k < pairs.length; k++) {
-								
-				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
-				    break;
-								
-				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
-									
-				double bc = b1[comp1].prob()+c1[comp2].prob();
-									
-				if(!pf.add(s,r,t,-1,1,0,bc,
-					   new FeatureVector(),b1[comp1],c1[comp2]))
-				    break;
-			    }
-			}
-		    }
-		}
-	    }
-				
-	}
-		
-	return pf.getBestParses();
-    }
+				       double[][][][] nt_probs, int K);
 
     public Tuple2<FeatureVector, String>[] decodeNonProjective(int len,
 					  FeatureVector[][][] fvs,

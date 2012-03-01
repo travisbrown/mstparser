@@ -1,6 +1,7 @@
 package mstparser
 
 class DependencyDecoder(protected val pipe: DependencyPipe) extends Decoder
+
 class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.DependencyDecoder2O with Decoder
 
 trait Decoder extends old.DependencyDecoder {
@@ -24,147 +25,99 @@ trait Decoder extends old.DependencyDecoder {
     }
     isChild
 	}
+
+  // static type for each edge: run time O(n^3 + Tn^2) T is number of types
+  def decodeProjective(
+    len: Int,
+    fvs: Array[Array[Array[FeatureVector]]],
+    probs: Array[Array[Array[Double]]],
+    fvsNt: Array[Array[Array[Array[FeatureVector]]]],
+    probsNt: Array[Array[Array[Array[Double]]]],
+    kBest: Int
+  ) = {
+	  val staticTypes = if (this.pipe.getLabeled) Some(this.getTypes(probsNt, len)) else None
+    val pf = new KBestParseForest(len - 1, kBest)
+
+    (0 until len).foreach { i =>
+      pf.add(i, -1, 0, 0.0, new FeatureVector)
+      pf.add(i, -1, 1, 0.0, new FeatureVector)
+    }
+
+    (1 until len).foreach { j =>
+      (0 until len - j).foreach { s =>
+        val t = s + j
+        val (type1, type2) = staticTypes.map(ts => (ts(s)(t), ts(t)(s))).getOrElse((0, 0))
+		
+        (s to t).foreach { r =>
+          if (r != t) {
+            val b1 = pf.getItems(s, r, 0, 0)
+            val c1 = pf.getItems(r + 1, t, 1, 0)
+
+            if (b1 != null && c1 != null) {
+              pf.getKBestPairs(b1, c1).takeWhile {
+                case (comp1, comp2) => comp1 > -1 && comp2 > -1
+              }.foreach {
+                case (comp1, comp2) =>
+                  val bc = b1(comp1).prob + c1(comp2).prob
+
+                  var finProb = bc + probs(s)(t)(0)
+                  var finFv = fvs(s)(t)(0)
+                  if (this.pipe.getLabeled) {
+                    finFv = fvsNt(s)(type1)(0)(1).cat(fvsNt(t)(type1)(0)(0).cat(finFv))
+                    finProb += probsNt(s)(type1)(0)(1) + probsNt(t)(type1)(0)(0)
+                  }
+                  pf.add(s, r, t, type1, 0, 1, finProb,finFv, b1(comp1), c1(comp2))
+
+                  finProb = bc + probs(s)(t)(1)
+                  finFv = fvs(s)(t)(1)
+                  if (this.pipe.getLabeled) {
+                    finFv = fvsNt(t)(type2)(1)(1).cat(fvsNt(s)(type2)(1)(0).cat(finFv))
+                    finProb += probsNt(t)(type2)(1)(1) + probsNt(s)(type2)(1)(0)
+                  }
+                  pf.add(s, r, t, type2, 1, 1, finProb, finFv, b1(comp1), c1(comp2))
+              }
+	          }	
+          }
+        }
+
+        (s to t).foreach { r =>
+          if (r != s) {
+            val b1 = pf.getItems(s, r, 0, 1)
+            val c1 = pf.getItems(r, t, 0, 0)
+
+            if (b1 != null && c1 != null) {
+              pf.getKBestPairs(b1, c1).takeWhile {
+                case (comp1, comp2) => comp1 > -1 && comp2 > -1
+              }.takeWhile {
+                case (comp1, comp2) =>
+                  val bc = b1(comp1).prob + c1(comp2).prob
+                  pf.add(s, r, t, -1, 0, 0, bc, new FeatureVector, b1(comp1), c1(comp2))
+              }
+            }
+          }
+
+          if (r != t) {
+            val b1 = pf.getItems(s, r, 1, 0)
+            val c1 = pf.getItems(r, t, 1, 1)
+
+            if (b1 != null && c1 != null) {
+              pf.getKBestPairs(b1, c1).takeWhile {
+                case (comp1, comp2) => comp1 > -1 && comp2 > -1
+              }.takeWhile {
+                case (comp1, comp2) =>
+                  val bc = b1(comp1).prob + c1(comp2).prob
+                  pf.add(s, r, t, -1, 1, 0, bc, new FeatureVector, b1(comp1), c1(comp2))
+              }
+            }
+          }
+        }
+      }
+    }
+	  pf.getBestParses
+  }
 }
 
 /*
-    // static type for each edge: run time O(n^3 + Tn^2) T is number of types
-    public Tuple2<FeatureVector, String>[] decodeProjective(DependencyInstance inst,
-				       FeatureVector[][][] fvs,
-				       double[][][] probs,
-				       FeatureVector[][][][] nt_fvs,
-				       double[][][][] nt_probs, int K) {
-
-	String[] forms = inst.forms();
-	String[] pos = inst.postags();
-
-	int[][] static_types = null;
-	if(pipe.getLabeled()) {
-	    static_types = getTypes(nt_probs,forms.length);
-	}
-
-	KBestParseForest pf = new KBestParseForest(forms.length-1,K);
-		
-	for(int s = 0; s < forms.length; s++) {
-	    pf.add(s,-1,0,0.0,new FeatureVector());
-	    pf.add(s,-1,1,0.0,new FeatureVector());
-	}
-			
-	for(int j = 1; j < forms.length; j++) {
-	    for(int s = 0; s < forms.length && s+j < forms.length; s++) {
-		int t = s+j;
-				
-		FeatureVector prodFV_st = fvs[s][t][0];
-		FeatureVector prodFV_ts = fvs[s][t][1];				
-		double prodProb_st = probs[s][t][0];
-		double prodProb_ts = probs[s][t][1];
-				
-		int type1 = pipe.getLabeled() ? static_types[s][t] : 0;
-		int type2 = pipe.getLabeled() ? static_types[t][s] : 0;
-		
-		FeatureVector nt_fv_s_01 = nt_fvs[s][type1][0][1];
-		FeatureVector nt_fv_s_10 = nt_fvs[s][type2][1][0];
-		FeatureVector nt_fv_t_00 = nt_fvs[t][type1][0][0];
-		FeatureVector nt_fv_t_11 = nt_fvs[t][type2][1][1];
-		double nt_prob_s_01 = nt_probs[s][type1][0][1];
-		double nt_prob_s_10 = nt_probs[s][type2][1][0];
-		double nt_prob_t_00 = nt_probs[t][type1][0][0];
-		double nt_prob_t_11 = nt_probs[t][type2][1][1];
-					
-		double prodProb = 0.0;
-				
-		for(int r = s; r <= t; r++) {
-					
-		    /** first is direction, second is complete*/
-		    /** _s means s is the parent*/
-		    if(r != t) {
-			ParseForestItem[] b1 = pf.getItems(s,r,0,0);
-			ParseForestItem[] c1 = pf.getItems(r+1,t,1,0);
-						
-			if(b1 != null && c1 != null) {
-			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
-			    for(int k = 0; k < pairs.length; k++) {
-								
-				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
-				    break;
-								
-				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
-								
-				double bc = b1[comp1].prob()+c1[comp2].prob();
-								
-				double prob_fin = bc+prodProb_st;
-				FeatureVector fv_fin = prodFV_st;
-				if(pipe.getLabeled()) {
-				    fv_fin = nt_fv_s_01.cat(nt_fv_t_00.cat(fv_fin));
-				    prob_fin += nt_prob_s_01+nt_prob_t_00;
-				}
-				pf.add(s,r,t,type1,0,1,prob_fin,fv_fin,b1[comp1],c1[comp2]);
-								
-				prob_fin = bc+prodProb_ts;
-				fv_fin = prodFV_ts;
-				if(pipe.getLabeled()) {
-				    fv_fin = nt_fv_t_11.cat(nt_fv_s_10.cat(fv_fin));
-				    prob_fin += nt_prob_t_11+nt_prob_s_10;
-				}
-				pf.add(s,r,t,type2,1,1,prob_fin,fv_fin,b1[comp1],c1[comp2]);
-
-			    }
-			}						
-		    }					
-		}
-				
-				
-		for(int r = s; r <= t; r++) {
-					
-		    if(r != s) {
-			ParseForestItem[] b1 = pf.getItems(s,r,0,1);
-			ParseForestItem[] c1 = pf.getItems(r,t,0,0);
-			if(b1 != null && c1 != null) {
-			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
-			    for(int k = 0; k < pairs.length; k++) {
-								
-				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
-				    break;
-								
-				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
-									
-				double bc = b1[comp1].prob()+c1[comp2].prob();
-									
-				if(!pf.add(s,r,t,-1,0,0,bc,
-					   new FeatureVector(),
-					   b1[comp1],c1[comp2]))
-				    break;
-			    }
-			}
-		    }
-						
-		    if(r != t) {
-			ParseForestItem[] b1 = pf.getItems(s,r,1,0);
-			ParseForestItem[] c1 = pf.getItems(r,t,1,1);
-			if(b1 != null && c1 != null) {
-			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
-			    for(int k = 0; k < pairs.length; k++) {
-								
-				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
-				    break;
-								
-				int comp1 = pairs[k]._1(); int comp2 = pairs[k]._2();
-									
-				double bc = b1[comp1].prob()+c1[comp2].prob();
-									
-				if(!pf.add(s,r,t,-1,1,0,bc,
-					   new FeatureVector(),b1[comp1],c1[comp2]))
-				    break;
-			    }
-			}
-		    }
-		}
-	    }
-				
-	}
-		
-	return pf.getBestParses();
-    }
-
     public Tuple2<FeatureVector, String>[] decodeNonProjective(DependencyInstance inst,
 					  FeatureVector[][][] fvs,
 					  double[][][] probs,
