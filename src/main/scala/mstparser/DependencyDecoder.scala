@@ -1,21 +1,42 @@
-package mstparser.old;
+package mstparser
 
-import mstparser.DependencyInstance;
-import mstparser.FeatureVector;
-import mstparser.KBestParseForest;
-import mstparser.ParseForestItem;
+class DependencyDecoder(protected val pipe: DependencyPipe) extends Decoder
+class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.DependencyDecoder2O with Decoder
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import gnu.trove.map.hash.TIntIntHashMap;
+trait Decoder extends old.DependencyDecoder {
+  protected def getTypes(probsNt: Array[Array[Array[Array[Double]]]], len: Int) =
+    Array.tabulate(len, len) {
+      case (i, j) if i == j => 0
+      case (i, j) => probsNt(i).zip(probsNt(j)).zipWithIndex.maxBy {
+        case ((pi, pj), k) => if (i < j) pi(0)(1) + pj(0)(0) else pi(1)(1) + pj(1)(0)
+      }._2
+		}
 
-import scala.Tuple2;
+  protected def calcChilds(par: Array[Int]) = {
+    val isChild = Array.ofDim[Boolean](par.length, par.length)
 
-public abstract class DependencyDecoder {
-  protected abstract mstparser.DependencyPipe pipe(); 
-  protected abstract int[][] getTypes(double[][][][] nt_probs, int len);
-  protected abstract boolean[][] calcChilds(int[] par);
+    par.zipWithIndex.drop(1).foreach { case (v, i) =>
+	    var l = v
+	    while (l != -1) {
+        isChild(l)(i) = true
+        l = par(l)
+      }
+    }
+    isChild
+	}
+}
+/*
+class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.DependencyDecoder2O {
+  protected def getTypes(probsNt: Array[Array[Array[Array[Double]]]], len: Int) =
+    Array.tabulate(len, len) {
+      case (i, j) if i == j => 0
+      case (i, j) => probsNt(i).zip(probsNt(j)).zipWithIndex.maxBy {
+        case ((pi, pj), k) => if (i < j) pi(0)(1) + pj(0)(0) else pi(1)(1) + pj(1)(0)
+      }._2
+		}
+}*/
 
+/*
     // static type for each edge: run time O(n^3 + Tn^2) T is number of types
     public Tuple2<FeatureVector, String>[] decodeProjective(DependencyInstance inst,
 				       FeatureVector[][][] fvs,
@@ -27,7 +48,7 @@ public abstract class DependencyDecoder {
 	String[] pos = inst.postags();
 
 	int[][] static_types = null;
-	if(this.pipe().getLabeled()) {
+	if(pipe.getLabeled()) {
 	    static_types = getTypes(nt_probs,forms.length);
 	}
 
@@ -47,8 +68,8 @@ public abstract class DependencyDecoder {
 		double prodProb_st = probs[s][t][0];
 		double prodProb_ts = probs[s][t][1];
 				
-		int type1 = this.pipe().getLabeled() ? static_types[s][t] : 0;
-		int type2 = this.pipe().getLabeled() ? static_types[t][s] : 0;
+		int type1 = pipe.getLabeled() ? static_types[s][t] : 0;
+		int type2 = pipe.getLabeled() ? static_types[t][s] : 0;
 		
 		FeatureVector nt_fv_s_01 = nt_fvs[s][type1][0][1];
 		FeatureVector nt_fv_s_10 = nt_fvs[s][type2][1][0];
@@ -82,7 +103,7 @@ public abstract class DependencyDecoder {
 								
 				double prob_fin = bc+prodProb_st;
 				FeatureVector fv_fin = prodFV_st;
-				if(this.pipe().getLabeled()) {
+				if(pipe.getLabeled()) {
 				    fv_fin = nt_fv_s_01.cat(nt_fv_t_00.cat(fv_fin));
 				    prob_fin += nt_prob_s_01+nt_prob_t_00;
 				}
@@ -90,7 +111,7 @@ public abstract class DependencyDecoder {
 								
 				prob_fin = bc+prodProb_ts;
 				fv_fin = prodFV_ts;
-				if(this.pipe().getLabeled()) {
+				if(pipe.getLabeled()) {
 				    fv_fin = nt_fv_t_11.cat(nt_fv_s_10.cat(fv_fin));
 				    prob_fin += nt_prob_t_11+nt_prob_s_10;
 				}
@@ -172,7 +193,7 @@ public abstract class DependencyDecoder {
 	TIntIntHashMap[] reps = new TIntIntHashMap[numWords];
 
 	int[][] static_types = null;
-	if(this.pipe().getLabeled()) {
+	if(pipe.getLabeled()) {
 	    static_types = getTypes(nt_probs,pos.length);
 	}
 
@@ -183,11 +204,11 @@ public abstract class DependencyDecoder {
 	    for(int j = 0; j < numWords; j++) {
 		// score of edge (i,j) i --> j
 		scoreMatrix[i][j] = probs[i < j ? i : j][i < j ? j : i][i < j ? 0 : 1]
-		    + (this.pipe().getLabeled() ? nt_probs[i][static_types[i][j]][i < j ? 0 : 1][1]
+		    + (pipe.getLabeled() ? nt_probs[i][static_types[i][j]][i < j ? 0 : 1][1]
 		       + nt_probs[j][static_types[i][j]][i < j ? 0 : 1][0]
 		       : 0.0);
 		orig_scoreMatrix[i][j] = probs[i < j ? i : j][i < j ? j : i][i < j ? 0 : 1]
-		    + (this.pipe().getLabeled() ? nt_probs[i][static_types[i][j]][i < j ? 0 : 1][1]
+		    + (pipe.getLabeled() ? nt_probs[i][static_types[i][j]][i < j ? 0 : 1][1]
 		       + nt_probs[j][static_types[i][j]][i < j ? 0 : 1][0]
 		       : 0.0);
 		oldI[i][j] = i;
@@ -229,7 +250,7 @@ public abstract class DependencyDecoder {
 		int ch = i; int pr = fin_par[k][i];
 		if(pr != -1) {
 		    fin_fv[k][ch] = fvs[ch < pr ? ch : pr][ch < pr ? pr : ch][ch < pr ? 1 : 0];
-		    if(this.pipe().getLabeled()) {
+		    if(pipe.getLabeled()) {
 			fin_fv[k][ch] = 
 			    fin_fv[k][ch].cat(nt_fvs[ch][static_types[pr][ch]][ch < pr ? 1 : 0][0]);
 			fin_fv[k][ch] = 
@@ -250,7 +271,7 @@ public abstract class DependencyDecoder {
 		fin[k] = fin_fv[k][i].cat(fin[k]);
 	    result[k] = "";
 	    for(int i = 1; i < par.length; i++)
-		result[k] += fin_par[k][i]+"|"+i + (this.pipe().getLabeled() ? ":"+static_types[fin_par[k][i]][i] : ":0") +" ";
+		result[k] += fin_par[k][i]+"|"+i + (pipe.getLabeled() ? ":"+static_types[fin_par[k][i]][i] : ":0") +" ";
 	}
 		
 	// create d.
@@ -519,4 +540,5 @@ public abstract class DependencyDecoder {
 	
     
 
-}
+}*/
+

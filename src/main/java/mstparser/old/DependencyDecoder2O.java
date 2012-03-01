@@ -111,18 +111,6 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 	return orig;
     }
 
-    private boolean[][] calcChilds(int[] par) {
-	boolean[][] isChild = new boolean[par.length][par.length];
-	for(int i = 1; i < par.length; i++) {
-	    int l = par[i];
-	    while(l != -1) {
-		isChild[l][i] = true;
-		l = par[l];
-	    }
-	}
-	return isChild;
-    }
-
     private int[] getSibs(int ch, int[] par) {
 	int aSib = par[ch];
 	if(par[ch] > ch)
