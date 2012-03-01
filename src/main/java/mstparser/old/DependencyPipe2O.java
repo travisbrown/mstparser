@@ -1,13 +1,17 @@
-package mstparser;
+package mstparser.old;
 
-import java.io.*;
-import gnu.trove.*;
-import java.util.*;
-import mstparser.io.*;
+import mstparser.DependencyInstance;
+import mstparser.FeatureVector;
+import mstparser.Parameters;
 
-public class DependencyPipe2O extends DependencyPipe {
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+//import java.util.*;
 
-    public DependencyPipe2O(ParserOptions options) throws IOException {
+public class DependencyPipe2O extends mstparser.DependencyPipe {
+
+    public DependencyPipe2O(mstparser.ParserOptions options) throws IOException {
 	super(options);
     }
 

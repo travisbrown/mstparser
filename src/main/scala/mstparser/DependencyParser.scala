@@ -53,7 +53,7 @@ class DependencyParser(
               fvs_sibs, probs_sibs,
               nt_fvs,nt_probs, options.trainK
             )
-          else decoder.decodeProjective(instance, fvs, probs, nt_fvs, nt_probs, options.trainK)
+          else decoder.decodeProjective(instance.length, fvs, probs, nt_fvs, nt_probs, options.trainK)
         case "non-proj" =>
           if (options.secondOrder)
             decoder.asInstanceOf[DependencyDecoder2O].decodeNonProjective(
@@ -62,7 +62,7 @@ class DependencyParser(
               fvs_sibs, probs_sibs,
               nt_fvs,nt_probs, options.trainK
             )
-          else decoder.decodeNonProjective(instance, fvs, probs, nt_fvs, nt_probs, options.trainK)
+          else decoder.decodeNonProjective(instance.length, fvs, probs, nt_fvs, nt_probs, options.trainK)
         case _ => null
       }
 
@@ -140,7 +140,7 @@ class DependencyParser(
               fvs_sibs, probs_sibs,
               nt_fvs,nt_probs, options.testK
             )
-          else decoder.decodeProjective(instance, fvs, probs, nt_fvs, nt_probs, options.testK)
+          else decoder.decodeProjective(instance.length, fvs, probs, nt_fvs, nt_probs, options.testK)
         case "non-proj" =>
           if (options.secondOrder)
             decoder.asInstanceOf[DependencyDecoder2O].decodeNonProjective(
@@ -149,7 +149,7 @@ class DependencyParser(
               fvs_sibs, probs_sibs,
               nt_fvs,nt_probs, options.testK
             )
-          else decoder.decodeNonProjective(instance, fvs, probs, nt_fvs, nt_probs, options.testK)
+          else decoder.decodeNonProjective(instance.length, fvs, probs, nt_fvs, nt_probs, options.testK)
         case _ => null
       }
 

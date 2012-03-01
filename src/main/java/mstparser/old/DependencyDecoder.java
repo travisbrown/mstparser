@@ -17,29 +17,26 @@ public abstract class DependencyDecoder {
   protected abstract boolean[][] calcChilds(int[] par);
 
     // static type for each edge: run time O(n^3 + Tn^2) T is number of types
-    public Tuple2<FeatureVector, String>[] decodeProjective(DependencyInstance inst,
+    public Tuple2<FeatureVector, String>[] decodeProjective(int len,
 				       FeatureVector[][][] fvs,
 				       double[][][] probs,
 				       FeatureVector[][][][] nt_fvs,
 				       double[][][][] nt_probs, int K) {
 
-	String[] forms = inst.forms();
-	String[] pos = inst.postags();
-
 	int[][] static_types = null;
 	if(this.pipe().getLabeled()) {
-	    static_types = getTypes(nt_probs,forms.length);
+	    static_types = getTypes(nt_probs,len);
 	}
 
-	KBestParseForest pf = new KBestParseForest(forms.length-1,K);
+	KBestParseForest pf = new KBestParseForest(len-1,K);
 		
-	for(int s = 0; s < forms.length; s++) {
+	for(int s = 0; s < len; s++) {
 	    pf.add(s,-1,0,0.0,new FeatureVector());
 	    pf.add(s,-1,1,0.0,new FeatureVector());
 	}
 			
-	for(int j = 1; j < forms.length; j++) {
-	    for(int s = 0; s < forms.length && s+j < forms.length; s++) {
+	for(int j = 1; j < len; j++) {
+	    for(int s = 0; s < len && s+j < len; s++) {
 		int t = s+j;
 				
 		FeatureVector prodFV_st = fvs[s][t][0];
@@ -154,33 +151,29 @@ public abstract class DependencyDecoder {
 	return pf.getBestParses();
     }
 
-    public Tuple2<FeatureVector, String>[] decodeNonProjective(DependencyInstance inst,
+    public Tuple2<FeatureVector, String>[] decodeNonProjective(int len,
 					  FeatureVector[][][] fvs,
 					  double[][][] probs,
 					  FeatureVector[][][][] nt_fvs,
 					  double[][][][] nt_probs, int K) {
 
-	String[] pos = inst.postags();
-		
-	int numWords = inst.length();
-
-	int[][] oldI = new int[numWords][numWords];
-	int[][] oldO = new int[numWords][numWords];
-	double[][] scoreMatrix = new double[numWords][numWords];
-	double[][] orig_scoreMatrix = new double[numWords][numWords];
-	boolean[] curr_nodes = new boolean[numWords];
-	TIntIntHashMap[] reps = new TIntIntHashMap[numWords];
+	int[][] oldI = new int[len][len];
+	int[][] oldO = new int[len][len];
+	double[][] scoreMatrix = new double[len][len];
+	double[][] orig_scoreMatrix = new double[len][len];
+	boolean[] curr_nodes = new boolean[len];
+	TIntIntHashMap[] reps = new TIntIntHashMap[len];
 
 	int[][] static_types = null;
 	if(this.pipe().getLabeled()) {
-	    static_types = getTypes(nt_probs,pos.length);
+	    static_types = getTypes(nt_probs,len);
 	}
 
-	for(int i = 0; i < numWords; i++) {
+	for(int i = 0; i < len; i++) {
 	    curr_nodes[i] = true;
 	    reps[i] = new TIntIntHashMap();
 	    reps[i].put(i,0);
-	    for(int j = 0; j < numWords; j++) {
+	    for(int j = 0; j < len; j++) {
 		// score of edge (i,j) i --> j
 		scoreMatrix[i][j] = probs[i < j ? i : j][i < j ? j : i][i < j ? 0 : 1]
 		    + (this.pipe().getLabeled() ? nt_probs[i][static_types[i][j]][i < j ? 0 : 1][1]
@@ -197,7 +190,7 @@ public abstract class DependencyDecoder {
 	}
 
 	TIntIntHashMap final_edges = chuLiuEdmonds(scoreMatrix,curr_nodes,oldI,oldO,false,new TIntIntHashMap(),reps);
-	int[] par = new int[numWords];
+	int[] par = new int[len];
 	int[] ns = final_edges.keys();
 	for(int i = 0; i < ns.length; i++) {
 	    int ch = ns[i]; int pr = final_edges.get(ns[i]);
@@ -210,8 +203,8 @@ public abstract class DependencyDecoder {
 	    if(n_par[i] > -1) new_k++;
 
 	// Create Feature Vectors;
-	int[][] fin_par = new int[new_k][numWords];
-	FeatureVector[][] fin_fv = new FeatureVector[new_k][numWords];
+	int[][] fin_par = new int[new_k][len];
+	FeatureVector[][] fin_fv = new FeatureVector[new_k][len];
 	fin_par[0] = par;
 	int c = 1;
 	for(int i = 0; i < n_par.length; i++) {

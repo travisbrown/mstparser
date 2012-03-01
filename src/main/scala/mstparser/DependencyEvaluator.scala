@@ -1,6 +1,5 @@
 package mstparser
 
-import java.io._
 import mstparser.io._
 
 object DependencyEvaluator {

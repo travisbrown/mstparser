@@ -25,16 +25,6 @@ trait Decoder extends old.DependencyDecoder {
     isChild
 	}
 }
-/*
-class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.DependencyDecoder2O {
-  protected def getTypes(probsNt: Array[Array[Array[Array[Double]]]], len: Int) =
-    Array.tabulate(len, len) {
-      case (i, j) if i == j => 0
-      case (i, j) => probsNt(i).zip(probsNt(j)).zipWithIndex.maxBy {
-        case ((pi, pj), k) => if (i < j) pi(0)(1) + pj(0)(0) else pi(1)(1) + pj(1)(0)
-      }._2
-		}
-}*/
 
 /*
     // static type for each edge: run time O(n^3 + Tn^2) T is number of types
