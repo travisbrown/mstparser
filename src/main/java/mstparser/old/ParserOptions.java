@@ -14,19 +14,7 @@ package mstparser.old;
 
 import java.io.File;
 
-/**
- * Hold all the options for the parser so they can be passed around easily.
- *
- * <p>
- * Created: Sat Nov 10 15:25:10 2001
- * </p>
- *
- * @author Jason Baldridge
- * @version $Id: CONLLReader.java 103 2007-01-21 20:26:39Z jasonbaldridge $
- * @see mstparser.io.DependencyReader
- */
 public class ParserOptions {
-    
     public String trainfile = null;
     public String testfile = null;
     public File trainforest = null;
@@ -47,84 +35,5 @@ public class ParserOptions {
     public boolean secondOrder = false;
     public boolean useRelationalFeatures = false;
     public boolean discourseMode = false;
-
-
-/*    public ParserOptions (String[] args) {
-
-	for(int i = 0; i < args.length; i++) {
-	    String[] pair = args[i].split(":");
-
-	    if (pair[0].equals("train")) {
-		train = true;
-	    }
-	    if (pair[0].equals("eval")) {
-		eval = true;
-	    }
-	    if (pair[0].equals("test")) {
-		test = true;
-	    }
-	    if (pair[0].equals("iters")) {
-		numIters = Integer.parseInt(pair[1]);
-	    }
-	    if (pair[0].equals("output-file")) {
-		outfile = pair[1];
-	    }
-	    if (pair[0].equals("gold-file")) {
-		goldfile = pair[1];
-	    }
-	    if (pair[0].equals("train-file")) {
-		trainfile = pair[1];
-	    }
-	    if (pair[0].equals("test-file")) {
-		testfile = pair[1];
-	    }
-	    if (pair[0].equals("model-name")) {
-		modelName = pair[1];
-	    }
-	    if (pair[0].equals("training-k")) {
-		trainK = Integer.parseInt(pair[1]);
-	    }
-	    if (pair[0].equals("loss-type")) {
-		lossType = pair[1];
-	    }			
-	    if (pair[0].equals("order") && pair[1].equals("2")) {
-		secondOrder = true;
-	    }			
-	    if (pair[0].equals("create-forest")) {
-		createForest = pair[1].equals("true") ? true : false;
-	    }			
-	    if (pair[0].equals("decode-type")) {
-		decodeType = pair[1];
-	    }			
-	    if (pair[0].equals("format")) {
-		format = pair[1];
-	    }			
-	    if (pair[0].equals("relational-features")) {
-		useRelationalFeatures = pair[1].equals("true") ? true : false;
-	    }			
-	    if (pair[0].equals("discourse-mode")) {
-		discourseMode = pair[1].equals("true") ? true : false;
-	    }			
-	}
-
-
-	try {
-	    File tmpDir = new File("/tmp");
-	    if (null != trainfile) {
-		trainforest = File.createTempFile("train", ".forest");
-		trainforest.deleteOnExit();
-	    }
-
-	    if (null != testfile) {
-		testforest = File.createTempFile("test", ".forest");
-		testforest.deleteOnExit();
-	    }
-
-	} catch (java.io.IOException e) {
-	    System.out.println("Unable to create tmp files for feature forests!");
-	    System.out.println(e);
-	    System.exit(0);
-	}
-    }*/
 }
 

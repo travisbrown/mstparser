@@ -1,9 +1,6 @@
 package mstparser.old;
 
 import mstparser.ParserOptions;
-import mstparser.io.*;
-import java.io.*;
-import java.util.*;
 
 public abstract class DependencyPipe {
   public abstract ParserOptions getOptions();
