@@ -128,7 +128,7 @@ public abstract class DependencyDecoder {
 	return d;
     }
 
-    private int[] getKChanges(int[] par, double[][] scoreMatrix, int K) {
+    protected int[] getKChanges(int[] par, double[][] scoreMatrix, int K) {
 	int[] result = new int[par.length];
 	int[] n_par = new int[par.length];
 	double[] n_score = new double[par.length];
@@ -172,7 +172,7 @@ public abstract class DependencyDecoder {
 	return result;
     }
 
-    private static TIntIntHashMap chuLiuEdmonds(double[][] scoreMatrix, boolean[] curr_nodes, 
+    protected static TIntIntHashMap chuLiuEdmonds(double[][] scoreMatrix, boolean[] curr_nodes, 
 						int[][] oldI, int[][] oldO, boolean print,
 						TIntIntHashMap final_edges, TIntIntHashMap[] reps) {
 		
@@ -377,11 +377,8 @@ public abstract class DependencyDecoder {
 		System.out.print(final_edges.get(keys[i])+"|"+keys[i]+" ");
 	    System.out.println();
 	}
-		
-	return final_edges;
-		
-    }
-	
-    
 
+	return final_edges;
+    }
 }
+
