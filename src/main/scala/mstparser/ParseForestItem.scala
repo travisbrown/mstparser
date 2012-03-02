@@ -3,11 +3,11 @@ package mstparser
 class ParseForestItem(
   private val s: Int,
   private val t: Int,
-  val label: Int,
-  val dir: Int,
-  val comp: Int,
+  private val label: Int,
+  private val dir: Int,
+  private val comp: Int,
   val prob: Double,
-  val fv: FeatureVector,
+  private val fv: FeatureVector,
   val children: Option[(ParseForestItem, ParseForestItem)]
 ) {
   def this(s: Int, t: Int, label: Int, dir: Int, comp: Int) =
@@ -30,7 +30,7 @@ class ParseForestItem(
 
     if (this.comp == 0) cs
     else if (this.dir == 0) "%s %d|%d:%d".format(cs, this.s, this.t, this.label).trim
-    else "%d|%d:%d %s".format(this.t, this.s, this.label, cs).trim 
+    else "%d|%d:%d %s".format(this.t, this.s, this.label, cs).trim
   }.getOrElse("")
 }
 

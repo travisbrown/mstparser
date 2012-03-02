@@ -4,7 +4,7 @@ class Parameters(size: Int) {
   var parameters = Array.ofDim[Double](size)
   private val total = Array.ofDim[Double](size)
 
-  private var lossType = "punc"
+  private val lossType = "punc"
 
   def updateParamsMIRA(instance: DependencyInstance, d: Array[(FeatureVector, String)], update: Double) {
     val score = this.getScore(instance.getFeatureVector)
@@ -61,7 +61,7 @@ class Parameters(size: Int) {
     val isComputed = Array.ofDim[Boolean](k)
 
     (0 until k).foreach(i => aa(i)(i) = a(i).dotProduct(a(i)))
-				
+
     var iter = 0
 	  while (kktMaxV >= eps && iter < maxIter) {
 

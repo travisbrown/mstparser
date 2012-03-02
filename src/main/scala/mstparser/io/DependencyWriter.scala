@@ -1,15 +1,3 @@
-///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2007 University of Texas at Austin and (C) 2005
-// University of Pennsylvania and Copyright (C) 2002, 2003 University
-// of Massachusetts Amherst, Department of Computer Science.
-//
-// This software is licensed under the terms of the Common Public
-// License, Version 1.0 or (at your option) any subsequent version.
-// 
-// The license is approved by the Open Source Initiative, and is
-// available from their website at http://www.opensource.org.
-///////////////////////////////////////////////////////////////////////////////
-
 package mstparser.io
 
 import java.io.PrintWriter

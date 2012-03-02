@@ -13,21 +13,19 @@ object DependencyEvaluator {
     if (labeled != predLabeled)
 	    println("Gold file and predicted file appear to differ on whether or not they are labeled. Expect problems!!!")
 
-    var corr = 0
-    var corrL = 0
-    var corrSent = 0
-    var corrSentL = 0
-
-    goldReader.zip(predReader).zipWithIndex.foreach { case ((goldInstance, predInstance), i) =>
-      goldInstance.difference(predInstance) match {
-        case Some((d, dL)) =>
-          if (d == 0) corrSent += 1
-          if (dL == 0) corrSentL += 1
-
-          corr += goldInstance.size - d
-          corrL += goldInstance.size - dL
-        case None =>
-          println("Lengths do not match on sentence " + i)
+    val (corr, corrL, corrSent, corrSentL) =
+      goldReader.zip(predReader).zipWithIndex.foldLeft(0, 0, 0, 0) {
+        case ((c, cL, cs, csL), ((goldInstance, predInstance), i)) =>
+          goldInstance.difference(predInstance) match {
+            case Some((d, dL)) => (
+              c + goldInstance.size - d,
+              cL + goldInstance.size - dL,
+              cs + (if (d == 0) 1 else 0),
+              csL + (if (dL == 0) 1 else 0)
+            )
+            case None =>
+              println("Lengths do not match on sentence " + i)
+              (c, cL, cs, csL)
 	    }
     }
 

@@ -13,7 +13,6 @@ class DependencyParser(
   private var pipe: DependencyPipe,
   private val options: ParserOptions
 ) {
-
 	val params = new Parameters(this.pipe.dataAlphabet.size)
   val decoder = if (options.secondOrder) new DependencyDecoder2O(this.pipe) else new DependencyDecoder(this.pipe)
 
@@ -45,15 +44,6 @@ class DependencyParser(
       val upd = (options.numIters * instances.size - (instances.size * (iter - 1) + (i + 1)) + 1).toDouble
 
       val d = options.decodeType match {
-        case "proj" =>
-          if (options.secondOrder)
-            decoder.asInstanceOf[DependencyDecoder2O].decodeProjective(
-              instance, fvs, probs,
-              fvs_trips, probs_trips,
-              fvs_sibs, probs_sibs,
-              nt_fvs,nt_probs, options.trainK
-            )
-          else decoder.decodeProjective(instance.length, fvs, probs, nt_fvs, nt_probs, options.trainK)
         case "non-proj" =>
           if (options.secondOrder)
             decoder.asInstanceOf[DependencyDecoder2O].decodeNonProjective(
@@ -63,7 +53,15 @@ class DependencyParser(
               nt_fvs,nt_probs, options.trainK
             )
           else decoder.decodeNonProjective(instance.length, fvs, probs, nt_fvs, nt_probs, options.trainK)
-        case _ => null
+        case _ =>
+          if (options.secondOrder)
+            decoder.asInstanceOf[DependencyDecoder2O].decodeProjective(
+              instance, fvs, probs,
+              fvs_trips, probs_trips,
+              fvs_sibs, probs_sibs,
+              nt_fvs,nt_probs, options.trainK
+            )
+          else decoder.decodeProjective(instance.length, fvs, probs, nt_fvs, nt_probs, options.trainK)
       }
 
       this.params.updateParamsMIRA(instance, d, upd)
@@ -75,8 +73,8 @@ class DependencyParser(
   private def createArrays(length: Int) = (
     Array.ofDim[FeatureVector](length, length, 2),
     Array.ofDim[Double](length, length, 2),
-    Array.ofDim[FeatureVector](length, pipe.getTypes.length, 2, 2),
-    Array.ofDim[Double](length, pipe.getTypes.length, 2, 2),
+    Array.ofDim[FeatureVector](length, pipe.getTypes.size, 2, 2),
+    Array.ofDim[Double](length, pipe.getTypes.size, 2, 2),
 
     Array.ofDim[FeatureVector](length, length, length),
     Array.ofDim[Double](length, length, length),
@@ -121,10 +119,10 @@ class DependencyParser(
 
     print("Processing Sentence: ")
 
-    pipe.zipWithIndex.foreach { case (instance, cnt) => 
+    pipe.zipWithIndex.foreach { case (instance, cnt) =>
       print("%d ".format(cnt + 1))
       val forms = instance.forms
-			
+
       val (fvs, probs, nt_fvs, nt_probs, fvs_trips, probs_trips, fvs_sibs, probs_sibs) = this.createArrays(instance.forms.length)
 
       if (options.secondOrder) this.pipe.asInstanceOf[DependencyPipe2O].fillFeatureVectors(
@@ -132,15 +130,6 @@ class DependencyParser(
       ) else this.pipe.fillFeatureVectors(instance, fvs, probs, nt_fvs, nt_probs, params)
 
       val d = options.decodeType match {
-        case "proj" =>
-          if (options.secondOrder)
-            decoder.asInstanceOf[DependencyDecoder2O].decodeProjective(
-              instance, fvs, probs,
-              fvs_trips, probs_trips,
-              fvs_sibs, probs_sibs,
-              nt_fvs,nt_probs, options.testK
-            )
-          else decoder.decodeProjective(instance.length, fvs, probs, nt_fvs, nt_probs, options.testK)
         case "non-proj" =>
           if (options.secondOrder)
             decoder.asInstanceOf[DependencyDecoder2O].decodeNonProjective(
@@ -150,7 +139,15 @@ class DependencyParser(
               nt_fvs,nt_probs, options.testK
             )
           else decoder.decodeNonProjective(instance.length, fvs, probs, nt_fvs, nt_probs, options.testK)
-        case _ => null
+        case _ =>
+          if (options.secondOrder)
+            decoder.asInstanceOf[DependencyDecoder2O].decodeProjective(
+              instance, fvs, probs,
+              fvs_trips, probs_trips,
+              fvs_sibs, probs_sibs,
+              nt_fvs,nt_probs, options.testK
+            )
+          else decoder.decodeProjective(instance.length, fvs, probs, nt_fvs, nt_probs, options.testK)
       }
 
       val res = d(0)._2.split(" ")
@@ -171,7 +168,7 @@ class DependencyParser(
       pipe.outputInstance(new DependencyInstance(formsNoRoot, null, null, posNoRoot, null, labels, heads, null))
     }
     pipe.close()
-		
+
     val end = System.currentTimeMillis()
     println("Took: %d".format(end - start))
     end - start

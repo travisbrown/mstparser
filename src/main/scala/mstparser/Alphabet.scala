@@ -9,21 +9,17 @@ class Alphabet(private val capacity: Int) extends Serializable {
   private var growing = true
 
   /** Return -1 if entry isn't present. */
-  def lookupIndex(entry: String) = {
-    require(entry != null, "Can't lookup \"null\" in an Alphabet.")
-
-    this.map.get(entry) match {
-      case -1 if this.growing =>
-        this.map.put(entry, this.map.size)
-        this.map.size - 1
-      case i => i
-    }
+  def lookupIndex(entry: String) = this.map.get(entry) match {
+    case -1 if this.growing =>
+      this.map.put(entry, this.map.size)
+      this.map.size - 1
+    case i => i
   }
 
   def toArray = this.map.keys(Array.empty[String])
 
   def contains(entry: String) = this.map.contains(entry)
-  def size = this.map.size 
+  def size = this.map.size
 
   def getGrowing = this.growing
 

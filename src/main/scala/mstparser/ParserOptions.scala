@@ -2,7 +2,28 @@ package mstparser
 
 import java.io.File
 
-class ParserOptions(args: Array[String]) extends old.ParserOptions {
+class ParserOptions(args: Array[String]) {
+  var trainfile: String = _
+  var testfile: String = _
+  var trainforest: File = _
+  var testforest: File = _
+  var train = false
+  var eval = false
+  var test = false
+  var modelName = "dep.model"
+  var lossType = "punc"
+  var createForest = true
+  var decodeType = "proj"
+  var format = "CONLL"
+  var numIters = 10
+  var outfile = "out.txt"
+  var goldfile: String = _
+  var trainK = 1
+  var testK = 1
+  var secondOrder = false
+  var useRelationalFeatures = false
+  var discourseMode = false
+
   this.args.map(_.split(":")).foreach {
     case Array(k) =>
       k match {

@@ -5,8 +5,6 @@ import scala.collection.mutable.PriorityQueue
 class KBestParseForest(private val end: Int, private val k: Int) {
   private val chart = Array.ofDim[ParseForestItem](this.end + 1, this.end + 1, 2, 2, this.k)
 
-  def getItem(s: Int, t: Int, d: Int, c: Int): ParseForestItem = this.getItem(s, t, d, c, 0)
-  def getItem(s: Int, t: Int, d: Int, c: Int, k: Int): ParseForestItem = this.chart(s)(t)(d)(c)(k)
   def getItems(s: Int, t: Int, d: Int, c: Int) =
     if (this.chart(s)(t)(d)(c)(0) != null) this.chart(s)(t)(d)(c) else null
 
@@ -17,14 +15,10 @@ class KBestParseForest(private val end: Int, private val k: Int) {
       else (null, null)
     }
 
-  def getProb(s: Int, t: Int, d: Int, c: Int): Double = this.getProb(s, t, d, c, 0)
-  def getProb(s: Int, t: Int, d: Int, c: Int, i: Int): Double =
-    Option(this.chart(s)(t)(d)(c)(i)).map(_.prob).getOrElse(Double.NegativeInfinity)
+  def getKBestPairs(is: Array[ParseForestItem], js: Array[ParseForestItem]) = {
+    val result = Array.fill(this.k)(-1, -1)
 
-  def getKBestPairs(is: Array[ParseForestItem], js: Array[ParseForestItem]): Array[(java.lang.Integer, java.lang.Integer)] = {
-    val result = Array.fill[(java.lang.Integer, java.lang.Integer)](this.k)(-1, -1)
-
-    if (is != null && js != null && is(0) != null && js(0) != null) {
+    if (is(0) != null && js(0) != null) {
       val heap = PriorityQueue((is(0).prob + js(0).prob, (0, 0)))
       val beenPushed = Array.ofDim[Boolean](this.k, this.k)
       beenPushed(0)(0) = true
@@ -116,5 +110,10 @@ class KBestParseForest(private val end: Int, private val k: Int) {
       added
     }
   }
+
+  def getKBestPairsJ(is: Array[ParseForestItem], js: Array[ParseForestItem]) =
+    this.getKBestPairs(is, js).map {
+      case (i, j) => (i.asInstanceOf[java.lang.Integer], j.asInstanceOf[java.lang.Integer])
+    }
 }
 

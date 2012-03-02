@@ -6,10 +6,9 @@ import gnu.trove.list.linked.TLinkedList;
 import gnu.trove.map.hash.TIntDoubleHashMap
 import gnu.trove.procedure.TObjectProcedure
 
-
 object FeatureVector {
   def fromKeys(keys: Array[Int]) = {
-    val v = new FeatureVector()
+    val v = new FeatureVector
     keys.foreach(k => v.add(new Feature(k, 1.0)))
     v
   }
@@ -18,7 +17,7 @@ object FeatureVector {
 class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) extends TLinkedList[Feature] {
   def this(fv1: FeatureVector, fv2: FeatureVector) = this(fv1, fv2, false)
   def this(fv1: FeatureVector) = this(fv1, null)
-  def this() = this(null) 
+  def this() = this(null)
 
   def cat(that: FeatureVector) = new FeatureVector(this, that)
   def getDistVector(that: FeatureVector) = new FeatureVector(this, that, true)
@@ -51,7 +50,7 @@ class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) 
     var score = Option(this.fv1).map(_.getScore(parameters, negate)).getOrElse(0.0) +
     Option(this.fv2).map(_.getScore(parameters, negate != this.negSecond)).getOrElse(0.0)
 
-    var mult = if (negate) -1.0 else 1.0
+    val mult = if (negate) -1.0 else 1.0
 
     this.forEachValue(new TObjectProcedure[Feature] {
       def execute(f: Feature) = {
@@ -71,7 +70,7 @@ class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) 
     Option(this.fv1).foreach(_.update(parameters, total, alpha, update, negate))
     Option(this.fv2).foreach(_.update(parameters, total, alpha, update, negate != this.negSecond))
 
-    var mult = if (negate) -1.0 else 1.0
+    val mult = if (negate) -1.0 else 1.0
 
     this.forEachValue(new TObjectProcedure[Feature] {
       def execute(f: Feature) = {
@@ -99,7 +98,7 @@ class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) 
     Option(this.fv1).foreach(_.addFeaturesToMap(map, negate))
     Option(this.fv2).foreach(_.addFeaturesToMap(map, negate != this.negSecond))
 
-    var mult = if (negate) -1.0 else 1.0
+    val mult = if (negate) -1.0 else 1.0
 
     this.forEachValue(new TObjectProcedure[Feature] {
       def execute(f: Feature) = {

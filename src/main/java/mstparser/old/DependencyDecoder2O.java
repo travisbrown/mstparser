@@ -198,7 +198,7 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 			FeatureVector prodFV_sst = fvs_trips[s][s][t].cat(fvs_sibs[s][t][0]);
 			double prodProb_sst = probs_trips[s][s][t]+probs_sibs[s][t][0];
 						
-			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
+			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairsJ(b1,c1);
 			    for(int k = 0; k < pairs.length; k++) {
 								
 				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
@@ -231,7 +231,7 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 			FeatureVector prodFV_stt = fvs_trips[t][t][s].cat(fvs_sibs[t][s][0]);
 			double prodProb_stt = probs_trips[t][t][s]+probs_sibs[t][s][0];
 
-			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
+			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairsJ(b1,c1);
 			    for(int k = 0; k < pairs.length; k++) {
 								
 				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
@@ -264,7 +264,7 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 					
 		    if(!(b1 == null || c1 == null)) {
 					
-			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
+			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairsJ(b1,c1);
 			    for(int k = 0; k < pairs.length; k++) {
 								
 				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
@@ -287,7 +287,7 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 					
 		    if(!(b1 == null || c1 == null)) {
 					
-			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
+			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairsJ(b1,c1);
 			    for(int k = 0; k < pairs.length; k++) {
 								
 				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
@@ -315,7 +315,7 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 					
 		    if(!(b1 == null || c1 == null)) {
 					
-			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
+			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairsJ(b1,c1);
 			    for(int k = 0; k < pairs.length; k++) {
 								
 				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
@@ -350,7 +350,7 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 			if(!(b1 == null || c1 == null)) {
 			    //continue;
 						
-			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
+			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairsJ(b1,c1);
 			    for(int k = 0; k < pairs.length; k++) {
 								
 				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
@@ -373,7 +373,7 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 			if(!(b1 == null || c1 == null)) {
 			    //continue;
 
-			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairs(b1,c1);
+			    Tuple2<Integer, Integer>[] pairs = pf.getKBestPairsJ(b1,c1);
 			    for(int k = 0; k < pairs.length; k++) {
 								
 				if(pairs[k]._1() == -1 || pairs[k]._2() == -1)
