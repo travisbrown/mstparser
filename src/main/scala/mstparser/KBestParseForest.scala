@@ -88,7 +88,7 @@ class KBestParseForest(private val end: Int, private val k: Int) {
   def add(s: Int, r: Int, t: Int, label: Int, d: Int, c: Int,
     score: Double, fv: FeatureVector, p: ParseForestItem, q: ParseForestItem) = {
     if (this.chart(s)(t)(d)(c)(0) == null) {
-      this.chart(s)(t)(d)(c) = Array.fill(k)(new ParseForestItem(s, r, t, label, d, c))
+      this.chart(s)(t)(d)(c) = Array.fill(k)(new ParseForestItem(s, t, label, d, c))
     }
 
     if (this.chart(s)(t)(d)(c)(k - 1).prob > score) false
@@ -99,7 +99,7 @@ class KBestParseForest(private val end: Int, private val k: Int) {
       while (!added && i < this.k) {
         if (this.chart(s)(t)(d)(c)(i).prob < score) {
           var tmp = this.chart(s)(t)(d)(c)(i)
-          this.chart(s)(t)(d)(c)(i) = new ParseForestItem(s, r, t, label, d, c, score, fv, Some(p, q))
+          this.chart(s)(t)(d)(c)(i) = new ParseForestItem(s, t, label, d, c, score, fv, Some(p, q))
 
           var j = i + 1
           while (j < this.k && tmp.prob > Double.NegativeInfinity) {

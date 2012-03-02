@@ -2,7 +2,6 @@ package mstparser
 
 class ParseForestItem(
   private val s: Int,
-  private val r: Int,
   private val t: Int,
   val label: Int,
   val dir: Int,
@@ -11,11 +10,11 @@ class ParseForestItem(
   val fv: FeatureVector,
   val children: Option[(ParseForestItem, ParseForestItem)]
 ) {
-  def this(s: Int, r: Int, t: Int, label: Int, dir: Int, comp: Int) =
-    this(s, r, t, label, dir, comp, Double.NegativeInfinity, null, None)
+  def this(s: Int, t: Int, label: Int, dir: Int, comp: Int) =
+    this(s, t, label, dir, comp, Double.NegativeInfinity, null, None)
 
   def this(s: Int, label: Int, dir: Int, prob: Double, fv: FeatureVector) =
-    this(s, 0, 0, label, dir, 0, prob, fv, None)
+    this(s, 0, label, dir, 0, prob, fv, None)
 
   def this(s: Int, label: Int, dir: Int) =
     this(s, label, dir, Double.NegativeInfinity, null)

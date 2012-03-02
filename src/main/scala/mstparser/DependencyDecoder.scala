@@ -120,7 +120,7 @@ trait Decoder extends old.DependencyDecoder {
 	  pf.getBestParses
   }
 
-  def decodeNonProjective(
+  /*def decodeNonProjective(
     len: Int,
     fvs: Array[Array[Array[FeatureVector]]],
     probs: Array[Array[Array[Double]]],
@@ -211,7 +211,7 @@ trait Decoder extends old.DependencyDecoder {
     }
 
     fin.zip(result.map(_.trim))
-  }
+  }*/
 }
 
 /*    private int[] getKChanges(int[] par, double[][] scoreMatrix, int K) {
