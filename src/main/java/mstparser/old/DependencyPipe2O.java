@@ -12,8 +12,8 @@ public abstract class DependencyPipe2O extends mstparser.DependencyPipe {
   public DependencyPipe2O(mstparser.ParserOptions options) throws IOException {
     super(options);
   }
-			
-    /*protected void addExtendedFeatures(DependencyInstance instance,
+
+/*    protected void addExtendedFeatures(DependencyInstance instance,
 				       FeatureVector fv) {
 	    
 	final int instanceLength = instance.length();

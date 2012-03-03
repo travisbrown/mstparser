@@ -28,7 +28,7 @@ class ParseForestItem(
     val rd = right.getDepString
     val cs = (ld + " " + rd).trim
 
-    if (this.comp == 0) cs
+    if (this.comp != 1) cs
     else if (this.dir == 0) "%s %d|%d:%d".format(cs, this.s, this.t, this.label).trim
     else "%d|%d:%d %s".format(this.t, this.s, this.label, cs).trim
   }.getOrElse("")

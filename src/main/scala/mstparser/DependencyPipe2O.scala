@@ -8,21 +8,20 @@ class DependencyPipe2O(options: ParserOptions) extends old.DependencyPipe2O(opti
   protected override def addExtendedFeatures(instance: DependencyInstance, fv: FeatureVector) {
     val heads = instance.heads.zipWithIndex
 
-    heads.filter { case (h, i) => h > -1 || i == 0 }.foreach {
-      case (h, i) =>
-        var prev = i
-        heads.drop(i + 1).filter(_._1 == i).foreach { case (_, j) =>
-          this.addTripFeatures(instance, i, prev, j, fv)
-          this.addSiblingFeatures(instance, prev, j, prev == i, fv)
-          prev = j
-        }
+    heads.filter { case (h, i) => h > -1 || i == 0 }.map(_._2).foreach { i =>
+      var prev = i
+      heads.drop(i + 1).filter(_._1 == i).map(_._2).foreach { j =>
+        this.addTripFeatures(instance, i, prev, j, fv)
+        this.addSiblingFeatures(instance, prev, j, prev == i, fv)
+        prev = j
+      }
 
-        prev = i
-        heads.take(i).reverse.filter(_._1 == i).foreach { case (_, j) =>
-          this.addTripFeatures(instance, i, prev, j, fv)
-          this.addSiblingFeatures(instance, prev, j, prev == i, fv)
-          prev = j
-        }
+      prev = i
+      heads.take(i).reverse.filter(_._1 == i).map(_._2).foreach { j =>
+        this.addTripFeatures(instance, i, prev, j, fv)
+        this.addSiblingFeatures(instance, prev, j, prev == i, fv)
+        prev = j
+      }
     }
   }
 
@@ -69,7 +68,7 @@ class DependencyPipe2O(options: ParserOptions) extends old.DependencyPipe2O(opti
       for {
         w1 <- 0 until len
         w2 <- 0 until len if w1 != w2
-        wh <- 0 until 1
+        wh <- 0 to 1
       } {
         val fv = new FeatureVector
         this.addSiblingFeatures(instance, w1, w2, wh == 0, fv)
@@ -117,7 +116,7 @@ class DependencyPipe2O(options: ParserOptions) extends old.DependencyPipe2O(opti
       for {
         w1 <- 0 until len
         w2 <- 0 until len if w1 != w2
-        wh <- 0 until 1
+        wh <- 0 to 1
       } {
         fvsSi(w1)(w2)(wh) = FeatureVector.fromKeys(in.readObject().asInstanceOf[Array[Int]])
         probsSi(w1)(w2)(wh) = params.getScore(fvsSi(w1)(w2)(wh))
