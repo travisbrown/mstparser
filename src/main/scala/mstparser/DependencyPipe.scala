@@ -146,19 +146,16 @@ class DependencyPipe(
   }
 
   protected def writeInstance(instance: DependencyInstance, out: ObjectOutputStream) {
-    var c = 0
 
     (0 until instance.length).foreach { w1 =>
       ((w1 + 1) until instance.length).foreach { w2 =>
         val prodFV1 = new FeatureVector
         this.addCoreFeatures(instance, w1, w2, true, prodFV1)
         out.writeObject(prodFV1.keys)
-        c += prodFV1.keys.length
 
         val prodFV2 = new FeatureVector
         this.addCoreFeatures(instance, w1, w2, false, prodFV2)
         out.writeObject(prodFV2.keys)
-        c += prodFV2.keys.length
       }
     }
 
@@ -170,22 +167,18 @@ class DependencyPipe(
           val prodFV1 = new FeatureVector
           this.addLabeledFeatures(instance, w1, t, true, true, prodFV1)
           out.writeObject(prodFV1.keys)
-          c += prodFV1.keys.length
 
           val prodFV2 = new FeatureVector
           this.addLabeledFeatures(instance, w1, t, true, false, prodFV2)
           out.writeObject(prodFV2.keys)
-          c += prodFV2.keys.length
 
           val prodFV3 = new FeatureVector
           this.addLabeledFeatures(instance, w1, t, false, true, prodFV3)
           out.writeObject(prodFV3.keys)
-          c += prodFV3.keys.length
 
           val prodFV4 = new FeatureVector
           this.addLabeledFeatures(instance, w1, t, false, false, prodFV4)
           out.writeObject(prodFV4.keys)
-          c += prodFV4.keys.length
         }
       }
       out.writeInt(-3)
@@ -194,8 +187,6 @@ class DependencyPipe(
     this.writeExtendedFeatures(instance, out)
 
     out.reset()
-
-    println("Written: " + c.toString)
   }
 
   protected def writeExtendedFeatures(instance: DependencyInstance, out: ObjectOutputStream) {}
