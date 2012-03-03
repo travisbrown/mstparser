@@ -74,7 +74,7 @@ class CONLLReader(discourseMode: Boolean) extends DependencyReader {
       val lemmas = Array.ofDim[String](instance.size + 1)
       val cpos = Array.ofDim[String](instance.size + 1)
       val pos = Array.ofDim[String](instance.size + 1)
-      var feats = Array.ofDim[Array[String]](instance.size + 1)
+      var feats = Array.ofDim[IndexedSeq[String]](instance.size + 1)
       val deprels = Array.ofDim[String](instance.size + 1)
       val heads = Array.ofDim[Int](instance.size + 1)
 
@@ -95,8 +95,9 @@ class CONLLReader(discourseMode: Boolean) extends DependencyReader {
         heads(i + 1) = info(6).toInt
       }
 
-      feats(0) = Array.ofDim[String](feats(1).length)
-      (0 until feats(1).length).foreach(i => feats(0)(i) = "<root-feat>%d".format(i))
+      feats(0) = feats(1).zipWithIndex.map {
+        case (_, i) => "<root-feat>%d".format(i)
+      }
 
       // The following stuff is for discourse and can be safely
       // ignored if you are doing sentential parsing. (In theory it
@@ -135,7 +136,7 @@ class MSTReader extends DependencyReader {
         "<root-LEMMA>" +: lemmas,
         "<root-CPOS>" +: cpostags,
         "<root-POS>" +: pos,
-        Array.ofDim[String](0, 0),
+        IndexedSeq.empty[IndexedSeq[String]],
         "<no-type>" +: deprels,
         -1 +: heads,
         null

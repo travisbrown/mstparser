@@ -3,14 +3,14 @@ package mstparser
 import scala.reflect.BeanProperty
 
 class DependencyInstance(
-  val forms: Array[String],
-  val lemmas: Array[String],
-  val cpostags: Array[String],
-  val postags: Array[String],
-  val feats: Array[Array[String]],
-  @BeanProperty var deprels: Array[String],
-  @BeanProperty var heads: Array[Int],
-  val relFeats: Array[RelationalFeature]
+  val forms: IndexedSeq[String],
+  val lemmas: IndexedSeq[String],
+  val cpostags: IndexedSeq[String],
+  val postags: IndexedSeq[String],
+  val feats: IndexedSeq[IndexedSeq[String]],
+  @BeanProperty var deprels: IndexedSeq[String],
+  @BeanProperty var heads: IndexedSeq[Int],
+  val relFeats: IndexedSeq[RelationalFeature]
 ) {
   @BeanProperty @transient var featureVector: FeatureVector = _
   @BeanProperty var parseTree: String = _
