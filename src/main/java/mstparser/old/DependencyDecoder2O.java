@@ -5,7 +5,7 @@ import scala.Tuple2;
 public abstract class DependencyDecoder2O extends DependencyDecoder {
   protected abstract Tuple2<Integer, Integer> getSibs(int ch, int[] par);
 
-    protected void rearrange(double[][][] probs,
+  protected void rearrange(double[][][] probs,
 			   double[][][] probs_trips,
 			   double[][][] probs_sibs, double[][][][] nt_probs, int[] par, int[] labs) {
 		
