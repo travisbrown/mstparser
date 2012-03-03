@@ -1,6 +1,5 @@
 package mstparser.old;
 
-import mstparser.DependencyInstance;
 import mstparser.FeatureVector;
 import mstparser.KBestParseForest;
 import mstparser.ParseForestItem;
@@ -37,7 +36,7 @@ public abstract class DependencyDecoder {
 	TIntIntHashMap[] reps = new TIntIntHashMap[len];
 
 	int[][] static_types = null;
-	if(this.pipe().getLabeled()) {
+  if(this.pipe().getLabeled()) {
 	    static_types = getTypes(nt_probs,len);
 	}
 

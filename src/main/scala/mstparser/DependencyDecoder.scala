@@ -6,8 +6,6 @@ import gnu.trove.procedure.TIntIntProcedure
 
 class DependencyDecoder(protected val pipe: DependencyPipe) extends Decoder
 
-class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.DependencyDecoder2O with Decoder
-
 trait Decoder extends old.DependencyDecoder {
   protected def getTypes(probsNt: Array[Array[Array[Array[Double]]]], len: Int) =
     Array.tabulate(len, len) {

@@ -56,7 +56,7 @@ class DependencyParser(
         case _ =>
           if (options.secondOrder)
             decoder.asInstanceOf[DependencyDecoder2O].decodeProjective(
-              instance, fvs, probs,
+              instance.length, fvs, probs,
               fvs_trips, probs_trips,
               fvs_sibs, probs_sibs,
               nt_fvs,nt_probs, options.trainK
@@ -142,7 +142,7 @@ class DependencyParser(
         case _ =>
           if (options.secondOrder)
             decoder.asInstanceOf[DependencyDecoder2O].decodeProjective(
-              instance, fvs, probs,
+              instance.length, fvs, probs,
               fvs_trips, probs_trips,
               fvs_sibs, probs_sibs,
               nt_fvs,nt_probs, options.testK

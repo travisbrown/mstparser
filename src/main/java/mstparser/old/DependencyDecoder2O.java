@@ -9,7 +9,7 @@ import scala.Tuple2;
 
 public abstract class DependencyDecoder2O extends DependencyDecoder {
 
-    private void rearrange(double[][][] probs,
+    protected void rearrange(double[][][] probs,
 			   double[][][] probs_trips,
 			   double[][][] probs_sibs, double[][][][] nt_probs, int[] par, int[] labs) {
 		
@@ -69,48 +69,6 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 	}
     }
 	
-    // same as decode, except return K best
-    public Tuple2<FeatureVector, String>[] decodeNonProjective(DependencyInstance inst,
-					  FeatureVector[][][] fvs,
-					  double[][][] probs,
-					  FeatureVector[][][] fvs_trips,
-					  double[][][] probs_trips,
-					  FeatureVector[][][] fvs_sibs,
-					  double[][][] probs_sibs,
-					  FeatureVector[][][][] nt_fvs,
-					  double[][][][] nt_probs, int K) {
-
-	String[] forms = inst.forms();
-	String[] pos = inst.postags();
-
-	Tuple2<FeatureVector, String>[] orig = decodeProjective(inst,fvs,probs,fvs_trips,probs_trips,fvs_sibs,probs_sibs,nt_fvs,nt_probs,1);
-	String[] o = orig[0]._2().split(" ");
-	int[] par = new int[o.length+1];
-	int[] labs = new int[o.length+1];
-	labs[0] = 0;
-	par[0] = -1;
-	for(int i = 1; i < par.length; i++) {
-	    par[i] = Integer.parseInt(o[i-1].split("\\|")[0]);
-	    labs[i] = this.pipe().getLabeled() ? Integer.parseInt(o[i-1].split(":")[1]) : 0;
-	}
-
-	rearrange(probs,probs_trips,probs_sibs,nt_probs,par,labs);
-		
-	String pars = "";
-	for(int i = 1; i < par.length; i++)
-	    pars += par[i]+"|"+i+":"+labs[i]+" ";
-
-	inst.setHeads(par);
-
-	inst.setDeprels(new String[labs.length]);
-	for(int i = 0; i < labs.length; i++)
-	    inst.deprels()[i] = this.pipe().getType(labs[i]);
-
-	orig[0] = new Tuple2<FeatureVector, String>(((mstparser.DependencyPipe2O)this.pipe()).createFeatureVector(inst), pars);
-
-	return orig;
-    }
-
     private int[] getSibs(int ch, int[] par) {
 	int aSib = par[ch];
 	if(par[ch] > ch)
@@ -142,7 +100,7 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
     }
 		
     // same as decode, except return K best
-    public Tuple2<FeatureVector, String>[] decodeProjective(DependencyInstance inst,
+    public Tuple2<FeatureVector, String>[] decodeProjective(int len,
 				       FeatureVector[][][] fvs,
 				       double[][][] probs,
 				       FeatureVector[][][] fvs_trips,
@@ -152,23 +110,20 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 				       FeatureVector[][][][] nt_fvs,
 				       double[][][][] nt_probs, int K) {
 		
-	String[] forms = inst.forms();
-	String[] pos = inst.postags();
-		
 	int[][] static_types = null;
 	if(this.pipe().getLabeled()) {
-	    static_types = getTypes(nt_probs,forms.length);
+	    static_types = getTypes(nt_probs, len);
 	}
 
-	KBestParseForest pf = new KBestParseForest(forms.length-1,K,3);
+	KBestParseForest pf = new KBestParseForest(len-1,K,3);
 		
-	for(int s = 0; s < forms.length; s++) {
+	for(int s = 0; s < len; s++) {
 	    pf.add(s,-1,0,0.0,new FeatureVector());
 	    pf.add(s,-1,1,0.0,new FeatureVector());
 	}
 		
-	for(int j = 1; j < forms.length; j++) {
-	    for(int s = 0; s < forms.length && s+j < forms.length; s++) {
+	for(int j = 1; j < len; j++) {
+	    for(int s = 0; s < len && s+j < len; s++) {
 		int t = s+j;
 				
 		FeatureVector prodFV_st = fvs[s][t][0];
