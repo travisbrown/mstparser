@@ -41,7 +41,7 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
     else ch - 1 until par(ch) by -1
   ).find(par(ch) == par(_)).getOrElse(par(ch))), new java.lang.Integer((
     if (par(ch) < ch) ch + 1 until par.length
-    else ch - 1 to 0 by -1 // TODO: Why 0 here?
+    else ch - 1 to 0 by -1
   ).find(par(ch) == par(_)).getOrElse(ch)))
 }
 

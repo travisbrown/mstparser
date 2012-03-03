@@ -8,6 +8,7 @@ import mstparser.ParseForestItem;
 import scala.Tuple2;
 
 public abstract class DependencyDecoder2O extends DependencyDecoder {
+  protected abstract Tuple2<Integer, Integer> getSibs(int ch, int[] par);
 
     protected void rearrange(double[][][] probs,
 			   double[][][] probs_trips,
@@ -68,37 +69,6 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 	    //System.out.println(max + " " + wh + " " + nPar + " " + nType);
 	}
     }
-	
-    protected abstract Tuple2<Integer, Integer> getSibs(int ch, int[] par);
-    /*{
-	int aSib = par[ch];
-	if(par[ch] > ch)
-	    for(int i = ch+1; i < par[ch]; i++) {
-		if(par[i] == par[ch]) {
-		    aSib = i; break;
-		}
-	    }
-	else
-	    for(int i = ch-1; i > par[ch]; i--) {
-		if(par[i] == par[ch]) {
-		    aSib = i; break;
-		}
-	    }
-	int bSib = ch;
-	if(par[ch] < ch)
-	    for(int i = ch+1; i < par.length; i++) {
-		if(par[i] == par[ch]) {
-		    bSib = i; break;
-		}
-	    }
-	else
-	    for(int i = ch-1; i >=0; i--) {
-		if(par[i] == par[ch]) {
-		    bSib = i; break;
-		}
-	    }
-	return new int[]{aSib,bSib};
-    }*/
 		
     // same as decode, except return K best
     public Tuple2<FeatureVector, String>[] decodeProjective(int len,
