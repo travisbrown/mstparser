@@ -1,10 +1,5 @@
 package mstparser.old;
 
-import mstparser.DependencyInstance;
-import mstparser.FeatureVector;
-import mstparser.KBestParseForest;
-import mstparser.ParseForestItem;
-
 import scala.Tuple2;
 
 public abstract class DependencyDecoder2O extends DependencyDecoder {
@@ -15,14 +10,12 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 			   double[][][] probs_sibs, double[][][][] nt_probs, int[] par, int[] labs) {
 		
 	int[][] static_types = null;
-	if(this.pipe().getLabeled()) {
-	    static_types = getTypes(nt_probs,par.length);
-	}
+	if (this.pipe().getLabeled()) static_types = getTypes(nt_probs,par.length);
 
 	boolean[][] isChild = calcChilds(par);
 	boolean[][] isCross = null;
 		
-	while(true) {
+	while (true) {
 	    int wh = -1;
 	    int nPar = -1;
 	    int nType = -1;
@@ -61,8 +54,7 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 		    }
 		}
 	    }
-	    if(max <= 0.0)
-		break;
+	    if(max <= 0.0) break;
 	    par[wh] = nPar;
 	    labs[wh] = nType;
 	    isChild = calcChilds(par);
