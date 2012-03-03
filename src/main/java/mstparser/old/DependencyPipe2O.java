@@ -13,35 +13,6 @@ public abstract class DependencyPipe2O extends mstparser.DependencyPipe {
     super(options);
   }
 
-/*    protected void addExtendedFeatures(DependencyInstance instance,
-				       FeatureVector fv) {
-	    
-	final int instanceLength = instance.length();
-	int[] heads = instance.heads();
-
-	// find all trip features
-	for(int i = 0; i < instanceLength; i++) {
-	    if(heads[i] == -1 && i != 0) continue;
-	    // right children
-	    int prev = i;
-	    for(int j = i+1; j < instanceLength; j++) {
-		if(heads[j] == i) {
-		    addTripFeatures(instance,i,prev,j,fv);
-		    addSiblingFeatures(instance,prev,j,prev==i,fv);
-		    prev = j;
-		}
-	    }
-	    prev = i;
-	    for(int j = i-1; j >= 0; j--) {
-		if(heads[j] == i) {
-		    addTripFeatures(instance,i,prev,j,fv);
-		    addSiblingFeatures(instance,prev,j,prev==i,fv);
-		    prev = j;
-		}
-	    }
-	}
-    }*/
-
     public void fillFeatureVectors(DependencyInstance instance,
 				   FeatureVector[][][] fvs,
 				   double[][][] probs,
@@ -91,7 +62,6 @@ public abstract class DependencyPipe2O extends mstparser.DependencyPipe {
 	    }
 	}
     }
-
 
     protected final void addSiblingFeatures(DependencyInstance instance,
 					  int ch1, int ch2,
@@ -143,151 +113,5 @@ public abstract class DependencyPipe2O extends mstparser.DependencyPipe {
 				       int par,
 				       int ch1, int ch2,
 				       FeatureVector fv);
-
-    /**
-     * Write out the second order features.
-     *
-     **
-    protected void writeExtendedFeatures (DependencyInstance instance, ObjectOutputStream out) 
-	throws IOException {
-
-	final int instanceLength = instance.length();
-
-	for(int w1 = 0; w1 < instanceLength; w1++) {
-	    for(int w2 = w1; w2 < instanceLength; w2++) {
-		for(int w3 = w2+1; w3 < instanceLength; w3++) {
-		    FeatureVector prodFV = new FeatureVector();
-		    addTripFeatures(instance,w1,w2,w3,prodFV);
-		    out.writeObject(prodFV.keys());
-		}
-	    }
-	    for(int w2 = w1; w2 >= 0; w2--) {
-		for(int w3 = w2-1; w3 >= 0; w3--) {
-		    FeatureVector prodFV = new FeatureVector();
-		    addTripFeatures(instance,w1,w2,w3,prodFV);
-		    out.writeObject(prodFV.keys());
-		}
-	    }
-	}
-			
-	out.writeInt(-3);
-	
-	for(int w1 = 0; w1 < instanceLength; w1++) {
-	    for(int w2 = 0; w2 < instanceLength; w2++) {
-		for(int wh = 0; wh < 2; wh++) {
-		    if(w1 != w2) {
-			FeatureVector prodFV = new FeatureVector();
-			addSiblingFeatures(instance,w1,w2,wh == 0,prodFV);
-			out.writeObject(prodFV.keys());
-		    }
-		}
-	    }
-	}
-	
-	out.writeInt(-3);
-    }
-
-
-   /* public DependencyInstance readInstance(ObjectInputStream in,
-					   int length,
-					   FeatureVector[][][] fvs,
-					   double[][][] probs,
-					   FeatureVector[][][] fvs_trips,
-					   double[][][] probs_trips,
-					   FeatureVector[][][] fvs_sibs,
-					   double[][][] probs_sibs,
-					   FeatureVector[][][][] nt_fvs,
-					   double[][][][] nt_probs,
-					   Parameters params) throws IOException {
-
-	try {
-	    // Get production crap.		
-	    for(int w1 = 0; w1 < length; w1++) {
-		for(int w2 = w1+1; w2 < length; w2++) {
-		    for(int ph = 0; ph < 2; ph++) {
-			FeatureVector prodFV = FeatureVector.fromKeys((int[])in.readObject());
-			double prodProb = params.getScore(prodFV);
-			fvs[w1][w2][ph] = prodFV;
-			probs[w1][w2][ph] = prodProb;
-		    }
-		}
-	    }
-	    int last = in.readInt();
-	    if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
-
-	    if(this.labeled()) {
-		for(int w1 = 0; w1 < length; w1++) {
-		    for(int t = 0; t < this.types().size(); t++) {
-			String type = this.types().apply(t);
-			for(int ph = 0; ph < 2; ph++) {						
-			    for(int ch = 0; ch < 2; ch++) {
-			  FeatureVector prodFV = FeatureVector.fromKeys((int[])in.readObject());
-				double nt_prob = params.getScore(prodFV);
-				nt_fvs[w1][t][ph][ch] = prodFV;
-				nt_probs[w1][t][ph][ch] = nt_prob;
-			    }
-			}
-		    }
-		}
-		last = in.readInt();
-		if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
-	    }
-
-	    for(int w1 = 0; w1 < length; w1++) {
-		for(int w2 = w1; w2 < length; w2++) {
-		    for(int w3 = w2+1; w3 < length; w3++) {
-			FeatureVector prodFV = FeatureVector.fromKeys((int[])in.readObject());
-			double prodProb = params.getScore(prodFV);
-			fvs_trips[w1][w2][w3] = prodFV;
-			probs_trips[w1][w2][w3] = prodProb;
-		    }
-		}
-		for(int w2 = w1; w2 >= 0; w2--) {
-		    for(int w3 = w2-1; w3 >= 0; w3--) {
-			FeatureVector prodFV = FeatureVector.fromKeys((int[])in.readObject());
-			double prodProb = params.getScore(prodFV);
-			fvs_trips[w1][w2][w3] = prodFV;
-			probs_trips[w1][w2][w3] = prodProb;
-		    }
-		}
-	    }
-	    last = in.readInt();
-	    if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
-
-	    for(int w1 = 0; w1 < length; w1++) {
-		for(int w2 = 0; w2 < length; w2++) {
-		    for(int wh = 0; wh < 2; wh++) {
-			if(w1 != w2) {
-			    FeatureVector prodFV = FeatureVector.fromKeys((int[])in.readObject());
-			    double prodProb = params.getScore(prodFV);
-			    fvs_sibs[w1][w2][wh] = prodFV;
-			    probs_sibs[w1][w2][wh] = prodProb;
-			}
-		    }
-		}
-	    }
-	    last = in.readInt();
-	    if(last != -3) { System.out.println("Error reading file."); System.exit(0); }
-	    
-			FeatureVector nfv = FeatureVector.fromKeys((int[])in.readObject());
-	    last = in.readInt();
-	    if(last != -4) { System.out.println("Error reading file."); System.exit(0); }
-
-	    DependencyInstance marshalledDI;
-	    marshalledDI = (DependencyInstance)in.readObject();
-	    marshalledDI.setFeatureVector(nfv);	
-	    last = in.readInt();
-	    if(last != -1) { System.out.println("Error reading file."); System.exit(0); }
-
-	    return marshalledDI;
-
-	} catch(ClassNotFoundException e) { 
-	    System.out.println("Error reading file."); System.exit(0); 
-	}	    
-
-	// this won't happen, but it takes care of compilation complaints
-	return null;
-		
-    }*/
 }
 
