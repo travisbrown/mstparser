@@ -3,6 +3,7 @@ package mstparser
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
@@ -108,7 +109,7 @@ class DependencyPipe(
     fv
   }
   
-  private def addExtendedFeatures(instance: DependencyInstance, fv: FeatureVector) {}
+  protected def addExtendedFeatures(instance: DependencyInstance, fv: FeatureVector) {}
 
   def createInstances(file: String, featFile: File) = {
     this.createAlphabet(file)
@@ -197,7 +198,7 @@ class DependencyPipe(
     println("Written: " + c.toString)
   }
 
-  private def writeExtendedFeatures(instance: DependencyInstance, out: ObjectOutputStream) {}
+  protected def writeExtendedFeatures(instance: DependencyInstance, out: ObjectOutputStream) {}
 
   def fillFeatureVectors(instance: DependencyInstance,
     fvs: Array[Array[Array[FeatureVector]]],
@@ -292,7 +293,7 @@ class DependencyPipe(
 
         if (in.readInt() != -3) { println("Error reading file."); sys.exit(0) }
       }
-    } catch { case e: ClassNotFoundException => println("Error reading file."); sys.exit(0) } 
+    } catch { case e: IOException => println("Error reading file."); sys.exit(0) } 
   } 
 
   private def addCoreFeatures(instance: DependencyInstance, small: Int, large: Int, attR: Boolean, fv: FeatureVector) {

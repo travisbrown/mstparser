@@ -5,18 +5,15 @@ import mstparser.FeatureVector;
 import mstparser.Parameters;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
+//import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-//import java.util.*;
 
-public class DependencyPipe2O extends mstparser.DependencyPipe {
-
-    public DependencyPipe2O(mstparser.ParserOptions options) throws IOException {
-	super(options);
-    }
-
+public abstract class DependencyPipe2O extends mstparser.DependencyPipe {
+  public DependencyPipe2O(mstparser.ParserOptions options) throws IOException {
+    super(options);
+  }
 			
-    protected void addExtendedFeatures(DependencyInstance instance,
+    /*protected void addExtendedFeatures(DependencyInstance instance,
 				       FeatureVector fv) {
 	    
 	final int instanceLength = instance.length();
@@ -43,7 +40,7 @@ public class DependencyPipe2O extends mstparser.DependencyPipe {
 		}
 	    }
 	}
-    }
+    }*/
 
     public void fillFeatureVectors(DependencyInstance instance,
 				   FeatureVector[][][] fvs,
@@ -96,7 +93,7 @@ public class DependencyPipe2O extends mstparser.DependencyPipe {
     }
 
 
-    private final void addSiblingFeatures(DependencyInstance instance,
+    protected final void addSiblingFeatures(DependencyInstance instance,
 					  int ch1, int ch2,
 					  boolean isST,
 					  FeatureVector fv) {
@@ -142,33 +139,15 @@ public class DependencyPipe2O extends mstparser.DependencyPipe {
 				
     }
 
-
-    private final void addTripFeatures(DependencyInstance instance,
+    protected abstract void addTripFeatures(DependencyInstance instance,
 				       int par,
 				       int ch1, int ch2,
-				       FeatureVector fv) {
-
-	String[] pos = instance.postags();
-		
-	// ch1 is always the closest to par
-	String dir = par > ch2 ? "RA" : "LA";
-		
-	String par_pos = pos[par];
-	String ch1_pos = ch1 == par ? "STPOS" : pos[ch1];
-	String ch2_pos = pos[ch2];
-
-	String pTrip = par_pos+"_"+ch1_pos+"_"+ch2_pos;
-	add("POS_TRIP="+pTrip+"_"+dir,1.0,fv);
-	add("APOS_TRIP="+pTrip,1.0,fv);
-		
-    }
-	
-
+				       FeatureVector fv);
 
     /**
      * Write out the second order features.
      *
-     **/
+     **
     protected void writeExtendedFeatures (DependencyInstance instance, ObjectOutputStream out) 
 	throws IOException {
 
@@ -209,7 +188,7 @@ public class DependencyPipe2O extends mstparser.DependencyPipe {
     }
 
 
-    public DependencyInstance readInstance(ObjectInputStream in,
+   /* public DependencyInstance readInstance(ObjectInputStream in,
 					   int length,
 					   FeatureVector[][][] fvs,
 					   double[][][] probs,
@@ -309,6 +288,6 @@ public class DependencyPipe2O extends mstparser.DependencyPipe {
 	// this won't happen, but it takes care of compilation complaints
 	return null;
 		
-    }		
+    }*/
 }
 
