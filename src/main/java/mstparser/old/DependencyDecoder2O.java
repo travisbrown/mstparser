@@ -32,8 +32,8 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 		for(int j = 0; j < par.length; j++) {
 		    int oP = par[i];
 		    par[i] = j;
-		    int[] sibs = getSibs(i,par);
-		    aSibs[i][j] = sibs[0]; bSibs[i][j] = sibs[1];
+		    Tuple2<Integer, Integer> sibs = getSibs(i,par);
+		    aSibs[i][j] = sibs._1(); bSibs[i][j] = sibs._2();
 		    par[i] = oP;
 		}
 	    }
@@ -69,7 +69,8 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 	}
     }
 	
-    private int[] getSibs(int ch, int[] par) {
+    protected abstract Tuple2<Integer, Integer> getSibs(int ch, int[] par);
+    /*{
 	int aSib = par[ch];
 	if(par[ch] > ch)
 	    for(int i = ch+1; i < par[ch]; i++) {
@@ -97,7 +98,7 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 		}
 	    }
 	return new int[]{aSib,bSib};
-    }
+    }*/
 		
     // same as decode, except return K best
     public Tuple2<FeatureVector, String>[] decodeProjective(int len,
