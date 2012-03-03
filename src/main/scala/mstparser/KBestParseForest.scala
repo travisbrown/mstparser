@@ -2,8 +2,9 @@ package mstparser
 
 import scala.collection.mutable.PriorityQueue
 
-class KBestParseForest(private val end: Int, private val k: Int) {
-  private val chart = Array.ofDim[ParseForestItem](this.end + 1, this.end + 1, 2, 2, this.k)
+class KBestParseForest(private val end: Int, private val k: Int, private val compC: Int) {
+  def this(end: Int, k: Int) = this(end, k, 2)
+  private val chart = Array.ofDim[ParseForestItem](this.end + 1, this.end + 1, 2, compC, this.k)
 
   def getItems(s: Int, t: Int, d: Int, c: Int) =
     if (this.chart(s)(t)(d)(c)(0) != null) this.chart(s)(t)(d)(c) else null

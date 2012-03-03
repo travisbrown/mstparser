@@ -160,7 +160,7 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 	    static_types = getTypes(nt_probs,forms.length);
 	}
 
-	KBestParseForest pf = new KBestParseForest(forms.length-1,K);
+	KBestParseForest pf = new KBestParseForest(forms.length-1,K,3);
 		
 	for(int s = 0; s < forms.length; s++) {
 	    pf.add(s,-1,0,0.0,new FeatureVector());
