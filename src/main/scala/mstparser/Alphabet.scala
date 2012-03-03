@@ -8,7 +8,6 @@ class Alphabet(private val capacity: Int) extends Serializable {
 	private val map = new TObjectIntHashMap[String](capacity, 0.75F, -1)
   private var growing = true
 
-  /** Return -1 if entry isn't present. */
   def lookupIndex(entry: String) = this.map.get(entry) match {
     case -1 if this.growing =>
       this.map.put(entry, this.map.size)

@@ -16,11 +16,11 @@ class DependencyParser(
 	val params = new Parameters(this.pipe.dataAlphabet.size)
   val decoder = if (options.secondOrder) new DependencyDecoder2O(this.pipe) else new DependencyDecoder(this.pipe)
 
-  def train(instances: Seq[DependencyInstance], trainfile: String, train_forest: File) {
+  def train(instances: Seq[DependencyInstance], trainForest: File) {
     (0 until options.numIters).map { i =>
       print(" Iteration %d[".format(i))
       val start = System.currentTimeMillis()
-      this.trainingIter(instances, trainfile, train_forest, i + 1)
+      this.trainingIter(instances, trainForest, i + 1)
       val end = System.currentTimeMillis()
       println("|Time:%d]".format(end - start))
       end - start
@@ -29,8 +29,8 @@ class DependencyParser(
     this.params.averageParams(options.numIters * instances.size)
   }
 
-  private def trainingIter(instances: Seq[DependencyInstance], trainfile: String, train_forest: File, iter: Int) {
-    val in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(train_forest), 65536))
+  private def trainingIter(instances: Seq[DependencyInstance], trainForest: File, iter: Int) {
+    val in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(trainForest), 65536))
 
     instances.zipWithIndex.foreach { case (instance, i) =>
       if ((i + 1) % 500 == 0) print("%d,".format(i + 1))
@@ -114,8 +114,8 @@ class DependencyParser(
   def outputParses() = {
     val start = System.currentTimeMillis
 
-    this.pipe.initInputFile(options.testfile)
-    this.pipe.initOutputFile(options.outfile)
+    this.pipe.initInputFile(options.testFile.get)
+    this.pipe.initOutputFile(options.outFile)
 
     print("Processing Sentence: ")
 
@@ -186,7 +186,7 @@ object DependencyParser {
         if (options.secondOrder) new DependencyPipe2O(options)
         else new DependencyPipe(options)
 
-      val instances = pipe.createInstances(options.trainfile, options.trainforest)
+      val instances = pipe.createInstances(options.trainFile.get, options.trainForest.get)
 	  	pipe.closeAlphabets()
 
       val dp = new DependencyParser(pipe, options)
@@ -195,7 +195,7 @@ object DependencyParser {
       val numTypes = pipe.typeAlphabet.size
       println("Num Feats: %d.\tNum Edge Labels: %d".format(numFeats, numTypes))
 
-      dp.train(instances, options.trainfile, options.trainforest)
+      dp.train(instances, options.trainForest.get)
 
       print("Saving model...")
       dp.saveModel(options.modelName)
@@ -219,7 +219,7 @@ object DependencyParser {
 
     if (options.eval) {
       println("\nEVALUATION PERFORMANCE:")
-      DependencyEvaluator.evaluate(options.goldfile, options.outfile, options.format)
+      DependencyEvaluator.evaluate(options.goldFile.get, options.outFile, options.format)
     }
   }
 }
