@@ -14,7 +14,7 @@ class ParserOptions(private val args: Array[String]) {
   val trainFile = this.pairs.get("train-file")
   val testFile = this.pairs.get("test-file")
   val goldFile = this.pairs.get("gold-file")
-  val outFile = this.pairs.getOrElse("out-file", "out.txt")
+  val outFile = this.pairs.getOrElse("output-file", "out.txt")
   val modelName = this.pairs.getOrElse("model-name", "dep.model")
   val createForest = this.pairs.get("create-forest").map(_ == "true").getOrElse(true)
   val secondOrder = this.pairs.get("order").map(_ == "2").getOrElse(false)

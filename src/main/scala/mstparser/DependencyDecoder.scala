@@ -4,6 +4,8 @@ import gnu.trove.map.TIntIntMap
 import gnu.trove.map.hash.TIntIntHashMap
 import gnu.trove.procedure.TIntIntProcedure
 
+import com.google.common.collect.MinMaxPriorityQueue
+
 class DependencyDecoder(protected val pipe: DependencyPipe) extends Decoder
 
 trait Decoder extends old.DependencyDecoder {
@@ -117,6 +119,59 @@ trait Decoder extends old.DependencyDecoder {
     }
 	  pf.getBestParses
   }
+
+  /*private def doublePairReverseOrdering[A]: Ordering[(A, Double)] =
+    Ordering.Double.reverse.on(_._2)
+
+  protected getKChanges(par: Array[Int], scores: Array[Array[Double]], k: Int) {
+    val result = Array.fill(par.size)(-1)
+    val isChild = this.calcChilds(par)
+
+    val nPar = par.zipWithIndex.tail.map { case (p, i) =>
+      (0 until par.size).filter(j =>
+        i != j && p != j && !isChild(i)(j)
+      ).map(j => (j, scores(j)(i))).maxBy(_._2)._1
+    }
+
+    val queue = MinMaxPriorityQueue
+      .orderedBy(this.doublePairReverseOrdering[Int])
+      .maximumSize(k).create[(Int, Double)]
+
+    
+    
+
+
+	for(int i = 1; i < n_par.length; i++) {
+	    double max = Double.NEGATIVE_INFINITY;
+	    int wh = -1;
+	    for(int j = 0; j < n_par.length; j++) {
+		if(i == j || par[i] == j || isChild[i][j]) continue;
+		if(scoreMatrix[j][i] > max) { max = scoreMatrix[j][i]; wh = j; }
+	    }
+	    n_par[i] = wh;
+	    n_score[i] = max;
+	}
+
+	for(int k = 0; k < K; k++) {
+	    double max = Double.NEGATIVE_INFINITY;
+	    int wh = -1;
+	    int whI = -1;
+	    for(int i = 0; i < n_par.length; i++) {
+		if(n_par[i] == -1) continue;
+		double score = scoreMatrix[n_par[i]][i];
+		if(score > max) {
+		    max = score; whI = i; wh = n_par[i];
+		}
+	    }
+
+	    if(max == Double.NEGATIVE_INFINITY)
+		break;
+	    result[whI] = wh;
+	    n_par[whI] = -1;
+	}
+
+	  result
+  }*/
 
   /*def decodeNonProjective(
     len: Int,
