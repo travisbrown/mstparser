@@ -4,7 +4,7 @@ import java.io.IOException
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
-class DependencyPipe2O(options: ParserOptions) extends old.DependencyPipe2O(options) {
+class DependencyPipe2O(options: ParserOptions) extends DependencyPipe(options) {
   protected override def addExtendedFeatures(instance: DependencyInstance, fv: FeatureVector) {
     val heads = instance.heads.zipWithIndex
 
@@ -38,6 +38,41 @@ class DependencyPipe2O(options: ParserOptions) extends old.DependencyPipe2O(opti
 
     this.add("POS_TRIP=" + pTrip + "_" + dir, 1.0, fv)
     this.add("APOS_TRIP=" + pTrip, 1.0, fv)
+  }
+
+  protected def addSiblingFeatures(
+    instance: DependencyInstance,
+    ch1: Int, ch2: Int,
+    isT: Boolean,
+    fv: FeatureVector
+  ) { 
+    // ch1 is always the closest to par.
+    val dir = if (ch1 > ch2) "RA" else "LA"
+    val ch1Pos = if (isT) "STPOS" else instance.postags(ch1)
+    val ch2Pos = instance.postags(ch2)
+    val ch1Wrd = if (isT) "STWRD" else instance.forms(ch1)
+    val ch2Wrd = instance.forms(ch2)
+
+    this.add("CH_PAIR=" + ch1Pos + "_" + ch2Pos + "_" + dir, 1.0, fv)
+    this.add("CH_WPAIR=" + ch1Wrd + "_" + ch2Wrd + "_" + dir, 1.0, fv)
+    this.add("CH_WPAIRA=" + ch1Wrd + "_" + ch2Pos + "_" + dir, 1.0, fv)
+    this.add("CH_WPAIRB=" + ch1Pos + "_" + ch2Wrd + "_" + dir, 1.0, fv)
+    this.add("ACH_PAIR=" + ch1Pos + "_" + ch2Pos, 1.0, fv)
+    this.add("ACH_WPAIR=" + ch1Wrd + "_" + ch2Wrd, 1.0, fv)
+    this.add("ACH_WPAIRA=" + ch1Wrd + "_" + ch2Pos, 1.0, fv)
+    this.add("ACH_WPAIRB=" + ch1Pos + "_" + ch2Wrd, 1.0, fv)
+
+    val distBool = math.abs(ch1 - ch2) match {
+      case dist if dist <= 1 => "0"
+      case dist if dist <= 6 => (dist - 1).toString
+      case dist if dist <= 10 => "5"
+      case _ => "10"
+    }
+
+    this.add("SIB_PAIR_DIST=" + distBool + "_" + dir, 1.0, fv)
+    this.add("ASIB_PAIR_DIST=" + distBool, 1.0, fv)
+    this.add("CH_PAIR_DIST=" + ch1Pos + "_" + ch2Pos + "_" + distBool + "_" + dir, 1.0, fv)
+    this.add("ACH_PAIR_DIST=" + ch1Pos + "_" + ch2Pos + "_" + distBool, 1.0, fv)
   }
 
   protected override def writeExtendedFeatures(instance: DependencyInstance, out: ObjectOutputStream) {
@@ -124,6 +159,55 @@ class DependencyPipe2O(options: ParserOptions) extends old.DependencyPipe2O(opti
 
       if (in.readInt() != -3) { println("Error reading file."); sys.exit(0) }
     } catch { case e: IOException => println("Error reading file."); sys.exit(0) } 
-  } 
+  }
+
+  def fillFeatureVectors(
+    instance: DependencyInstance,
+    fvs: Array[Array[Array[FeatureVector]]],
+    probs: Array[Array[Array[Double]]],
+    fvsTr: Array[Array[Array[FeatureVector]]],
+    probsTr: Array[Array[Array[Double]]],
+    fvsSi: Array[Array[Array[FeatureVector]]],
+    probsSi: Array[Array[Array[Double]]],
+    fvsNt: Array[Array[Array[Array[FeatureVector]]]],
+    probsNt: Array[Array[Array[Array[Double]]]],
+    params: Parameters
+  ) {
+    this.fillFeatureVectors(instance, fvs, probs, fvsNt, probsNt, params)
+    val len = instance.length
+
+    (0 until len).foreach { w1 =>
+      for {
+        w2 <- w1 until len
+        w3 <- w2 + 1 until len
+      } {
+        val fv = new FeatureVector
+        this.addTripFeatures(instance, w1, w2, w3, fv)
+        fvsTr(w1)(w2)(w3) = fv
+        probsTr(w1)(w2)(w3) = params.getScore(fv)
+      }
+
+      for {
+        w2 <- w1 to 0 by -1
+        w3 <- w2 - 1 to 0 by -1
+      } {
+        val fv = new FeatureVector
+        this.addTripFeatures(instance, w1, w2, w3, fv)
+        fvsTr(w1)(w2)(w3) = fv
+        probsTr(w1)(w2)(w3) = params.getScore(fv)
+      }
+    }
+
+    for {
+      w1 <- 0 until len
+      w2 <- 0 until len if w1 != w2
+      wh <- 0 to 1
+    } {
+      val fv = new FeatureVector
+      this.addSiblingFeatures(instance, w1, w2, wh == 0, fv)
+      fvsSi(w1)(w2)(wh) = fv
+      probsSi(w1)(w2)(wh) = params.getScore(fv)
+    }
+  }
 }
 
