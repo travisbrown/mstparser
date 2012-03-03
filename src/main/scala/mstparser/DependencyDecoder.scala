@@ -68,7 +68,7 @@ trait Decoder extends old.DependencyDecoder {
                     finFv = fvsNt(s)(type1)(0)(1).cat(fvsNt(t)(type1)(0)(0).cat(finFv))
                     finProb += probsNt(s)(type1)(0)(1) + probsNt(t)(type1)(0)(0)
                   }
-                  pf.add(s, r, t, type1, 0, 1, finProb,finFv, b1(comp1), c1(comp2))
+                  pf.add(s, r, t, type1, 0, 1, finProb, finFv, b1(comp1), c1(comp2))
 
                   finProb = bc + probs(s)(t)(1)
                   finFv = fvs(s)(t)(1)
