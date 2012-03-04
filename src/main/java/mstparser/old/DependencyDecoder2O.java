@@ -4,6 +4,7 @@ import scala.Tuple2;
 
 public abstract class DependencyDecoder2O extends DependencyDecoder {
   protected abstract Tuple2<Integer, Integer> oldGetSibs(int ch, int[] par);
+  protected abstract Tuple2<int[][], int[][]> oldAllSibs(int[] par);
 
   protected Tuple2<int[], int[]> rearrangex(double[][][] probs,
 			   double[][][] probs_trips,
@@ -20,17 +21,10 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 	    int nPar = -1;
 	    int nType = -1;
 	    double max = Double.NEGATIVE_INFINITY;
-	    int[][] aSibs = new int[par.length][par.length];
-	    int[][] bSibs = new int[par.length][par.length];
-	    for(int i = 1; i < par.length; i++) {
-		for(int j = 0; j < par.length; j++) {
-		    int oP = par[i];
-		    par[i] = j;
-		    Tuple2<Integer, Integer> sibs = oldGetSibs(i,par);
-		    aSibs[i][j] = sibs._1(); bSibs[i][j] = sibs._2();
-		    par[i] = oP;
-		}
-	    }
+      Tuple2<int[][], int[][]> ss = this.oldAllSibs(par);
+      int[][] aSibs = ss._1();
+      int[][] bSibs = ss._2();
+
 	    for(int ch = 1; ch < par.length; ch++) {
 		// Calculate change of removing edge
 		int aSib = aSibs[ch][par[ch]]; int bSib = bSibs[ch][par[ch]];
@@ -40,7 +34,7 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 		    - (bSib != ch ? probs_trips[par[ch]][ch][bSib] + probs_sibs[ch][bSib][1] : 0.0)
 		    - (this.pipe().getLabeled() ? (nt_probs[ch][labs[ch]][lDir ? 1 : 0][0] + nt_probs[par[ch]][labs[ch]][lDir ? 1 : 0][1]) : 0.0)
 		    + (bSib != ch ? probs_trips[par[ch]][aSib][bSib] + probs_sibs[aSib][bSib][aSib == par[ch] ? 0 : 1] : 0.0);
-        System.err.println(change);
+        //System.err.println(change);
 		for(int pa = 0; pa < par.length; pa++) {
 		    if(ch == pa || pa == par[ch] || isChild[ch][pa]) continue;
 		    aSib = aSibs[ch][pa]; bSib = bSibs[ch][pa];
@@ -55,7 +49,7 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 		    }
 		}
 	    }
-      System.err.println();
+      //System.err.println();
 	    if(max <= 0.0) break;
 	    par[wh] = nPar;
 	    labs[wh] = nType;

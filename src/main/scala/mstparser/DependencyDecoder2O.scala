@@ -23,7 +23,16 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
     val parse = -1 +: os.map(_.split("\\|")(0).toInt)
     var labels = 0 +: (if (this.pipe.getLabeled) os.map(_.split(":")(1).toInt) else Array.fill(os.length)(0))
 
+    val (nParseP, nLabelsP) = this.rearrange(probs, probsTr, probsSi, probsNt, parse, labels)
     val (nParse, nLabels) = this.rearrangex(probs, probsTr, probsSi, probsNt, parse, labels)
+    if (!nParse.sameElements(nParseP)) {
+      println(nParse.zip(nParseP).mkString(" "))
+      println(nLabels.zip(nLabelsP).mkString(" "))
+      println()
+    } else {
+      println("Fine.")
+      println()
+    }
 
     instance.setHeads(nParse)
     instance.setDeprels(nLabels.map(this.pipe.getType(_)))
@@ -47,6 +56,17 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
   protected def oldGetSibs(ch: Int, par: Array[Int]) = {
     val (a, b) = this.getSibs(ch, par)
     (new java.lang.Integer(a), new java.lang.Integer(b))
+  }
+
+  private def allSibs(parse: Seq[Int]) =
+    IndexedSeq.tabulate(parse.size, parse.size) {
+      case (0, _) => (0, 0)
+      case (i, j) => this.getSibs(i, parse.updated(i, j))
+    }
+
+  protected def oldAllSibs(parse: Array[Int]) = {
+    val (as, bs) = this.allSibs(parse).map(_.unzip).unzip
+    (as.map(_.toArray).toArray, bs.map(_.toArray).toArray)
   }
 
   protected def rearrange(
@@ -74,10 +94,11 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
       var nP = -1
       var nL = -1
 
-      val sibs = IndexedSeq.tabulate(len, len) {
+      val sibs = this.allSibs(nParse)
+      /*IndexedSeq.tabulate(len, len) {
         case (0, _) => (0, 0)
         case (i, j) => this.getSibs(i, nParse.updated(i, j))
-      }
+      }*/
 
       nParse.zipWithIndex.tail.foreach { case (p, i) =>
         // Calculate change of removing edge.
@@ -98,7 +119,7 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
               if (bSib != i) probsTr(p)(aSib)(bSib) + probsSi(aSib)(bSib)(if (aSib == p) 0 else 1)
               else 0.0
             )
-        System.err.println(change0)
+        //System.err.println(change0)
 
         nParse.zipWithIndex.filter {
           case (_, j) => j != i && j != p && !isChild(i)(j)
@@ -126,7 +147,7 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
           }
         }
       }
-      System.err.println()
+      //System.err.println()
 
       if (max > 0.0) {
         nParse(wh) = nP
