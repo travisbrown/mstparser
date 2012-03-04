@@ -23,7 +23,7 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
     val parse = -1 +: os.map(_.split("\\|")(0).toInt)
     var labels = 0 +: (if (this.pipe.getLabeled) os.map(_.split(":")(1).toInt) else Array.fill(os.length)(0))
 
-    val (nParse, nLabels) = this.rearrange(probs, probsTr, probsSi, probsNt, parse, labels)
+    val (nParse, nLabels) = this.rearrangex(probs, probsTr, probsSi, probsNt, parse, labels)
 
     instance.setHeads(nParse)
     instance.setDeprels(nLabels.map(this.pipe.getType(_)))
@@ -49,7 +49,7 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
     (new java.lang.Integer(a), new java.lang.Integer(b))
   }
 
-  protected def rearrange2(
+  protected def rearrange(
     probs: Array[Array[Array[Double]]],
     probsTr: Array[Array[Array[Double]]],
     probsSi: Array[Array[Array[Double]]],
@@ -98,6 +98,7 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
               if (bSib != i) probsTr(p)(aSib)(bSib) + probsSi(aSib)(bSib)(if (aSib == p) 0 else 1)
               else 0.0
             )
+        System.err.println(change0)
 
         nParse.zipWithIndex.filter {
           case (_, j) => j != i && j != p && !isChild(i)(j)
@@ -106,7 +107,7 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
           val lDir = i < j
 
           val change1 = probs(if (lDir) i else j)(if (lDir) j else i)(if (lDir) 1 else 0)
-            + probsTr(j)(aSib)(i) - probsSi(aSib)(i)(if (aSib == j) 0 else 1)
+            + probsTr(j)(aSib)(i) + probsSi(aSib)(i)(if (aSib == j) 0 else 1)
             + (
                 if (bSib != i) probsTr(j)(i)(bSib) + probsSi(i)(bSib)(1)
                 else 0.0
@@ -125,6 +126,7 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
           }
         }
       }
+      System.err.println()
 
       if (max > 0.0) {
         nParse(wh) = nP

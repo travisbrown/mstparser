@@ -5,7 +5,7 @@ import scala.Tuple2;
 public abstract class DependencyDecoder2O extends DependencyDecoder {
   protected abstract Tuple2<Integer, Integer> oldGetSibs(int ch, int[] par);
 
-  protected Tuple2<int[], int[]> rearrange(double[][][] probs,
+  protected Tuple2<int[], int[]> rearrangex(double[][][] probs,
 			   double[][][] probs_trips,
 			   double[][][] probs_sibs, double[][][][] nt_probs, int[] par, int[] labs) {
 		
@@ -40,6 +40,7 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 		    - (bSib != ch ? probs_trips[par[ch]][ch][bSib] + probs_sibs[ch][bSib][1] : 0.0)
 		    - (this.pipe().getLabeled() ? (nt_probs[ch][labs[ch]][lDir ? 1 : 0][0] + nt_probs[par[ch]][labs[ch]][lDir ? 1 : 0][1]) : 0.0)
 		    + (bSib != ch ? probs_trips[par[ch]][aSib][bSib] + probs_sibs[aSib][bSib][aSib == par[ch] ? 0 : 1] : 0.0);
+        System.err.println(change);
 		for(int pa = 0; pa < par.length; pa++) {
 		    if(ch == pa || pa == par[ch] || isChild[ch][pa]) continue;
 		    aSib = aSibs[ch][pa]; bSib = bSibs[ch][pa];
@@ -54,6 +55,7 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 		    }
 		}
 	    }
+      System.err.println();
 	    if(max <= 0.0) break;
 	    par[wh] = nPar;
 	    labs[wh] = nType;
