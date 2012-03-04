@@ -102,21 +102,22 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
 
       nParse.zipWithIndex.tail.foreach { case (p, i) =>
         // Calculate change of removing edge.
-        val (aSib, bSib) = sibs(i)(p)
+        val (a, b) = sibs(i)(p)
         val lDir = i < p
 
-        val change0 = 0.0 - probs(if (lDir) i else p)(if (lDir) p else i)(if (lDir) 1 else 0)
-          - probsTr(p)(aSib)(i) - probsSi(aSib)(i)(if (aSib == p) 0 else 1)
-          - (
-              if (bSib != i) probsTr(p)(i)(bSib) + probsSi(i)(bSib)(1)
+        val change0 = probs(if (lDir) i else p)(if (lDir) p else i)(if (lDir) 1 else 0)
+          + probsTr(p)(a)(i)
+          + probsSi(a)(i)(if (a == p) 0 else 1)
+          + ( if (b != i)
+              probsTr(p)(i)(b)
+            + probsSi(i)(b)(1)
+            - probsTr(p)(a)(b)
+            - probsSi(a)(b)(if (a == p) 0 else 1)
               else 0.0
             )
-          - (
-              if (this.pipe.getLabeled) probsNt(i)(nLabels(i))(if (lDir) 1 else 0)(0) + probsNt(p)(nLabels(i))(if (lDir) 1 else 0)(1)
-              else 0.0
-            )
-          + (
-              if (bSib != i) probsTr(p)(aSib)(bSib) + probsSi(aSib)(bSib)(if (aSib == p) 0 else 1)
+          + ( if (this.pipe.getLabeled)
+              probsNt(i)(nLabels(i))(if (lDir) 1 else 0)(0)
+            + probsNt(p)(nLabels(i))(if (lDir) 1 else 0)(1)
               else 0.0
             )
         //System.err.println(change0)
@@ -124,26 +125,30 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
         nParse.zipWithIndex.filter {
           case (_, j) => j != i && j != p && !isChild(i)(j)
         }.foreach { case (_, j) =>
-          val (aSib, bSib) = sibs(i)(j)
+          val (a, b) = sibs(i)(j)
           val lDir = i < j
 
           val change1 = probs(if (lDir) i else j)(if (lDir) j else i)(if (lDir) 1 else 0)
-            + probsTr(j)(aSib)(i) + probsSi(aSib)(i)(if (aSib == j) 0 else 1)
-            + (
-                if (bSib != i) probsTr(j)(i)(bSib) + probsSi(i)(bSib)(1)
+            + probsTr(j)(a)(i)
+            + probsSi(a)(i)(if (a == j) 0 else 1)
+            + ( if (b != i)
+                probsTr(j)(i)(b)
+              + probsSi(i)(b)(1)
+              - probsTr(j)(a)(b)
+              - probsSi(a)(b)(if (a == j) 0 else 1)
                 else 0.0
               )
-            + staticTypes.map(ts => probsNt(i)(ts(j)(i))(if (lDir) 1 else 0)(0) + probsNt(j)(ts(j)(i))(if (lDir) 1 else 0)(1)).getOrElse(0.0)
-            - (
-                if (bSib != i) probsTr(j)(aSib)(bSib) + probsSi(aSib)(bSib)(if (aSib == j) 0 else 1)
-                else 0.0
-              )
+            + staticTypes.map(ts =>
+                probsNt(i)(ts(j)(i))(if (lDir) 1 else 0)(0)
+              + probsNt(j)(ts(j)(i))(if (lDir) 1 else 0)(1)
+            ).getOrElse(0.0)
 
-          if (max < change0 + change1) {
-            max = change0 + change1
+          if (max < change1 - change0) {
+            max = change1 - change0
             wh = i
             nP = j
             nL = staticTypes.map(_(j)(i)).getOrElse(0)
+            System.err.println("N: " + wh + " " + nP)
           }
         }
       }
@@ -155,7 +160,7 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
         isChild = this.calcChilds(nParse)
       }
     }
-
+    System.err.println()
     (nParse.toIndexedSeq, nLabels.toIndexedSeq)
   }
 
