@@ -123,55 +123,35 @@ trait Decoder extends old.DependencyDecoder {
   /*private def doublePairReverseOrdering[A]: Ordering[(A, Double)] =
     Ordering.Double.reverse.on(_._2)
 
-  protected getKChanges(par: Array[Int], scores: Array[Array[Double]], k: Int) {
-    val result = Array.fill(par.size)(-1)
-    val isChild = this.calcChilds(par)
-
-    val nPar = par.zipWithIndex.tail.map { case (p, i) =>
-      (0 until par.size).filter(j =>
-        i != j && p != j && !isChild(i)(j)
-      ).map(j => (j, scores(j)(i))).maxBy(_._2)._1
-    }
-
     val queue = MinMaxPriorityQueue
       .orderedBy(this.doublePairReverseOrdering[Int])
-      .maximumSize(k).create[(Int, Double)]
+      .maximumSize(k).create[(Int, Double)]*/
 
-    
-    
+  protected def getKChanges(parse: Array[Int], scores: Array[Array[Double]], k: Int) = {
+    val result = Array.fill(parse.size)(-1)
+    val isChild = this.calcChilds(parse)
 
+    val nParse = (-1 +: parse.zipWithIndex.tail.map { case (p, i) =>
+      val valid = (0 until parse.size).filter(j =>
+        i != j && p != j && !isChild(i)(j)
+      )
+      if (valid.isEmpty) -1 else valid.maxBy(j => scores(j)(i))
+    }).toBuffer
 
-	for(int i = 1; i < n_par.length; i++) {
-	    double max = Double.NEGATIVE_INFINITY;
-	    int wh = -1;
-	    for(int j = 0; j < n_par.length; j++) {
-		if(i == j || par[i] == j || isChild[i][j]) continue;
-		if(scoreMatrix[j][i] > max) { max = scoreMatrix[j][i]; wh = j; }
-	    }
-	    n_par[i] = wh;
-	    n_score[i] = max;
-	}
+    (0 until k).foreach { i =>
+      val pairs = nParse.zipWithIndex.filter(_._1 > -1)
+      if (!pairs.isEmpty) {
+        val (mp, mi) = pairs.maxBy { case (np, ni) =>
+          scores(np)(ni)
+        }
 
-	for(int k = 0; k < K; k++) {
-	    double max = Double.NEGATIVE_INFINITY;
-	    int wh = -1;
-	    int whI = -1;
-	    for(int i = 0; i < n_par.length; i++) {
-		if(n_par[i] == -1) continue;
-		double score = scoreMatrix[n_par[i]][i];
-		if(score > max) {
-		    max = score; whI = i; wh = n_par[i];
-		}
-	    }
+        result(mi) = mp
+        nParse(mi) = -1
+      }
+    }
 
-	    if(max == Double.NEGATIVE_INFINITY)
-		break;
-	    result[whI] = wh;
-	    n_par[whI] = -1;
-	}
-
-	  result
-  }*/
+    result
+  }
 
   /*def decodeNonProjective(
     len: Int,

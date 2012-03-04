@@ -127,7 +127,7 @@ public abstract class DependencyDecoder {
 	return d;
     }
 
-    protected int[] getKChanges(int[] par, double[][] scoreMatrix, int K) {
+    protected abstract int[] getKChanges(int[] par, double[][] scoreMatrix, int K); /*{
 	int[] result = new int[par.length];
 	int[] n_par = new int[par.length];
 	double[] n_score = new double[par.length];
@@ -169,7 +169,7 @@ public abstract class DependencyDecoder {
 	}
 
 	return result;
-    }
+    }*/
 
     protected static TIntIntHashMap chuLiuEdmonds(double[][] scoreMatrix, boolean[] curr_nodes, 
 						int[][] oldI, int[][] oldO, boolean print,
