@@ -13,7 +13,7 @@ import scala.Tuple2;
 public abstract class DependencyDecoder {
   public abstract mstparser.DependencyPipe pipe(); 
   protected abstract int[][] getTypes(double[][][][] nt_probs, int len);
-  protected abstract boolean[][] calcChilds(int[] par);
+  protected abstract boolean[][] oldCalcChilds(int[] par);
 
     // static type for each edge: run time O(n^3 + Tn^2) T is number of types
     public abstract Tuple2<FeatureVector, String>[] decodeProjective(int len,

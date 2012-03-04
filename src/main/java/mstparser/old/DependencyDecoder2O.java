@@ -3,16 +3,16 @@ package mstparser.old;
 import scala.Tuple2;
 
 public abstract class DependencyDecoder2O extends DependencyDecoder {
-  protected abstract Tuple2<Integer, Integer> getSibs(int ch, int[] par);
+  protected abstract Tuple2<Integer, Integer> oldGetSibs(int ch, int[] par);
 
-  protected void rearrange(double[][][] probs,
+  protected Tuple2<int[], int[]> rearrange(double[][][] probs,
 			   double[][][] probs_trips,
 			   double[][][] probs_sibs, double[][][][] nt_probs, int[] par, int[] labs) {
 		
 	int[][] static_types = null;
 	if (this.pipe().getLabeled()) static_types = getTypes(nt_probs,par.length);
 
-	boolean[][] isChild = calcChilds(par);
+	boolean[][] isChild = oldCalcChilds(par);
 	boolean[][] isCross = null;
 		
 	while (true) {
@@ -26,7 +26,7 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 		for(int j = 0; j < par.length; j++) {
 		    int oP = par[i];
 		    par[i] = j;
-		    Tuple2<Integer, Integer> sibs = getSibs(i,par);
+		    Tuple2<Integer, Integer> sibs = oldGetSibs(i,par);
 		    aSibs[i][j] = sibs._1(); bSibs[i][j] = sibs._2();
 		    par[i] = oP;
 		}
@@ -57,9 +57,10 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
 	    if(max <= 0.0) break;
 	    par[wh] = nPar;
 	    labs[wh] = nType;
-	    isChild = calcChilds(par);
+	    isChild = oldCalcChilds(par);
 	    //System.out.println(max + " " + wh + " " + nPar + " " + nType);
 	}
+  return new Tuple2<int[], int[]>(par, labs);
     }
 }
 

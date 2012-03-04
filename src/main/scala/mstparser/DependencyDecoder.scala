@@ -4,9 +4,10 @@ import gnu.trove.map.TIntIntMap
 import gnu.trove.map.hash.TIntIntHashMap
 import gnu.trove.procedure.TIntIntProcedure
 
+import scala.collection.mutable.Buffer
 import com.google.common.collect.MinMaxPriorityQueue
 
-class DependencyDecoder(protected val pipe: DependencyPipe) extends Decoder
+class DependencyDecoder(protected val pipe: DependencyPipe) extends /*old.DependencyDecoder with*/ Decoder
 
 trait Decoder extends old.DependencyDecoder {
   protected def getTypes(probsNt: Array[Array[Array[Array[Double]]]], len: Int) =
@@ -17,17 +18,19 @@ trait Decoder extends old.DependencyDecoder {
       }._2
 		}
 
-  protected def calcChilds(par: Array[Int]) = {
-    val isChild = Array.ofDim[Boolean](par.length, par.length)
+  protected def oldCalcChilds(parse: Array[Int]) = this.calcChilds(parse).map(_.toArray).toArray
 
-    par.zipWithIndex.drop(1).foreach { case (v, i) =>
+  protected def calcChilds(parse: Seq[Int]) = {
+    val isChild = IndexedSeq.fill(parse.size)(Buffer.fill(parse.size)(false))
+
+    parse.zipWithIndex.drop(1).foreach { case (v, i) =>
 	    var l = v
 	    while (l != -1) {
         isChild(l)(i) = true
-        l = par(l)
+        l = parse(l)
       }
     }
-    isChild
+    isChild.map(_.toIndexedSeq)
 	}
 
   // static type for each edge: run time O(n^3 + Tn^2) T is number of types

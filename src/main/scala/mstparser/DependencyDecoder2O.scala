@@ -20,29 +20,121 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
     val orig = this.decodeProjective(instance.length, fvs, probs, fvsTr, probsTr, fvsSi, probsSi, fvsNt, probsNt, 1)
 
     val os = orig(0)._2.split(" ")
-    val pars = -1 +: os.map(_.split("\\|")(0).toInt)
-    var labs = 0 +: (if (this.pipe.getLabeled) os.map(_.split(":")(1).toInt) else Array.fill(os.length)(0))
+    val parse = -1 +: os.map(_.split("\\|")(0).toInt)
+    var labels = 0 +: (if (this.pipe.getLabeled) os.map(_.split(":")(1).toInt) else Array.fill(os.length)(0))
 
-    this.rearrange(probs, probsTr, probsSi, probsNt, pars, labs)
+    val (nParse, nLabels) = this.rearrange(probs, probsTr, probsSi, probsNt, parse, labels)
 
-    instance.setHeads(pars)
-    instance.setDeprels(labs.map(this.pipe.getType(_)))
+    instance.setHeads(nParse)
+    instance.setDeprels(nLabels.map(this.pipe.getType(_)))
 
-    val parsString = pars.zip(labs).zipWithIndex.drop(1).map {
+    val parseString = nParse.zip(nLabels).zipWithIndex.drop(1).map {
       case ((p, l), i) => "%d|%d:%d".format(p, i, l)
     }.mkString(" ")
 
-    orig(0) = (this.pipe.createFeatureVector(instance), parsString)
+    orig(0) = (this.pipe.createFeatureVector(instance), parseString)
     orig
   }
 
-  protected def getSibs(ch: Int, par: Array[Int]) = (new java.lang.Integer((
+  private def getSibs(ch: Int, par: Seq[Int]): (Int, Int) = ((
     if (par(ch) > ch) ch + 1 until par(ch)
     else ch - 1 until par(ch) by -1
-  ).find(par(ch) == par(_)).getOrElse(par(ch))), new java.lang.Integer((
+  ).find(par(ch) == par(_)).getOrElse(par(ch)), (
     if (par(ch) < ch) ch + 1 until par.length
     else ch - 1 to 0 by -1
-  ).find(par(ch) == par(_)).getOrElse(ch)))
+  ).find(par(ch) == par(_)).getOrElse(ch))
+
+  protected def oldGetSibs(ch: Int, par: Array[Int]) = {
+    val (a, b) = this.getSibs(ch, par)
+    (new java.lang.Integer(a), new java.lang.Integer(b))
+  }
+
+  protected def rearrange2(
+    probs: Array[Array[Array[Double]]],
+    probsTr: Array[Array[Array[Double]]],
+    probsSi: Array[Array[Array[Double]]],
+    probsNt: Array[Array[Array[Array[Double]]]],
+    parse: IndexedSeq[Int],
+    labels: IndexedSeq[Int]
+  ) = {
+    val len = parse.size
+    val staticTypes = if (this.pipe.getLabeled) Some(this.getTypes(probsNt, len)) else None
+
+    var isChild = this.calcChilds(parse)
+
+    var max = Double.PositiveInfinity
+
+    val nParse = parse.toBuffer
+    val nLabels = labels.toBuffer
+
+    while (max > 0.0) {
+      max = Double.NegativeInfinity
+
+      var wh = -1
+      var nP = -1
+      var nL = -1
+
+      val sibs = IndexedSeq.tabulate(len, len) {
+        case (0, _) => (0, 0)
+        case (i, j) => this.getSibs(i, nParse.updated(i, j))
+      }
+
+      nParse.zipWithIndex.tail.foreach { case (p, i) =>
+        // Calculate change of removing edge.
+        val (aSib, bSib) = sibs(i)(p)
+        val lDir = i < p
+
+        val change0 = 0.0 - probs(if (lDir) i else p)(if (lDir) p else i)(if (lDir) 1 else 0)
+          - probsTr(p)(aSib)(i) - probsSi(aSib)(i)(if (aSib == p) 0 else 1)
+          - (
+              if (bSib != i) probsTr(p)(i)(bSib) + probsSi(i)(bSib)(1)
+              else 0.0
+            )
+          - (
+              if (this.pipe.getLabeled) probsNt(i)(nLabels(i))(if (lDir) 1 else 0)(0) + probsNt(p)(nLabels(i))(if (lDir) 1 else 0)(1)
+              else 0.0
+            )
+          + (
+              if (bSib != i) probsTr(p)(aSib)(bSib) + probsSi(aSib)(bSib)(if (aSib == p) 0 else 1)
+              else 0.0
+            )
+
+        nParse.zipWithIndex.filter {
+          case (_, j) => j != i && j != p && !isChild(i)(j)
+        }.foreach { case (_, j) =>
+          val (aSib, bSib) = sibs(i)(j)
+          val lDir = i < j
+
+          val change1 = probs(if (lDir) i else j)(if (lDir) j else i)(if (lDir) 1 else 0)
+            + probsTr(j)(aSib)(i) - probsSi(aSib)(i)(if (aSib == j) 0 else 1)
+            + (
+                if (bSib != i) probsTr(j)(i)(bSib) + probsSi(i)(bSib)(1)
+                else 0.0
+              )
+            + staticTypes.map(ts => probsNt(i)(ts(j)(i))(if (lDir) 1 else 0)(0) + probsNt(j)(ts(j)(i))(if (lDir) 1 else 0)(1)).getOrElse(0.0)
+            - (
+                if (bSib != i) probsTr(j)(aSib)(bSib) + probsSi(aSib)(bSib)(if (aSib == j) 0 else 1)
+                else 0.0
+              )
+
+          if (max < change0 + change1) {
+            max = change0 + change1
+            wh = i
+            nP = j
+            nL = staticTypes.map(_(j)(i)).getOrElse(0)
+          }
+        }
+      }
+
+      if (max > 0.0) {
+        nParse(wh) = nP
+        nLabels(wh) = nL
+        isChild = this.calcChilds(nParse)
+      }
+    }
+
+    (nParse.toIndexedSeq, nLabels.toIndexedSeq)
+  }
 
   def decodeProjective(
     len: Int,
@@ -56,7 +148,7 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
     probsNt: Array[Array[Array[Array[Double]]]],
     kBest: Int
   ) = {
-	  val staticTypes = if (this.pipe.getLabeled) Some(this.getTypes(probsNt, len)) else None
+    val staticTypes = if (this.pipe.getLabeled) Some(this.getTypes(probsNt, len)) else None
     val pf = new KBestParseForest(len - 1, kBest, 3)
 
     (0 until len).foreach { i =>
@@ -68,8 +160,8 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
       (0 until len - j).foreach { s =>
         val t = s + j
         val (type1, type2) = staticTypes.map(ts => (ts(s)(t), ts(t)(s))).getOrElse((0, 0))
-		
-		    // case when r == s
+    
+        // case when r == s
         val b1 = pf.getItems(s, s, 0, 0)
         val c1 = pf.getItems(s + 1, t, 1, 0)
 
@@ -93,7 +185,7 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
           }
         }
 
-		    // case when r == t
+        // case when r == t
         val b2 = pf.getItems(s, t - 1, 0, 0)
         val c2 = pf.getItems(t, t, 1, 0)
 
@@ -135,9 +227,9 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
         }
 
         (s + 1 until t).foreach { r =>
-		      // s -> (r,t)
-		      val b1 = pf.getItems(s, r, 0, 1)
-		      val c1 = pf.getItems(r, t, 0, 2)
+          // s -> (r,t)
+          val b1 = pf.getItems(s, r, 0, 1)
+          val c1 = pf.getItems(r, t, 0, 2)
 
           if (b1 != null && c1 != null) {
             pf.getKBestPairs(b1, c1).takeWhile {
@@ -157,9 +249,9 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
             }
           }
 
-		      // s -> (r,t)
-		      val b2 = pf.getItems(s, r, 1, 2)
-		      val c2 = pf.getItems(r, t, 1, 1)
+          // s -> (r,t)
+          val b2 = pf.getItems(s, r, 1, 2)
+          val c2 = pf.getItems(r, t, 1, 1)
 
           if (b2 != null && c2 != null) {
             pf.getKBestPairs(b2, c2).takeWhile {
@@ -213,7 +305,7 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
         }
       }
     }
-	  pf.getBestParses
+    pf.getBestParses
   }
 }
 
