@@ -7,9 +7,7 @@ import gnu.trove.procedure.TIntIntProcedure
 import scala.collection.mutable.Buffer
 import com.google.common.collect.MinMaxPriorityQueue
 
-class DependencyDecoder(protected val pipe: DependencyPipe) extends /*old.DependencyDecoder with*/ Decoder
-
-trait Decoder extends old.DependencyDecoder {
+class DependencyDecoder(protected val pipe: DependencyPipe) extends old.DependencyDecoder {
   protected def getTypes(probsNt: Array[Array[Array[Array[Double]]]], len: Int) =
     Array.tabulate(len, len) {
       case (i, j) if i == j => 0
@@ -17,8 +15,6 @@ trait Decoder extends old.DependencyDecoder {
         case ((pi, pj), k) => if (i < j) pi(0)(1) + pj(0)(0) else pi(1)(1) + pj(1)(0)
       }._2
 		}
-
-  protected def oldCalcChilds(parse: Array[Int]) = this.calcChilds(parse).map(_.toArray).toArray
 
   protected def calcChilds(parse: Seq[Int]) = {
     val isChild = IndexedSeq.fill(parse.size)(Buffer.fill(parse.size)(false))
@@ -122,13 +118,6 @@ trait Decoder extends old.DependencyDecoder {
     }
 	  pf.getBestParses
   }
-
-  /*private def doublePairReverseOrdering[A]: Ordering[(A, Double)] =
-    Ordering.Double.reverse.on(_._2)
-
-    val queue = MinMaxPriorityQueue
-      .orderedBy(this.doublePairReverseOrdering[Int])
-      .maximumSize(k).create[(Int, Double)]*/
 
   protected def getKChanges(parse: Array[Int], scores: Array[Array[Double]], k: Int) = {
     val result = Array.fill(parse.size)(-1)

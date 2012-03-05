@@ -4,7 +4,7 @@ import gnu.trove.map.TIntIntMap
 import gnu.trove.map.hash.TIntIntHashMap
 import gnu.trove.procedure.TIntIntProcedure
 
-class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.DependencyDecoder2O with Decoder {
+class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) {
   def decodeNonProjective(
     instance: DependencyInstance,
     fvs: Array[Array[Array[FeatureVector]]],
@@ -43,17 +43,6 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
     if (par(ch) < ch) ch + 1 until par.length
     else ch - 1 to 0 by -1
   ).find(par(ch) == par(_)).getOrElse(ch))
-
-  private def allSibs(parse: Seq[Int]) =
-    IndexedSeq.tabulate(parse.size, parse.size) {
-      case (0, _) => (0, 0)
-      case (i, j) => this.getSibs(i, parse.updated(i, j))
-    }
-
-  protected def oldAllSibs(parse: Array[Int]) = {
-    val (as, bs) = this.allSibs(parse).map(_.unzip).unzip
-    (as.map(_.toArray).toArray, bs.map(_.toArray).toArray)
-  }
 
   protected def rearrange(
     probs: Array[Array[Array[Double]]],
