@@ -64,6 +64,15 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
     (as.map(_.toArray).toArray, bs.map(_.toArray).toArray)
   }
 
+  /*protected def score(
+    probs: Array[Array[Array[Double]]],
+    probsTr: Array[Array[Array[Double]]],
+    probsSi: Array[Array[Array[Double]]],
+    probsNt: Array[Array[Array[Array[Double]]]],
+    parse: IndexedSeq[Int],
+    labels: IndexedSeq[Int]
+  ) = {*/
+
   protected def rearrange(
     probs: Array[Array[Array[Double]]],
     probsTr: Array[Array[Array[Double]]],
@@ -102,7 +111,8 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
         val (a, b) = sibs(i)(p)
         val lDir = i < p
 
-        val change0 = probs(if (lDir) i else p)(if (lDir) p else i)(if (lDir) 1 else 0)
+        val change0 =
+            probs(if (lDir) i else p)(if (lDir) p else i)(if (lDir) 1 else 0)
           + probsTr(p)(a)(i)
           + probsSi(a)(i)(if (a == p) 0 else 1)
           + ( if (b != i)
@@ -125,7 +135,8 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
           val (a, b) = sibs(i)(j)
           val lDir = i < j
 
-          val change1 = probs(if (lDir) i else j)(if (lDir) j else i)(if (lDir) 1 else 0)
+          val change1 =
+              probs(if (lDir) i else j)(if (lDir) j else i)(if (lDir) 1 else 0)
             + probsTr(j)(a)(i)
             + probsSi(a)(i)(if (a == j) 0 else 1)
             + ( if (b != i)
