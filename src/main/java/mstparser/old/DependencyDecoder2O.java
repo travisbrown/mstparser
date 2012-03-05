@@ -3,7 +3,6 @@ package mstparser.old;
 import scala.Tuple2;
 
 public abstract class DependencyDecoder2O extends DependencyDecoder {
-  protected abstract Tuple2<Integer, Integer> oldGetSibs(int ch, int[] par);
   protected abstract Tuple2<int[][], int[][]> oldAllSibs(int[] par);
 
   protected Tuple2<int[], int[]> rearrangex(double[][][] probs,

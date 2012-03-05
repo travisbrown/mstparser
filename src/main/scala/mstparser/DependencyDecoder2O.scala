@@ -53,11 +53,6 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
     else ch - 1 to 0 by -1
   ).find(par(ch) == par(_)).getOrElse(ch))
 
-  protected def oldGetSibs(ch: Int, par: Array[Int]) = {
-    val (a, b) = this.getSibs(ch, par)
-    (new java.lang.Integer(a), new java.lang.Integer(b))
-  }
-
   private def allSibs(parse: Seq[Int]) =
     IndexedSeq.tabulate(parse.size, parse.size) {
       case (0, _) => (0, 0)
@@ -100,7 +95,9 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
         case (i, j) => this.getSibs(i, nParse.updated(i, j))
       }*/
 
-      nParse.zipWithIndex.tail.foreach { case (p, i) =>
+      val pairs = nParse.zipWithIndex.toIndexedSeq
+
+      pairs.tail.foreach { case (p, i) =>
         // Calculate change of removing edge.
         val (a, b) = sibs(i)(p)
         val lDir = i < p
@@ -122,7 +119,7 @@ class DependencyDecoder2O(protected val pipe: DependencyPipe) extends old.Depend
             )
         //System.err.println(change0)
 
-        nParse.zipWithIndex.filter {
+        pairs.filter {
           case (_, j) => j != i && j != p && !isChild(i)(j)
         }.foreach { case (_, j) =>
           val (a, b) = sibs(i)(j)
