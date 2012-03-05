@@ -16,7 +16,7 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
     int len = parse.length;
     int[][] staticTypes = this.pipe().getLabeled() ? this.getTypes(probsNt, len) : null;
 
-    boolean[][] isChild = this.oldCalcChilds(parse);
+    //boolean[][] isChild = this.oldCalcChilds(parse);
     
     double max = Double.POSITIVE_INFINITY;
 
@@ -62,7 +62,7 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
         //System.err.println(change);
 
         for (int j = 0; j < nParse.length; j++) {
-          if (i == j || j == p || isChild[i][j]) continue;
+          if (i == j || j == p || this.oldCalcChilds(nParse)[i][j]) continue;
 
           a = aSibs[i][j]; b = bSibs[i][j];
           lDir = i < j;
@@ -76,12 +76,12 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
               + probsSi[i][b][1]
               - probsTr[j][a][b]
               - probsSi[a][b][a == j ? 0 : 1]
-              : 0.0)
-
+              : 0.0
+              )
             + (this.pipe().getLabeled() ? 
                 probsNt[i][staticTypes[j][i]][lDir ? 1 : 0][0]
               + probsNt[j][staticTypes[j][i]][lDir ? 1 : 0][1]
-            : 0.0);
+              : 0.0);
 
           if (max < change1 - change0) {
             max = change1 - change0;
@@ -97,7 +97,7 @@ public abstract class DependencyDecoder2O extends DependencyDecoder {
       if (max > 0.0) {
         nParse[wh] = nP;
         nLabels[wh] = nL;
-        isChild = this.oldCalcChilds(nParse);
+        //isChild = this.oldCalcChilds(nParse);
       }
       //System.out.println(max + " " + wh + " " + nPar + " " + nType);
     }
