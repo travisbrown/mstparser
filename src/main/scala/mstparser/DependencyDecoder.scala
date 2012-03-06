@@ -157,12 +157,6 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
 
     val oldI = Array.tabulate(len, len)((i, _) => i)
     val oldO = Array.tabulate(len, len)((_, j) => j)
-    val nodes = Array.fill(len)(true)
-    val reps = Array.tabulate(len) { i =>
-      val rep = new TIntIntHashMap
-      rep.put(i, 0)
-      rep
-    }
 
     val scoreMatrix = Array.tabulate(len, len) {
       case (i, j) if i < j =>
@@ -176,20 +170,13 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
         ).getOrElse(0.0)
     }
 
-    val scoreMatrixOrig = scoreMatrix.map(_.clone)
-
     val parse = Array.ofDim[Int](len)
-    old.DependencyDecoder.chuLiuEdmonds(
-      scoreMatrix, nodes, oldI, oldO, false, new TIntIntHashMap, reps
-    ).forEachEntry(new TIntIntProcedure {
-      def execute(i: Int, v: Int) = {
-        parse(i) = v
-        true
-      }
-    })
+    this.chuLiuEdmonds(scoreMatrix, oldI, oldO).foreach {
+      case (i, v) => parse(i) = v
+    }
 
     val parFin = parse +: this.getKChanges(
-      parse, scoreMatrixOrig, math.min(kBest, parse.length)
+      parse, scoreMatrix, math.min(kBest, parse.length)
     ).zipWithIndex.filter(_._1 > -1).map {
       case (p, i) => parse.updated(i, p)
     }
@@ -219,197 +206,139 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
     fin.zip(result.map(_.trim))
   }
 
-  private def chuLiuEdmonds(
-    scoreMatrix: Array[Array[Double]],
-    nodes: Array[Boolean],
+  def chuLiuEdmonds(
+    scores: Array[Array[Double]],
     oldI: Array[Array[Int]],
-    oldO: Array[Array[Int]],
-    print: Boolean,
-    edges: Map[Int, Int],
-    reps: Array[TIntIntHashMap]
+    oldO: Array[Array[Int]]
   ) = {
-    // Need to construct for each node list of nodes they represent (here only!)
-    val len = nodes.size
-  
-    val ns = nodes.zipWithIndex
-    val nis = ns.filter(_._1).map(_._2)
+    def cLE(
+      scores: Array[Array[Double]],
+      oldI: Array[Array[Int]],
+      oldO: Array[Array[Int]],
+      nodes: Set[Int],
+      edges: Map[Int, Int],
+      reps: IndexedSeq[Map[Int, Int]],
+      print: Boolean
+    ): Map[Int, Int] = {
+      // Need to construct for each node list of nodes they represent (here only!)
+      val len = scores.size
+ 
+      val is = (0 until len)
+      val as = is.filter(nodes)
 
-    val parse = -1 +: ns.tail.map {
-      case (false, _) => 0
-      case (_, i)     => nis.filter(_ != i).maxBy(scoreMatrix(_)(i))
-    }
+      val parse = is.map {
+        case 0 => -1
+        case i if !nodes(i) => 0
+        case i => as.filter(_ != i).maxBy(scores(_)(i))
+      }
 
-    if (print) System.err.println("After init" + 
-      parse.zipWithIndex.filter(p => nodes(p._2)).map {
-        case (p, i) => p + "|" + i
-      }.mkString(" ")
-    )
+      if (print) System.err.println("After init" + 
+        parse.zipWithIndex.filter(pi => nodes(pi._2)).map {
+          case (p, i) => p + "|" + i
+        }.mkString(" ")
+      )
 
-  val cycles = Buffer.empty[TIntIntHashMap]
-  val added = collection.mutable.Set.empty[Int]
+      val cycles = Buffer.empty[Map[Int, Int]]
+      val added = collection.mutable.Set.empty[Int]
 
-  var i = 0
-  while (i < len && cycles.isEmpty) {
-    if (!added(i) && nodes(i)) {
-      added += i
-      val cycle = new TIntIntHashMap
-      cycle.put(i, 0)
+      var i = 0
+      while (i < len && cycles.isEmpty) {
+        if (!added(i) && nodes(i)) {
+          added += i
+          val cycle = collection.mutable.Map(i -> 0)
 
-      var j = i
-      var found = false
-      while (!found) {
-        if (parse(j) == -1) {
-          added += j
-          found = true
-        } else {
-          if (cycle.contains(parse(j))) {
-            cycle.clear()
-            cycle.put(parse(j), parse(parse(j)))
-            added += parse(j)
+          var j = i
+          var found = false
+          while (!found) {
+            if (parse(j) == -1) {
+              added += j
+              found = true
+            } else {
+              if (cycle.contains(parse(j))) {
+                cycle.clear()
+                val k = parse(j)
+                cycle(k) = parse(k)
+                added += k
 
-            var k = parse(parse(j))
-            while (k != parse(j)) {
-              cycle.put(k, parse(k))
-              added += k
-              k = parse(k)
+                var l = parse(k)
+                while (l != k) {
+                  cycle(l) = parse(l)
+                  added += l
+                  l = parse(l)
+                }
+
+                cycles += cycle.toMap
+                found = true
+              } else {
+                cycle(j) = 0
+                j = parse(j)
+                if (added(j) && !cycle.contains(j))
+                  found = true
+                else
+                  added(j) = true
+              }
             }
-
-            cycles += cycle
-            found = true
-          } else {
-            cycle.put(j, 0)
-            j = parse(j)
-            if (added(j) && !cycle.contains(j)) found = true
-            added(j) = true
           }
         }
+        i += 1
       }
-    }
-  }
-  }
-  /*
-  if (cycles.isEmpty) {
-    parse.zipWithIndex.filter(p => nodes(p._1)).foreach {
-      case (-1, _) => edges.put(0, -1)
-      case (p, i)  => edges.put(oldO(p)(i), oldI(p)(i))
-    }
-    edges
-  } else {
-    val biggest =  
-  int max_cyc = 0;
-  int wh_cyc = 0;
-  for(int i = 0; i < cycles.size(); i++) {
-      TIntIntHashMap cycle = (TIntIntHashMap)cycles.get(i);
-      if(cycle.size() > max_cyc) { max_cyc = cycle.size(); wh_cyc = i; }
-  }
-    
-  TIntIntHashMap cycle = (TIntIntHashMap)cycles.get(wh_cyc);
-  int[] cyc_nodes = cycle.keys();
-  int rep = cyc_nodes[0];
-    
-  if(print) {
-      System.out.println("Found Cycle");
-      for(int i = 0; i < cyc_nodes.length; i++)
-    System.out.print(cyc_nodes[i] + " ");
-      System.out.println();
-  }
+      
+      if (cycles.isEmpty) edges ++
+        parse.zipWithIndex.filter(pi => nodes(pi._1)).map {
+          case (-1, _) => 0 -> -1
+          case (p, i)  => oldO(p)(i) -> oldI(p)(i)
+        }.toMap
+      else {
+        val biggest = cycles.maxBy(_.size)
+        val cNodes = biggest.keys.toIndexedSeq.sorted
 
-  double cyc_weight = 0.0;
-  for(int j = 0; j < cyc_nodes.length; j++) {
-      cyc_weight += scoreMatrix[par[cyc_nodes[j]]][cyc_nodes[j]];
-  }
-    
-    
-  for(int i = 0; i < len; i++) {
-      
-      if(!curr_nodes[i] || cycle.contains(i)) continue;
-      
-      
-      double max1 = Double.NEGATIVE_INFINITY;
-      int wh1 = -1;
-      double max2 = Double.NEGATIVE_INFINITY;
-      int wh2 = -1;
-      
-      for(int j = 0; j < cyc_nodes.length; j++) {
-    int j1 = cyc_nodes[j];
-        
-    if(scoreMatrix[j1][i] > max1) {
-        max1 = scoreMatrix[j1][i];
-        wh1 = j1;//oldI[j1][i];
-    }
-        
-    // cycle weight + new edge - removal of old
-    double scr = cyc_weight + scoreMatrix[i][j1] - scoreMatrix[par[j1]][j1];
-    if(scr > max2) {
-        max2 = scr;
-        wh2 = j1;//oldO[i][j1];
-    }
-      }
-      
-      scoreMatrix[rep][i] = max1;
-      oldI[rep][i] = oldI[wh1][i];//wh1;
-      oldO[rep][i] = oldO[wh1][i];//oldO[wh1][i];
-      scoreMatrix[i][rep] = max2;
-      oldO[i][rep] = oldO[i][wh2];//wh2;
-      oldI[i][rep] = oldI[i][wh2];//oldI[i][wh2];
-      
-  }
-    
-  TIntIntHashMap[] rep_cons = new TIntIntHashMap[cyc_nodes.length];
-  for(int i = 0; i < cyc_nodes.length; i++) {
-      rep_cons[i] = new TIntIntHashMap();
-      int[] keys = reps[cyc_nodes[i]].keys();
-      Arrays.sort(keys);
-      if(print) System.out.print(cyc_nodes[i] + ": ");
-      for(int j = 0; j < keys.length; j++) {
-    rep_cons[i].put(keys[j],0);
-    if(print) System.out.print(keys[j] + " ");
-      }
-      if(print) System.out.println();
-  }
-    
-  // don't consider not representative nodes
-  // these nodes have been folded
-  for(int i = 1; i < cyc_nodes.length; i++) {
-      curr_nodes[cyc_nodes[i]] = false;
-      int[] keys = reps[cyc_nodes[i]].keys();
-      for(int j = 0; j < keys.length; j++)
-    reps[rep].put(keys[j],0);
-  }
-    
-  this.chuLiuEdmonds(scoreMatrix, nodes, oldI, oldO, print, edges, reps)
-    
-  // check each node in cycle, if one of its representatives
-  // is a key in the final_edges, it is the one.
-  int wh = -1;
-  boolean found = false;
-  for(int i = 0; i < rep_cons.length && !found; i++) {
-      int[] keys = rep_cons[i].keys();
-      for(int j = 0; j < keys.length && !found; j++) {
-    if(final_edges.contains(keys[j])) {
-        wh = cyc_nodes[i];
-        found = true;
-    }
-      }
-  }
-    
-  int l = par[wh];
-  while(l != wh) {
-      int ch = oldO[par[l]][l];
-      int pr = oldI[par[l]][l];
-      final_edges.put(ch,pr);
-      l = par[l];
-  }
-    
-  if(print) {
-      int[] keys = final_edges.keys();
-      Arrays.sort(keys);
-      for(int i = 0; i < keys.length; i++)
-    System.out.print(final_edges.get(keys[i])+"|"+keys[i]+" ");
-      System.out.println();
-  }
+        if (print) System.err.println("Found cycle:\n" + cNodes.mkString(" "))
 
-  return final_edges;
-  }*/
+        val weight = cNodes.map(i => scores(parse(i))(i)).sum
+
+        as.filter(biggest.contains).foreach { i =>
+          val (ai, aw) = cNodes.map(j => j -> scores(j)(i)).maxBy(_._2)
+          val (bi, bw) = cNodes.map(j => j -> (weight + scores(i)(j) - scores(parse(j))(j))).maxBy(_._2)
+
+          scores(cNodes.head)(i) = aw
+          oldI(cNodes.head)(i) = oldI(ai)(i)
+          oldO(cNodes.head)(i) = oldO(ai)(i)
+          
+          scores(i)(cNodes.head) = bw
+          oldI(i)(cNodes.head) = oldI(i)(bi)
+          oldO(i)(cNodes.head) = oldO(i)(bi)
+        }
+
+        val repCons = cNodes.map(i => reps(i).keySet)
+        val nRep = cNodes.tail.map(i => reps(i).mapValues(_ => 0)).foldLeft(reps(cNodes.head))(_ ++ _)
+ 
+        val nEdges = cLE(
+          scores, oldI, oldO,
+          nodes -- cNodes.tail,
+          edges,
+          reps.updated(cNodes.head, nRep),
+          print
+        )
+
+        // TODO: Could be more efficient, since we don't need the whole
+        // intersection.
+        val n = cNodes.zip(repCons).find(!_._2.intersect(nEdges.keySet).isEmpty).get._1
+
+        nEdges ++ Stream.iterate(parse(n))(parse(_)).takeWhile(_ != n).map(i =>
+          oldO(parse(i))(i) -> oldI(parse(i))(i)
+        ).toMap
+      }
+    }
+
+    val len = oldI.size
+
+    cLE(
+      scores.map(_.clone), oldI, oldO,
+      (0 until len).toSet,
+      Map.empty[Int, Int],
+      IndexedSeq.tabulate(len)(i => Map(i -> 0)),
+      true
+    )
+  }
 }
 
