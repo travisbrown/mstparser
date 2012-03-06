@@ -1,5 +1,6 @@
 package mstparser.old;
 
+import mstparser.DependencyPipe;
 import mstparser.FeatureVector;
 import mstparser.KBestParseForest;
 import mstparser.ParseForestItem;
@@ -11,118 +12,7 @@ import gnu.trove.map.hash.TIntIntHashMap;
 import scala.Tuple2;
 
 public abstract class DependencyDecoder {
-  public abstract mstparser.DependencyPipe pipe(); 
-  protected abstract int[] getKChanges(int[] par, double[][] scoreMatrix, int K);
-  protected abstract int[][] getTypes(double[][][][] nt_probs, int len);
-
-  public Tuple2<FeatureVector, String>[] decodeNonProjective(
-    int len,
-    FeatureVector[][][] fvs,
-    double[][][] probs,
-    FeatureVector[][][][] nt_fvs,
-    double[][][][] nt_probs,
-    int K) {
-
-  int[][] oldI = new int[len][len];
-  int[][] oldO = new int[len][len];
-  double[][] scoreMatrix = new double[len][len];
-  double[][] orig_scoreMatrix = new double[len][len];
-  boolean[] curr_nodes = new boolean[len];
-  TIntIntHashMap[] reps = new TIntIntHashMap[len];
-
-  int[][] static_types = null;
-  if(this.pipe().getLabeled()) {
-      static_types = getTypes(nt_probs,len);
-  }
-
-  for(int i = 0; i < len; i++) {
-      curr_nodes[i] = true;
-      reps[i] = new TIntIntHashMap();
-      reps[i].put(i,0);
-      for(int j = 0; j < len; j++) {
-    // score of edge (i,j) i --> j
-    scoreMatrix[i][j] = probs[i < j ? i : j][i < j ? j : i][i < j ? 0 : 1]
-        + (this.pipe().getLabeled() ? nt_probs[i][static_types[i][j]][i < j ? 0 : 1][1]
-           + nt_probs[j][static_types[i][j]][i < j ? 0 : 1][0]
-           : 0.0);
-    orig_scoreMatrix[i][j] = probs[i < j ? i : j][i < j ? j : i][i < j ? 0 : 1]
-        + (this.pipe().getLabeled() ? nt_probs[i][static_types[i][j]][i < j ? 0 : 1][1]
-           + nt_probs[j][static_types[i][j]][i < j ? 0 : 1][0]
-           : 0.0);
-    oldI[i][j] = i;
-    oldO[i][j] = j;
-    if(i == j || j == 0) continue; // no self loops of i --> 0
-      }
-  }
-
-  TIntIntHashMap final_edges = chuLiuEdmonds(scoreMatrix,curr_nodes,oldI,oldO,false,new TIntIntHashMap(),reps);
-  int[] par = new int[len];
-  int[] ns = final_edges.keys();
-  for(int i = 0; i < ns.length; i++) {
-      int ch = ns[i]; int pr = final_edges.get(ns[i]);
-      par[ch] = pr;
-  }
-
-  int[] n_par = getKChanges(par,orig_scoreMatrix,Math.min(K,par.length));
-  int new_k = 1;
-  for(int i = 0; i < n_par.length; i++)
-      if(n_par[i] > -1) new_k++;
-
-  // Create Feature Vectors;
-  int[][] fin_par = new int[new_k][len];
-  FeatureVector[][] fin_fv = new FeatureVector[new_k][len];
-  fin_par[0] = par;
-  int c = 1;
-  for(int i = 0; i < n_par.length; i++) {
-      if(n_par[i] > -1) {
-    int[] t_par = new int[par.length];
-    for(int j = 0; j < t_par.length; j++)
-        t_par[j] = par[j];
-    t_par[i] = n_par[i];
-    fin_par[c] = t_par;
-    c++;
-      }
-  }
-  for(int k = 0; k < fin_par.length; k++) {
-      for(int i = 0; i < fin_par[k].length; i++) {
-    int ch = i; int pr = fin_par[k][i];
-    if(pr != -1) {
-        fin_fv[k][ch] = fvs[ch < pr ? ch : pr][ch < pr ? pr : ch][ch < pr ? 1 : 0];
-        if(this.pipe().getLabeled()) {
-      fin_fv[k][ch] = 
-          fin_fv[k][ch].cat(nt_fvs[ch][static_types[pr][ch]][ch < pr ? 1 : 0][0]);
-      fin_fv[k][ch] = 
-          fin_fv[k][ch].cat(nt_fvs[pr][static_types[pr][ch]][ch < pr ? 1 : 0][1]);
-        }
-    }
-    else
-        fin_fv[k][ch] = new FeatureVector();
-      }
-  }
-  
-  
-  FeatureVector[] fin = new FeatureVector[new_k];
-  String[] result = new String[new_k];
-  for(int k = 0; k < fin.length; k++) {
-      fin[k] = new FeatureVector();
-      for(int i = 1; i < fin_fv[k].length; i++)
-    fin[k] = fin_fv[k][i].cat(fin[k]);
-      result[k] = "";
-      for(int i = 1; i < par.length; i++)
-    result[k] += fin_par[k][i]+"|"+i + (this.pipe().getLabeled() ? ":"+static_types[fin_par[k][i]][i] : ":0") +" ";
-  }
-    
-  // create d.
-  Tuple2<FeatureVector, String>[] d = (Tuple2<FeatureVector, String>[]) new Tuple2[new_k];
-
-  for(int k = 0; k < new_k; k++) {
-      d[k] = new Tuple2<FeatureVector, String>(fin[k], result[k].trim());
-  }
-
-  return d;
-    }
-
-    protected static TIntIntHashMap chuLiuEdmonds(double[][] scoreMatrix, boolean[] curr_nodes, 
+    public static TIntIntHashMap chuLiuEdmonds(double[][] scoreMatrix, boolean[] curr_nodes, 
             int[][] oldI, int[][] oldO, boolean print,
             TIntIntHashMap final_edges, TIntIntHashMap[] reps) {
     
