@@ -208,8 +208,8 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
       oldO: Array[Array[Int]],
       nodes: Set[Int],
       edges: Map[Int, Int],
-      reps: IndexedSeq[Map[Int, Int]],
-      print: Boolean
+      reps: IndexedSeq[Set[Int]],
+      printing: Boolean
     ): Map[Int, Int] = {
       // Need to construct for each node list of nodes they represent (here only!)
       val len = scores.size
@@ -217,12 +217,24 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
       val is = (0 until len)
       val as = is.filter(nodes)
 
+      if (printing) {
+      for {
+        i <- 0 until len
+        j <- 0 until len
+      } {
+        //print(oldI(i)(j) + "-" + oldO(i)(j) + "-" + scores(i)(j) + " ")
+        //if (j == len - 1) println
+      }
+
+      println("Edges: " + edges)
+      }
+
       val parse = -1 +: is.tail.map {
         case i if !nodes(i) => 0
         case i => as.filter(_ != i).maxBy(scores(_)(i))
       }
 
-      if (print) System.err.println("After init" + 
+      if (printing) System.err.println("After init" + 
         parse.zipWithIndex.filter(pi => nodes(pi._2)).map {
           case (p, i) => p + "|" + i
         }.mkString(" ")
@@ -273,20 +285,24 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
         i += 1
       }
       
-      if (cycles.isEmpty) edges ++
-        parse.zipWithIndex.filter(pi => nodes(pi._1)).map {
+      if (cycles.isEmpty) {
+        if (printing) println("No cycles!")
+        edges ++
+        parse.zipWithIndex.filter(pi => nodes(pi._2)).map {
           case (-1, _) => 0 -> -1
           case (p, i)  => oldO(p)(i) -> oldI(p)(i)
         }.toMap
+      }
       else {
         val biggest = cycles.maxBy(_.size)
-        val cNodes = biggest.keys.toIndexedSeq.sorted
+        val cNodes = biggest.keys.toIndexedSeq.sorted.reverse
 
-        if (print) System.err.println("Found cycle:\n" + cNodes.mkString(" "))
+        if (printing) System.err.println("Found cycle:\n" + cNodes.mkString(" "))
 
         val weight = cNodes.map(i => scores(parse(i))(i)).sum
+        if (printing) println("Weight: " + weight)
 
-        as.filter(biggest.contains).foreach { i =>
+        as.filterNot(biggest.contains).foreach { i =>
           val (ai, aw) = cNodes.map(j => j -> scores(j)(i)).maxBy(_._2)
           val (bi, bw) = cNodes.map(j => j -> (weight + scores(i)(j) - scores(parse(j))(j))).maxBy(_._2)
 
@@ -299,20 +315,28 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
           oldO(i)(cNodes.head) = oldO(i)(bi)
         }
 
-        val repCons = cNodes.map(i => reps(i).keySet)
-        val nRep = cNodes.tail.map(i => reps(i).mapValues(_ => 0)).foldLeft(reps(cNodes.head))(_ ++ _)
+        val repCons = cNodes.map(reps(_))
+
+        if (printing) {
+          cNodes.zip(repCons).foreach { case (i, s) =>
+            println(i + ": " + s.mkString(" "))
+          }
+        }
+
+        val nRep = cNodes.tail.map(reps).foldLeft(reps(cNodes.head))(_ ++ _)
  
         val nEdges = cLE(
           scores, oldI, oldO,
           nodes -- cNodes.tail,
           edges,
           reps.updated(cNodes.head, nRep),
-          print
+          printing
         )
 
         // TODO: Could be more efficient, since we don't need the whole
         // intersection.
-        val n = cNodes.zip(repCons).find(!_._2.intersect(nEdges.keySet).isEmpty).get._1
+        val n = cNodes.find(i => !reps(i).intersect(nEdges.keySet).isEmpty).getOrElse(-1)
+        if (printing) println("Found: " + n)
 
         nEdges ++ Stream.iterate(parse(n))(parse(_)).takeWhile(_ != n).map(i =>
           oldO(parse(i))(i) -> oldI(parse(i))(i)
@@ -328,20 +352,31 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
       Array.tabulate(len, len)((_, j) => j),
       (0 until len).toSet,
       Map.empty[Int, Int],
-      IndexedSeq.tabulate(len)(i => Map(i -> 0)),
-      true
+      IndexedSeq.tabulate(len)(Set(_)),
+      false
     )
   }
 
-  def chuLiuEdmonds(scores: Array[Array[Double]]) = {
+  def chuLiuEdmondsOld(scores: Array[Array[Double]]) = {
+    val len = scores.size
     old.DependencyDecoder.chuLiuEdmonds(
       scores.map(_.clone),
-      Array.fill(scores.size)(true),
+      Array.fill(len)(true),
       Array.tabulate(len, len)((i, _) => i),
       Array.tabulate(len, len)((_, j) => j),
       true,
+      new TIntIntHashMap,
+      Array.tabulate(len) { i =>
+        val m = new TIntIntHashMap
+        m.put(i, 0)
+        m
+      }
+    )
+  }
 
-      
+  def random(n: Int) = {
+    val r = new scala.util.Random(0)
+    Array.tabulate(n, n)((_, _) => r.nextDouble())
   }
 }
 

@@ -17,7 +17,18 @@ public abstract class DependencyDecoder {
             TIntIntHashMap final_edges, TIntIntHashMap[] reps) {
     
   // need to construct for each node list of nodes they represent (here only!)
-    
+
+  if (print) {
+  /*for (int i = 0; i < curr_nodes.length; i++) {
+    for (int j = 0; j < curr_nodes.length; j++) {
+      System.out.print(oldI[i][j] + "-" + oldO[i][j] + "-" + scoreMatrix[i][j] + " ");
+    }
+    System.out.println();
+  }*/
+
+  System.out.println("Edges: " + final_edges);
+  }
+
   int[] par = new int[curr_nodes.length];
   int numWords = curr_nodes.length;
     
@@ -89,6 +100,7 @@ public abstract class DependencyDecoder {
     
   // get all edges and return them
   if(cycles.size() == 0) {
+    if (print) System.out.println("No cycles!");
       //System.out.println("TREE:");
       for(int i = 0; i < par.length; i++) {
     if(!curr_nodes[i]) continue;
@@ -127,7 +139,7 @@ public abstract class DependencyDecoder {
   for(int j = 0; j < cyc_nodes.length; j++) {
       cyc_weight += scoreMatrix[par[cyc_nodes[j]]][cyc_nodes[j]];
   }
-    
+   if (print) System.out.println("Weight: " + cyc_weight); 
     
   for(int i = 0; i < numWords; i++) {
       
@@ -201,6 +213,7 @@ public abstract class DependencyDecoder {
     }
       }
   }
+  if (print) System.out.println("Found: " + wh);
     
   int l = par[wh];
   while(l != wh) {
