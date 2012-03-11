@@ -217,37 +217,19 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
       val is = (0 until len)
       val as = is.filter(nodes)
 
-      if (printing) {
-      for {
-        i <- 0 until len
-        j <- 0 until len
-      } {
-        //print(oldI(i)(j) + "-" + oldO(i)(j) + "-" + scores(i)(j) + " ")
-        //if (j == len - 1) println
-      }
-
-      println("Edges: " + edges)
-      }
-
       val parse = -1 +: is.tail.map {
         case i if !nodes(i) => 0
         case i => as.filter(_ != i).maxBy(scores(_)(i))
       }
 
-      if (printing) System.err.println("After init" + 
-        parse.zipWithIndex.filter(pi => nodes(pi._2)).map {
-          case (p, i) => p + "|" + i
-        }.mkString(" ")
-      )
-
-      val cycles = Buffer.empty[Map[Int, Int]]
+      val cycles = Buffer.empty[Set[Int]] //Map[Int, Int]]
       val added = collection.mutable.Set.empty[Int]
 
       var i = 0
       while (i < len && cycles.isEmpty) {
         if (!added(i) && nodes(i)) {
           added += i
-          val cycle = collection.mutable.Map(i -> 0)
+          val cycle = collection.mutable.Set(i)
 
           var j = i
           var found = false
@@ -256,25 +238,25 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
               added += j
               found = true
             } else {
-              if (cycle.contains(parse(j))) {
+              if (cycle(parse(j))) {
                 cycle.clear()
                 val k = parse(j)
-                cycle(k) = parse(k)
+                cycle += k
                 added += k
 
                 var l = parse(k)
                 while (l != k) {
-                  cycle(l) = parse(l)
+                  cycle += l
                   added += l
                   l = parse(l)
                 }
 
-                cycles += cycle.toMap
+                cycles += cycle.toSet
                 found = true
               } else {
-                cycle(j) = 0
+                cycle += j
                 j = parse(j)
-                if (added(j) && !cycle.contains(j))
+                if (added(j) && !cycle(j))
                   found = true
                 else
                   added(j) = true
@@ -286,7 +268,6 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
       }
       
       if (cycles.isEmpty) {
-        if (printing) println("No cycles!")
         edges ++
         parse.zipWithIndex.filter(pi => nodes(pi._2)).map {
           case (-1, _) => 0 -> -1
@@ -295,12 +276,9 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
       }
       else {
         val biggest = cycles.maxBy(_.size)
-        val cNodes = biggest.keys.toIndexedSeq.sorted.reverse
-
-        if (printing) System.err.println("Found cycle:\n" + cNodes.mkString(" "))
+        val cNodes = biggest.toIndexedSeq.sorted.reverse
 
         val weight = cNodes.map(i => scores(parse(i))(i)).sum
-        if (printing) println("Weight: " + weight)
 
         as.filterNot(biggest.contains).foreach { i =>
           val (ai, aw) = cNodes.map(j => j -> scores(j)(i)).maxBy(_._2)
@@ -313,14 +291,6 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
           scores(i)(cNodes.head) = bw
           oldI(i)(cNodes.head) = oldI(i)(bi)
           oldO(i)(cNodes.head) = oldO(i)(bi)
-        }
-
-        val repCons = cNodes.map(reps(_))
-
-        if (printing) {
-          cNodes.zip(repCons).foreach { case (i, s) =>
-            println(i + ": " + s.mkString(" "))
-          }
         }
 
         val nRep = cNodes.tail.map(reps).foldLeft(reps(cNodes.head))(_ ++ _)
@@ -336,7 +306,6 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
         // TODO: Could be more efficient, since we don't need the whole
         // intersection.
         val n = cNodes.find(i => !reps(i).intersect(nEdges.keySet).isEmpty).getOrElse(-1)
-        if (printing) println("Found: " + n)
 
         nEdges ++ Stream.iterate(parse(n))(parse(_)).takeWhile(_ != n).map(i =>
           oldO(parse(i))(i) -> oldI(parse(i))(i)
