@@ -155,10 +155,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
   ) = {
     val staticTypes = if (this.pipe.getLabeled) Some(this.getTypes(probsNt, len)) else None
 
-    val oldI = Array.tabulate(len, len)((i, _) => i)
-    val oldO = Array.tabulate(len, len)((_, j) => j)
-
-    val scoreMatrix = Array.tabulate(len, len) {
+    val scores = Array.tabulate(len, len) {
       case (i, j) if i < j =>
         probs(i)(j)(0) + staticTypes.map(ts =>
           probsNt(i)(ts(i)(j))(0)(1) + probsNt(j)(ts(i)(j))(0)(0)
@@ -171,12 +168,10 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
     }
 
     val parse = Array.ofDim[Int](len)
-    this.chuLiuEdmonds(scoreMatrix, oldI, oldO).foreach {
-      case (i, v) => parse(i) = v
-    }
+    this.chuLiuEdmonds(scores).foreach { case (i, v) => parse(i) = v }
 
     val parFin = parse +: this.getKChanges(
-      parse, scoreMatrix, math.min(kBest, parse.length)
+      parse, scores, math.min(kBest, parse.length)
     ).zipWithIndex.filter(_._1 > -1).map {
       case (p, i) => parse.updated(i, p)
     }
@@ -206,11 +201,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
     fin.zip(result.map(_.trim))
   }
 
-  def chuLiuEdmonds(
-    scores: Array[Array[Double]],
-    oldI: Array[Array[Int]],
-    oldO: Array[Array[Int]]
-  ) = {
+  def chuLiuEdmonds(scores: Array[Array[Double]]) = {
     def cLE(
       scores: Array[Array[Double]],
       oldI: Array[Array[Int]],
@@ -226,8 +217,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
       val is = (0 until len)
       val as = is.filter(nodes)
 
-      val parse = is.map {
-        case 0 => -1
+      val parse = -1 +: is.tail.map {
         case i if !nodes(i) => 0
         case i => as.filter(_ != i).maxBy(scores(_)(i))
       }
@@ -330,15 +320,28 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
       }
     }
 
-    val len = oldI.size
+    val len = scores.size
 
     cLE(
-      scores.map(_.clone), oldI, oldO,
+      scores.map(_.clone),
+      Array.tabulate(len, len)((i, _) => i),
+      Array.tabulate(len, len)((_, j) => j),
       (0 until len).toSet,
       Map.empty[Int, Int],
       IndexedSeq.tabulate(len)(i => Map(i -> 0)),
       true
     )
+  }
+
+  def chuLiuEdmonds(scores: Array[Array[Double]]) = {
+    old.DependencyDecoder.chuLiuEdmonds(
+      scores.map(_.clone),
+      Array.fill(scores.size)(true),
+      Array.tabulate(len, len)((i, _) => i),
+      Array.tabulate(len, len)((_, j) => j),
+      true,
+
+      
   }
 }
 
