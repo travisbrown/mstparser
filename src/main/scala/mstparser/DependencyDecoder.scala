@@ -356,27 +356,5 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
       false
     )
   }
-
-  def chuLiuEdmondsOld(scores: Array[Array[Double]]) = {
-    val len = scores.size
-    old.DependencyDecoder.chuLiuEdmonds(
-      scores.map(_.clone),
-      Array.fill(len)(true),
-      Array.tabulate(len, len)((i, _) => i),
-      Array.tabulate(len, len)((_, j) => j),
-      true,
-      new TIntIntHashMap,
-      Array.tabulate(len) { i =>
-        val m = new TIntIntHashMap
-        m.put(i, 0)
-        m
-      }
-    )
-  }
-
-  def random(n: Int) = {
-    val r = new scala.util.Random(0)
-    Array.tabulate(n, n)((_, _) => r.nextDouble())
-  }
 }
 
