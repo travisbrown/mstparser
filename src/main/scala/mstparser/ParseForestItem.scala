@@ -19,13 +19,13 @@ class ParseForestItem(
   def this(s: Int, label: Int, dir: Int) =
     this(s, label, dir, Double.NegativeInfinity, null)
 
-  def getFeatureVector: FeatureVector = this.children.map { case (left, right) =>
-    this.fv.cat(left.getFeatureVector.cat(right.getFeatureVector))
+  def featureVector: FeatureVector = this.children.map { case (left, right) =>
+    this.fv.cat(left.featureVector.cat(right.featureVector))
   }.getOrElse(this.fv)
 
-  def getDepString: String = this.children.map { case (left, right) =>
-    val ld = left.getDepString
-    val rd = right.getDepString
+  def depString: String = this.children.map { case (left, right) =>
+    val ld = left.depString
+    val rd = right.depString
     val cs = (ld + " " + rd).trim
 
     if (this.comp != 1) cs

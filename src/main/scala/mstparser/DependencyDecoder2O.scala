@@ -25,8 +25,8 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
 
     val (nParse, nLabels) = this.rearrange(probs, probsTr, probsSi, probsNt, parse, labels)
 
-    instance.setHeads(nParse)
-    instance.setDeprels(nLabels.map(this.pipe.getType(_)))
+    instance.heads = nParse
+    instance.deprels = nLabels.map(this.pipe.getType(_))
 
     val parseString = nParse.zip(nLabels).zipWithIndex.drop(1).map {
       case ((p, l), i) => "%d|%d:%d".format(p, i, l)

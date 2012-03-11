@@ -7,14 +7,12 @@ import java.io.IOException
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
-import scala.reflect.BeanProperty
-
 import mstparser.io._
 
 class DependencyPipe(
-  @BeanProperty protected val options: ParserOptions,
-  @BeanProperty var dataAlphabet: Alphabet,
-  @BeanProperty var typeAlphabet: Alphabet
+  protected val options: ParserOptions,
+  var dataAlphabet: Alphabet,
+  var typeAlphabet: Alphabet
 ) {
   def this(options: ParserOptions) = this(options, new Alphabet, new Alphabet)
 
@@ -57,12 +55,12 @@ class DependencyPipe(
 
   def nextInstance = if (!this.depReader.hasNext) null else {
     val instance = this.depReader.next
-    instance.setFeatureVector(this.createFeatureVector(instance))
-    instance.setParseTree(
+    instance.featureVector = this.createFeatureVector(instance)
+    instance.parseTree =
       instance.heads.tail.zip(instance.deprels.tail).zipWithIndex.map {
         case ((h, l), j) => "%d|%d:%d".format(h, j + 1, this.typeAlphabet.lookupIndex(l))
       }.mkString(" ")
-    )
+
     instance
   }
 
@@ -126,12 +124,11 @@ class DependencyPipe(
     this.instances = depReader.zipWithIndex.map { case (instance, i) =>
       print(i + " ")
 
-      instance.setFeatureVector(this.createFeatureVector(instance))
-      instance.setParseTree(
+      instance.featureVector = this.createFeatureVector(instance)
+      instance.parseTree =
         instance.heads.tail.zip(instance.deprels.tail).zipWithIndex.map {
           case ((h, l), j) => "%d|%d:%d".format(h, j + 1, this.typeAlphabet.lookupIndex(l))
         }.mkString(" ")
-      )
 
       if (this.options.createForest) this.writeInstance(instance, out)
       instance

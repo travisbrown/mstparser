@@ -12,7 +12,7 @@ class KBestParseForest(private val end: Int, private val k: Int, private val com
   def getBestParses: Array[(FeatureVector, String)] =
     this.chart(0)(this.end)(0)(0).map { item =>
       if (item.prob > Double.NegativeInfinity)
-        (item.getFeatureVector, item.getDepString)
+        (item.featureVector, item.depString)
       else (null, null)
     }
 

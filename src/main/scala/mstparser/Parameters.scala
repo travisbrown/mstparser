@@ -7,11 +7,11 @@ class Parameters(size: Int) {
   private val lossType = "punc"
 
   def updateParamsMIRA(instance: DependencyInstance, d: Array[(FeatureVector, String)], update: Double) {
-    val score = this.getScore(instance.getFeatureVector)
+    val score = this.getScore(instance.featureVector)
 
     val (b, dist) = d.takeWhile(_._1 != null).map { case (f, p) => (
-      this.numErrors(instance, p, instance.getParseTree) - (score - this.getScore(f)),
-      instance.getFeatureVector.getDistVector(f)
+      this.numErrors(instance, p, instance.parseTree) - (score - this.getScore(f)),
+      instance.featureVector.getDistVector(f)
     )}.unzip
 
     dist.zip(this.hildreth(dist, b)).foreach { case (f, a) =>

@@ -81,7 +81,6 @@ class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) 
     })
 	}
 
-
   def dotProduct(that: FeatureVector) = {
     val m1 = new TIntDoubleHashMap(this.size)
     this.addFeaturesToMap(m1, false)
