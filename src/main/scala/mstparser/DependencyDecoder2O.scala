@@ -157,7 +157,7 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
       (0 until len - j).foreach { s =>
         val t = s + j
         val (type1, type2) = staticTypes.map(ts => (ts(s)(t), ts(t)(s))).getOrElse((0, 0))
-    
+
         // case when r == s
         val b1 = pf.getItems(s, s, 0, 0)
         val c1 = pf.getItems(s + 1, t, 1, 0)

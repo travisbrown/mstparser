@@ -86,8 +86,8 @@ class CONLLReader(discourseMode: Boolean) extends DependencyReader {
       heads(0) = -1
 
       instance.zipWithIndex.foreach { case (info, i) =>
-	      forms(i + 1) = this.normalize(info(1))
-	      lemmas(i + 1) = this.normalize(info(2))
+        forms(i + 1) = this.normalize(info(1))
+        lemmas(i + 1) = this.normalize(info(2))
         cpos(i + 1) = info(3)
         pos(i + 1) = info(4)
         feats(i + 1) = info(5).split("\\|")
@@ -131,7 +131,7 @@ class MSTReader extends DependencyReader {
       val lemmas = forms.map(form => if (form.length > 5) form.substring(0, 5) else form)
       val cpostags = pos.map(_.substring(0, 1))
 
-	    new DependencyInstance(
+      new DependencyInstance(
         "<root>" +: forms,
         "<root-LEMMA>" +: lemmas,
         "<root-CPOS>" +: cpostags,

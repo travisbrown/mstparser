@@ -63,7 +63,7 @@ class Parameters(size: Int) {
     (0 until k).foreach(i => aa(i)(i) = a(i).dotProduct(a(i)))
 
     var iter = 0
-	  while (kktMaxV >= eps && iter < maxIter) {
+    while (kktMaxV >= eps && iter < maxIter) {
 
       val diffA = if (aa(kktMaxI)(kktMaxI) <= zero) 0.0 else ff(kktMaxI) / aa(kktMaxI)(kktMaxI)
       val addA = if (alpha(kktMaxI) + diffA < 0.0) -1.0 * alpha(kktMaxI) else diffA
@@ -80,7 +80,7 @@ class Parameters(size: Int) {
       (0 until ff.size).foreach { i =>
         ff(i) -= addA * aa(i)(kktMaxI)
         kkt(i) = if (alpha(i) > zero) math.abs(ff(i)) else ff(i)
-	    }
+      }
 
       val (v, i) = kkt.zipWithIndex.maxBy(_._1)
       kktMaxV = v

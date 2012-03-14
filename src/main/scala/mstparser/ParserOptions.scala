@@ -27,22 +27,22 @@ class ParserOptions(private val args: Array[String]) {
   val trainK = this.pairs.get("training-k").map(_.toInt).getOrElse(1)
   val testK = this.pairs.get("test-k").map(_.toInt).getOrElse(1)
 
-	val (trainForest, testForest) = try {(
+  val (trainForest, testForest) = try {(
     this.trainFile.map { f =>
       val tmp = File.createTempFile("train", ".forest")
       tmp.deleteOnExit()
       tmp
-	  },
+    },
     this.testFile.map { f =>
       val tmp = File.createTempFile("test", ".forest")
       tmp.deleteOnExit()
       tmp
-	  }
+    }
   )} catch { case e: java.io.IOException =>
-	  println("Unable to create temporary files for feature forests!")
-	  println(e)
-	  sys.exit(0)
-	}
+    println("Unable to create temporary files for feature forests!")
+    println(e)
+    sys.exit(0)
+  }
 
   override def toString = "FLAGS [%s]\n".format(List(
     "train-file"          -> this.trainFile.orNull,

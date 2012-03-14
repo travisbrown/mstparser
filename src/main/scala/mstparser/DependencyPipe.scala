@@ -82,7 +82,7 @@ class DependencyPipe(
 
     fv
   }
-  
+
   protected def addExtendedFeatures(instance: DependencyInstance, fv: FeatureVector) {}
 
   def createInstances(file: String, featFile: File, createForest: Boolean) = {
@@ -261,8 +261,8 @@ class DependencyPipe(
 
         if (in.readInt() != -3) { println("Error reading file."); sys.exit(0) }
       }
-    } catch { case e: IOException => println("Error reading file."); sys.exit(0) } 
-  } 
+    } catch { case e: IOException => println("Error reading file."); sys.exit(0) }
+  }
 
   private def addCoreFeatures(instance: DependencyInstance, small: Int, large: Int, attR: Boolean, fv: FeatureVector) {
     val attDist = "&%s&%d".format(
@@ -367,7 +367,7 @@ class DependencyPipe(
       }
     }
   }
- 
+
   protected def addLinearFeatures(
     label: String,
     vals: IndexedSeq[String],
@@ -491,164 +491,164 @@ class DependencyPipe(
     attDist: String,
     fv: FeatureVector
   ) {
-    
+
   addLinearFeatures("FORM", instance.forms, small, large, attDist, fv);
   addLinearFeatures("LEMMA", instance.lemmas, small, large, attDist, fv);
-  
-  addTwoObsFeatures("HCB1", instance.forms(headIndex), 
+
+  addTwoObsFeatures("HCB1", instance.forms(headIndex),
         instance.lemmas(headIndex),
-        instance.forms(childIndex), 
-        instance.lemmas(childIndex), 
+        instance.forms(childIndex),
+        instance.lemmas(childIndex),
         attDist, fv);
-  
-  addTwoObsFeatures("HCB2", instance.forms(headIndex), 
+
+  addTwoObsFeatures("HCB2", instance.forms(headIndex),
         instance.lemmas(headIndex),
-        instance.forms(childIndex), 
-        instance.postags(childIndex), 
+        instance.forms(childIndex),
+        instance.postags(childIndex),
         attDist, fv);
-  
-  addTwoObsFeatures("HCB3", instance.forms(headIndex), 
+
+  addTwoObsFeatures("HCB3", instance.forms(headIndex),
         instance.lemmas(headIndex),
-        instance.forms(childIndex), 
-        instance.cpostags(childIndex), 
+        instance.forms(childIndex),
+        instance.cpostags(childIndex),
         attDist, fv);
-  
-  addTwoObsFeatures("HC2", instance.forms(headIndex), 
-        instance.postags(headIndex), 
-        instance.forms(childIndex), 
+
+  addTwoObsFeatures("HC2", instance.forms(headIndex),
+        instance.postags(headIndex),
+        instance.forms(childIndex),
         instance.cpostags(childIndex), attDist, fv);
-  
-  addTwoObsFeatures("HCC2", instance.lemmas(headIndex), 
-        instance.postags(headIndex), 
-        instance.lemmas(childIndex), 
-        instance.cpostags(childIndex), 
+
+  addTwoObsFeatures("HCC2", instance.lemmas(headIndex),
+        instance.postags(headIndex),
+        instance.lemmas(childIndex),
+        instance.cpostags(childIndex),
         attDist, fv);
-  
-  
+
+
   //// Use this if your extra feature lists all have the same length.
-  (0 until instance.feats.size).foreach { i => 
+  (0 until instance.feats.size).foreach { i =>
     addLinearFeatures("F" +i, instance.feats(i), small, large, attDist, fv);
 
-    addTwoObsFeatures("FF" +i, 
-          instance.forms(headIndex), 
+    addTwoObsFeatures("FF" +i,
+          instance.forms(headIndex),
           instance.feats(i)(headIndex),
-          instance.forms(childIndex), 
+          instance.forms(childIndex),
           instance.feats(i)(childIndex),
           attDist, fv);
 
-    addTwoObsFeatures("LF" +i, 
-          instance.lemmas(headIndex), 
+    addTwoObsFeatures("LF" +i,
+          instance.lemmas(headIndex),
           instance.feats(i)(headIndex),
-          instance.lemmas(childIndex), 
+          instance.lemmas(childIndex),
           instance.feats(i)(childIndex),
           attDist, fv);
-    
-    addTwoObsFeatures("PF" +i, 
-          instance.postags(headIndex), 
+
+    addTwoObsFeatures("PF" +i,
+          instance.postags(headIndex),
           instance.feats(i)(headIndex),
-          instance.postags(childIndex), 
+          instance.postags(childIndex),
           instance.feats(i)(childIndex),
           attDist, fv);
-    
-    addTwoObsFeatures("CPF" +i, 
-          instance.cpostags(headIndex), 
+
+    addTwoObsFeatures("CPF" +i,
+          instance.cpostags(headIndex),
           instance.feats(i)(headIndex),
-          instance.cpostags(childIndex), 
+          instance.cpostags(childIndex),
           instance.feats(i)(childIndex),
           attDist, fv);
-    
+
 
     (i + 1 until instance.feats.size).foreach { j =>
-        addTwoObsFeatures("CPF" +i+ "_" +j, 
+        addTwoObsFeatures("CPF" +i+ "_" +j,
               instance.feats(i)(headIndex),
               instance.feats(j)(headIndex),
               instance.feats(i)(childIndex),
               instance.feats(j)(childIndex),
-              attDist, fv); 
+              attDist, fv);
     }
-  
+
     (0 until instance.feats.size).foreach { j =>
-        addTwoObsFeatures("XFF" +i+ "_" +j, 
+        addTwoObsFeatures("XFF" +i+ "_" +j,
               instance.forms(headIndex),
               instance.feats(i)(headIndex),
               instance.forms(childIndex),
               instance.feats(j)(childIndex),
               attDist, fv);
-  
-        addTwoObsFeatures("XLF" +i+ "_" +j, 
+
+        addTwoObsFeatures("XLF" +i+ "_" +j,
               instance.lemmas(headIndex),
               instance.feats(i)(headIndex),
               instance.lemmas(childIndex),
               instance.feats(j)(childIndex),
               attDist, fv);
-  
-        addTwoObsFeatures("XPF" +i+ "_" +j, 
+
+        addTwoObsFeatures("XPF" +i+ "_" +j,
               instance.postags(headIndex),
               instance.feats(i)(headIndex),
               instance.postags(childIndex),
               instance.feats(j)(childIndex),
               attDist, fv);
-  
-  
-        addTwoObsFeatures("XCF" +i+ "_" +j, 
+
+
+        addTwoObsFeatures("XCF" +i+ "_" +j,
               instance.cpostags(headIndex),
               instance.feats(i)(headIndex),
               instance.cpostags(childIndex),
               instance.feats(j)(childIndex),
               attDist, fv);
-    } 
+    }
   }
 
   if (options.useRelationalFeatures) {
 
       //for (int rf_index=0; rf_index<2; rf_index++) {
       (0 until instance.relFeats.size).foreach { rf_index =>
-    
+
         val headToChild =
         "H2C" +rf_index+instance.relFeats(rf_index).getFeature(headIndex, childIndex);
-      
+
     addTwoObsFeatures("RFA1",
-          instance.forms(headIndex), 
+          instance.forms(headIndex),
           instance.lemmas(headIndex),
           instance.postags(childIndex),
           headToChild,
           attDist, fv);
-    
+
     addTwoObsFeatures("RFA2",
-          instance.postags(headIndex), 
+          instance.postags(headIndex),
           instance.cpostags(headIndex),
           instance.forms(childIndex),
           headToChild,
           attDist, fv);
-      
+
         addTwoObsFeatures("RFA3",
-          instance.lemmas(headIndex), 
+          instance.lemmas(headIndex),
           instance.postags(headIndex),
           instance.forms(childIndex),
           headToChild,
           attDist, fv);
-        
+
         addTwoObsFeatures("RFB1",
           headToChild,
           instance.postags(headIndex),
-          instance.forms(childIndex), 
+          instance.forms(childIndex),
           instance.lemmas(childIndex),
           attDist, fv);
-        
+
         addTwoObsFeatures("RFB2",
           headToChild,
           instance.forms(headIndex),
-          instance.postags(childIndex), 
+          instance.postags(childIndex),
           instance.cpostags(childIndex),
           attDist, fv);
-        
+
         addTwoObsFeatures("RFB3",
           headToChild,
           instance.forms(headIndex),
-          instance.lemmas(childIndex), 
+          instance.lemmas(childIndex),
           instance.postags(childIndex),
           attDist, fv);
-    
+
       }
   }
     }

@@ -69,15 +69,15 @@ class KBestParseForest(
 
           var j = i + 1
           while (j < this.k && tmp.prob > Double.NegativeInfinity) {
-		        val tmp1 = this.chart(s)(s)(d)(0)(j)
+            val tmp1 = this.chart(s)(s)(d)(0)(j)
             this.chart(s)(s)(d)(0)(j) = tmp
             tmp = tmp1
             j += 1
           }
-		      added = true
-	      }
+          added = true
+        }
         i += 1
-	    }
+      }
 
       added
     }
@@ -101,15 +101,15 @@ class KBestParseForest(
 
           var j = i + 1
           while (j < this.k && tmp.prob > Double.NegativeInfinity) {
-		        val tmp1 = this.chart(s)(t)(d)(c)(j)
+            val tmp1 = this.chart(s)(t)(d)(c)(j)
             this.chart(s)(t)(d)(c)(j) = tmp
             tmp = tmp1
             j += 1
           }
-		      added = true
-	      }
+          added = true
+        }
         i += 1
-	    }
+      }
 
       added
     }

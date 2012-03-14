@@ -45,7 +45,7 @@ class DependencyPipe2O(options: ParserOptions) extends DependencyPipe(options) {
     ch1: Int, ch2: Int,
     isT: Boolean,
     fv: FeatureVector
-  ) { 
+  ) {
     // ch1 is always the closest to par.
     val dir = if (ch1 > ch2) "RA" else "LA"
     val ch1Pos = if (isT) "STPOS" else instance.postags(ch1)
@@ -158,7 +158,7 @@ class DependencyPipe2O(options: ParserOptions) extends DependencyPipe(options) {
       }
 
       if (in.readInt() != -3) { println("Error reading file."); sys.exit(0) }
-    } catch { case e: IOException => println("Error reading file."); sys.exit(0) } 
+    } catch { case e: IOException => println("Error reading file."); sys.exit(0) }
   }
 
   override def fillFeatureVectors(

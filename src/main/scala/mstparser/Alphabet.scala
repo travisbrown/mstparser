@@ -5,7 +5,7 @@ import gnu.trove.map.hash.TObjectIntHashMap
 class Alphabet[A](capacity: Int) extends Serializable {
   def this() = this(10000)
 
-	private[this] val map = new TObjectIntHashMap[A](capacity, 0.75F, -1)
+  private[this] val map = new TObjectIntHashMap[A](capacity, 0.75F, -1)
   private[this] var growing = true
   private[this] val _values = scala.collection.mutable.ArrayBuffer.empty[A]
 

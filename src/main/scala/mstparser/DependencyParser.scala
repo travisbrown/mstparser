@@ -11,7 +11,7 @@ class DependencyParser(
   private var pipe: DependencyPipe,
   private val options: ParserOptions
 ) {
-	val params = new Parameters(this.pipe.dataAlphabet.size)
+  val params = new Parameters(this.pipe.dataAlphabet.size)
 
   def train(instances: Seq[DependencyInstance], trainForest: File) {
     (0 until options.numIters).map { i =>
@@ -187,7 +187,7 @@ object DependencyParser {
       print("Saving model...")
       dp.saveModel(options.modelName)
       print("done.")
-	  }
+    }
 
     if (options.test) {
       val pipe =

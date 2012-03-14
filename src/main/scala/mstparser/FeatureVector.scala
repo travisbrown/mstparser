@@ -27,7 +27,7 @@ class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) 
   def keys = {
     val keys = new TIntArrayList
     this.addKeysToList(keys)
-	  keys.toArray
+    keys.toArray
   }
 
   private def addKeysToList(keys: TIntArrayList) {
@@ -61,7 +61,7 @@ class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) 
       parameters(f.index) += mult * alpha * f.value
       total(f.index) += mult * alpha * f.value * update
     }
-	}
+  }
 
   def dotProduct(that: FeatureVector) = {
     val m1 = new TIntDoubleHashMap(this.features.size)

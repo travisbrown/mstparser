@@ -16,8 +16,8 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
     val isChild = IndexedSeq.fill(parse.size)(Buffer.fill(parse.size)(false))
 
     parse.zipWithIndex.drop(1).foreach { case (v, i) =>
-	    var l = v
-	    while (l != -1) {
+      var l = v
+      while (l != -1) {
         isChild(l)(i) = true
         l = parse(l)
       }
@@ -34,7 +34,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
     probsNt: Array[Array[Array[Array[Double]]]],
     kBest: Int
   ) = {
-	  val staticTypes = if (this.pipe.labeled) Some(this.getTypes(probsNt, len)) else None
+    val staticTypes = if (this.pipe.labeled) Some(this.getTypes(probsNt, len)) else None
     val pf = new KBestParseForest(len - 1, kBest)
 
     (0 until len).foreach { i =>
@@ -46,7 +46,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
       (0 until len - j).foreach { s =>
         val t = s + j
         val (type1, type2) = staticTypes.map(ts => (ts(s)(t), ts(t)(s))).getOrElse((0, 0))
-		
+
         (s to t).foreach { r =>
           if (r != t) {
             val b1 = pf.getItems(s, r, 0, 0)
@@ -75,7 +75,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
                   }
                   pf.add(s, r, t, type2, 1, 1, finProb, finFv, b1(comp1), c1(comp2))
               }
-	          }	
+            }
           }
         }
 
@@ -112,7 +112,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
         }
       }
     }
-	  pf.getBestParses
+    pf.getBestParses
   }
 
   protected def getKChanges(parse: Array[Int], scores: Array[Array[Double]], k: Int) = {
@@ -208,7 +208,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
     ): Map[Int, Int] = {
       // Need to construct for each node list of nodes they represent (here only!)
       val len = scores.size
- 
+
       val is = (0 until len)
       val as = is.filter(nodes)
 
@@ -261,7 +261,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
         }
         i += 1
       }
-      
+
       if (cycles.isEmpty) {
         edges ++
         parse.zipWithIndex.filter(pi => nodes(pi._2)).map {
@@ -281,14 +281,14 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
           scores(cNodes.head)(i) = aw
           oldI(cNodes.head)(i) = oldI(ai)(i)
           oldO(cNodes.head)(i) = oldO(ai)(i)
-          
+
           scores(i)(cNodes.head) = bw
           oldI(i)(cNodes.head) = oldI(i)(bi)
           oldO(i)(cNodes.head) = oldO(i)(bi)
         }
 
         val nRep = cNodes.tail.map(reps).foldLeft(reps(cNodes.head))(_ ++ _)
- 
+
         val nEdges = cLE(
           scores, oldI, oldO,
           nodes -- cNodes.tail,

@@ -11,7 +11,7 @@ object DependencyEvaluator {
     val predLabeled = predReader.startReading(predFile)
 
     if (labeled != predLabeled)
-	    println("Gold file and predicted file appear to differ on whether or not they are labeled. Expect problems!!!")
+      println("Gold file and predicted file appear to differ on whether or not they are labeled. Expect problems!!!")
 
     val (corr, corrL, corrSent, corrSentL) =
       goldReader.zip(predReader).zipWithIndex.foldLeft(0, 0, 0, 0) {
@@ -26,7 +26,7 @@ object DependencyEvaluator {
             case None =>
               println("Lengths do not match on sentence " + i)
               (c, cL, cs, csL)
-	    }
+      }
     }
 
     println("Tokens: " + goldReader.tokenCount)
