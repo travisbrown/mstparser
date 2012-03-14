@@ -173,7 +173,7 @@ class DependencyPipe2O(options: ParserOptions) extends DependencyPipe(options) {
     probsNt: Array[Array[Array[Array[Double]]]],
     params: Parameters
   ) {
-    this.fillFeatureVectors(instance, fvs, probs, null, null, null, null, fvsNt, probsNt, params)
+    super.fillFeatureVectors(instance, fvs, probs, null, null, null, null, fvsNt, probsNt, params)
     val len = instance.length
 
     (0 until len).foreach { w1 =>
