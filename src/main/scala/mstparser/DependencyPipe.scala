@@ -36,8 +36,7 @@ class DependencyPipe(
   }
 
   def close() {
-    if (this.depWriter != null)
-      this.depWriter.finishWriting()
+    if (this.depWriter != null) this.depWriter.finishWriting()
   }
 
   def add(f: String, fv: FeatureVector) {
@@ -59,8 +58,8 @@ class DependencyPipe(
       this.createFeatureVector(instance)
     }
 
-    this.dataAlphabet.setGrowing(false)
-    this.typeAlphabet.setGrowing(false)
+    this.dataAlphabet.stopGrowth()
+    this.typeAlphabet.stopGrowth()
     println("Done.")
   }
 
@@ -87,10 +86,6 @@ class DependencyPipe(
   protected def addExtendedFeatures(instance: DependencyInstance, fv: FeatureVector) {}
 
   def createInstances(file: String, featFile: File, createForest: Boolean) = {
-    //this.createAlphabet(file)
-
-    //println("Num Features: " + dataAlphabet.size)
-
     this.labeled = this.depReader.startReading(file)
 
     val out = if (createForest)
@@ -112,8 +107,6 @@ class DependencyPipe(
     }.toIndexedSeq
 
     println()
-
-    //this.closeAlphabets()
 
     if (createForest) out.close()
     this.instances
@@ -425,6 +418,11 @@ class DependencyPipe(
     }
   }
 
+  private def addWithAtt(feat: String, att: String, fv: FeatureVector) {
+    this.add(feat, fv)
+    this.add(feat + att, fv)
+  }
+
   private def addCorePosFeatures(
     prefix: String,
     leftOf1: String, one: String, rightOf1: String,
@@ -433,61 +431,32 @@ class DependencyPipe(
     fv: FeatureVector
   ) {
     val att = "*" + attDistance
-
     this.add(prefix + "=" + leftOf1 + " " + one + " " + two + att, fv)
 
     var feat = prefix + "1=" + leftOf1+ " " +one+ " " +two
-    add(feat, fv)
+    this.add(feat, fv)
     feat += " " + rightOf2
-    add(feat, fv)
-    add(feat + att, fv)
+    this.addWithAtt(feat, att, fv)
 
-    feat = prefix + "2=" + leftOf1 + " " + two + " " + rightOf2
-    add(feat, fv)
-    add(feat + att, fv)
-  
-    feat = prefix + "3=" + leftOf1 + " " + one + " " + rightOf2
-    add(feat, fv)
-    add(feat + att, fv)
-  
-    feat = prefix + "4=" + one + " " + two + " " + rightOf2
-    add(feat, fv)
-    add(feat + att, fv)
+    this.addWithAtt(prefix + "2=" + leftOf1 + " " + two + " " + rightOf2, att, fv)
+    this.addWithAtt(prefix + "3=" + leftOf1 + " " + one + " " + rightOf2, att, fv)
+    this.addWithAtt(prefix + "4=" + one + " " + two + " " + rightOf2, att, fv)
 
     val prefix2 = "A" + prefix
 
-    add(prefix2 + "1=" + one + " " + rightOf1 + " " + leftOf2 + att, fv)
-
     feat = prefix2 + "1=" + one + " " + rightOf1 + " " + leftOf2
-    add(feat, fv)
+    this.add(feat, fv)
     feat += " " + two
-    add(feat, fv)
-    add(feat + att, fv)
+    this.addWithAtt(feat, att, fv)
 
-    feat = prefix2 + "2=" + one + " " + rightOf1 + " " + two
-    add(feat, fv)
-    add(feat + att, fv)
-  
-    feat = prefix2 + "3=" + one + " " + leftOf2 + " " + two
-    add(feat, fv)
-    feat += att
-    add(feat, fv)
-  
-    feat = prefix2 + "4=" + rightOf1 + " " + leftOf2 + " " + two
-    add(feat, fv)
-    add(feat + att, fv)
+    this.addWithAtt(prefix2 + "2=" + one + " " + rightOf1 + " " + two, att, fv)
+    this.addWithAtt(prefix2 + "3=" + one + " " + leftOf2 + " " + two, att, fv)
+    this.addWithAtt(prefix2 + "4=" + rightOf1 + " " + leftOf2 + " " + two, att, fv)
 
     val prefix3 = "B" + prefix2
 
-    //// feature posL-1 posL posR-1 posR
-    feat = prefix3 + "1=" + leftOf1 + " " + one + " " + leftOf2 + " " + two
-    add(feat, fv)
-    add(feat + att, fv)
-
-    //// feature posL posL+1 posR posR+1
-    feat = prefix3 + "2=" + one + " " + rightOf1 + " " + two + " " + rightOf2
-    add(feat, fv)
-    add(feat + att, fv)
+    this.addWithAtt(prefix3 + "1=" + leftOf1 + " " + one + " " + leftOf2 + " " + two, att, fv)
+    this.addWithAtt(prefix3 + "2=" + one + " " + rightOf1 + " " + two + " " + rightOf2, att, fv)
   }
 
   protected def addTwoObsFeatures(
@@ -498,58 +467,19 @@ class DependencyPipe(
     fv: FeatureVector
   ) {
     val att = "*" + attDistance
-
-    var feat = prefix + "2FF1=" + item1F1
-    add(feat, fv)
-    add(feat + att, fv)
-  
-    feat = prefix + "2FF1=" +item1F1+ " " +item1F2
-    add(feat, fv)
-    add(feat + att, fv)
-
-    feat = prefix + "2FF1=" + item1F1 + " " + item1F2 + " " + item2F2
-    add(feat, fv)
-    add(feat + att, fv)
-
-    feat = prefix + "2FF1=" + item1F1 + " " + item1F2 + " " + item2F2 + " " + item2F1
-    add(feat, fv)
-    add(feat + att, fv)
-  
-    feat = prefix + "2FF2=" + item1F1 + " " + item2F1
-    add(feat, fv)
-    add(feat + att, fv)
-
-    feat = prefix + "2FF3=" + item1F1 + " " + item2F2
-    add(feat, fv)
-    add(feat + att, fv)
-
-    feat = prefix + "2FF4=" + item1F2 + " " + item2F1
-    add(feat, fv)
-    add(feat + att, fv)
-
-    feat = prefix + "2FF4=" + item1F2 + " " + item2F1 + " " + item2F2
-    add(feat, fv)
-    add(feat + att, fv)
-
-    feat = prefix + "2FF5=" + item1F2 + " " + item2F2
-    add(feat, fv)
-    add(feat + att, fv)
-
-    feat = prefix + "2FF6=" + item2F1 + " " + item2F2
-    add(feat, fv)
-    add(feat + att, fv)
-
-    feat = prefix + "2FF7=" + item1F2
-    add(feat, fv)
-    add(feat + att, fv)
-  
-    feat = prefix + "2FF8=" + item2F1
-    add(feat, fv)
-    add(feat + att, fv)
-  
-    feat = prefix + "2FF9=" + item2F2
-    add(feat, fv)
-    add(feat + att, fv)
+    this.addWithAtt(prefix + "2FF1=" + item1F1, att, fv)
+    this.addWithAtt(prefix + "2FF1=" + item1F1 + " " + item1F2, att, fv)
+    this.addWithAtt(prefix + "2FF1=" + item1F1 + " " + item1F2 + " " + item2F2, att, fv)
+    this.addWithAtt(prefix + "2FF1=" + item1F1 + " " + item1F2 + " " + item2F2 + " " + item2F1, att, fv)
+    this.addWithAtt(prefix + "2FF2=" + item1F1 + " " + item2F1, att, fv)
+    this.addWithAtt(prefix + "2FF3=" + item1F1 + " " + item2F2, att, fv)
+    this.addWithAtt(prefix + "2FF4=" + item1F2 + " " + item2F1, att, fv)
+    this.addWithAtt(prefix + "2FF4=" + item1F2 + " " + item2F1 + " " + item2F2, att, fv)
+    this.addWithAtt(prefix + "2FF5=" + item1F2 + " " + item2F2, att, fv)
+    this.addWithAtt(prefix + "2FF6=" + item2F1 + " " + item2F2, att, fv)
+    this.addWithAtt(feat = prefix + "2FF7=" + item1F2, att, fv)
+    this.addWithAtt(prefix + "2FF8=" + item2F1, att, fv)
+    this.addWithAtt(prefix + "2FF9=" + item2F2, att, fv)
   }
 
   private def addDiscourseFeatures(
@@ -669,8 +599,6 @@ class DependencyPipe(
     } 
   }
 
-
-  // Test out relational features
   if (options.useRelationalFeatures) {
 
       //for (int rf_index=0; rf_index<2; rf_index++) {
