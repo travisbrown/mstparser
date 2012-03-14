@@ -4,7 +4,14 @@ import java.io.IOException
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
-class DependencyPipe2O(options: ParserOptions) extends DependencyPipe(options) {
+class DependencyPipe2O(
+  options: ParserOptions,
+  dataAlphabet: Alphabet[String],
+  typeAlphabet: Alphabet[String],
+  labeled: Boolean
+) extends DependencyPipe(options, dataAlphabet, typeAlphabet, labeled) {
+  def this(options: ParserOptions) = this(options, new Alphabet, new Alphabet, false)
+
   protected override def addExtendedFeatures(instance: DependencyInstance, fv: FeatureVector) {
     val heads = instance.heads.zipWithIndex
 

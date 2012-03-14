@@ -91,11 +91,22 @@ class DependencyParser(
   def loadModel(file: String) {
     val in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file)))
     this.params.parameters = in.readObject().asInstanceOf[Array[Double]]
-    this.pipe = new DependencyPipe(this.options,
-      in.readObject().asInstanceOf[Alphabet[String]],
-      in.readObject().asInstanceOf[Alphabet[String]],
-      in.readBoolean()
-    )
+    this.pipe = if (this.options.secondOrder)
+      new DependencyPipe2O(this.options,
+        in.readObject().asInstanceOf[Alphabet[String]],
+        in.readObject().asInstanceOf[Alphabet[String]],
+        in.readBoolean()
+      )
+    else
+      new DependencyPipe(this.options,
+        in.readObject().asInstanceOf[Alphabet[String]],
+        in.readObject().asInstanceOf[Alphabet[String]],
+        in.readBoolean()
+      )
+    //this.pipe.dataAlphabet = in.readObject().asInstanceOf[Alphabet[String]]
+    //this.pipe.typeAlphabet = in.readObject().asInstanceOf[Alphabet[String]]
+    //this.pipe.labeled = in.readBoolean()
+
     in.close()
   }
 
