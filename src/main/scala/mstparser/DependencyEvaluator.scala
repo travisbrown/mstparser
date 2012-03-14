@@ -1,6 +1,6 @@
 package mstparser
 
-import mstparser.io._
+import mstparser.io.DependencyReader
 
 object DependencyEvaluator {
   def evaluate(actFile: String, predFile: String, format: String) = {

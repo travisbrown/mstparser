@@ -1,20 +1,18 @@
 package mstparser
 
-import gnu.trove.list.TIntList
 import gnu.trove.list.array.TIntArrayList
-import gnu.trove.list.linked.TLinkedList;
 import gnu.trove.map.hash.TIntDoubleHashMap
-import gnu.trove.procedure.TObjectProcedure
 
 object FeatureVector {
   def fromKeys(keys: Array[Int]) = {
     val v = new FeatureVector
-    keys.foreach(k => v.add(new Feature(k, 1.0)))
+    keys.foreach(k => v.add(k, 1.0))
     v
   }
 }
 
-class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) extends TLinkedList[Feature] {
+class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) {
+  private val features = scala.collection.mutable.Buffer.empty[Feature]
   def this(fv1: FeatureVector, fv2: FeatureVector) = this(fv1, fv2, false)
   def this(fv1: FeatureVector) = this(fv1, null)
   def this() = this(null)
@@ -23,7 +21,7 @@ class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) 
   def getDistVector(that: FeatureVector) = new FeatureVector(this, that, true)
 
   def add(i: Int, v: Double) {
-    this.add(new Feature(i, v))
+    this.features += new Feature(i, v)
   }
 
   def keys = {
@@ -36,30 +34,17 @@ class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) 
     Option(this.fv1).foreach(_.addKeysToList(keys))
     Option(this.fv2).foreach(_.addKeysToList(keys))
 
-    this.forEachValue(new TObjectProcedure[Feature] {
-      def execute(f: Feature) = {
-        keys.add(f.index)
-        true
-      }
-    })
+    this.features.foreach(f => keys.add(f.index))
   }
 
   def getScore(parameters: Array[Double]): Double = this.getScore(parameters, false)
 
   private def getScore(parameters: Array[Double], negate: Boolean): Double = {
     var score = Option(this.fv1).map(_.getScore(parameters, negate)).getOrElse(0.0) +
-    Option(this.fv2).map(_.getScore(parameters, negate != this.negSecond)).getOrElse(0.0)
+      Option(this.fv2).map(_.getScore(parameters, negate != this.negSecond)).getOrElse(0.0)
 
     val mult = if (negate) -1.0 else 1.0
-
-    this.forEachValue(new TObjectProcedure[Feature] {
-      def execute(f: Feature) = {
-        score += mult * parameters(f.index) * f.value
-        true
-      }
-    })
-
-    score
+    score + this.features.map(f => mult * parameters(f.index) * f.value).sum
   }
 
   def update(parameters: Array[Double], total: Array[Double], alpha: Double, update: Double) {
@@ -72,21 +57,18 @@ class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) 
 
     val mult = if (negate) -1.0 else 1.0
 
-    this.forEachValue(new TObjectProcedure[Feature] {
-      def execute(f: Feature) = {
-        parameters(f.index) += mult * alpha * f.value
-        total(f.index) += mult * alpha * f.value * update
-        true
-      }
-    })
+    this.features.foreach { f =>
+      parameters(f.index) += mult * alpha * f.value
+      total(f.index) += mult * alpha * f.value * update
+    }
 	}
 
   def dotProduct(that: FeatureVector) = {
-    val m1 = new TIntDoubleHashMap(this.size)
+    val m1 = new TIntDoubleHashMap(this.features.size)
     this.addFeaturesToMap(m1, false)
     m1.compact()
 
-    val m2 = new TIntDoubleHashMap(that.size)
+    val m2 = new TIntDoubleHashMap(that.features.size)
     that.addFeaturesToMap(m2, false)
     m2.compact()
 
@@ -99,13 +81,10 @@ class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) 
 
     val mult = if (negate) -1.0 else 1.0
 
-    this.forEachValue(new TObjectProcedure[Feature] {
-      def execute(f: Feature) = {
-        if (!map.adjustValue(f.index, mult * f.value))
-          map.put(f.index, mult * f.value)
-        true
-      }
-    })
+    this.features.foreach { f =>
+      if (!map.adjustValue(f.index, mult * f.value))
+        map.put(f.index, mult * f.value)
+    }
   }
 
   override def toString = {
@@ -118,12 +97,7 @@ class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) 
     Option(this.fv1).foreach(_.toString(builder))
     Option(this.fv2).foreach(_.toString(builder))
 
-    this.forEachValue(new TObjectProcedure[Feature] {
-      def execute(f: Feature) = {
-        builder.append(f.toString).append(' ')
-        true
-      }
-    })
+    this.features.foreach(f => builder.append(f.toString).append(' '))
   }
 }
 

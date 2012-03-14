@@ -1,46 +1,45 @@
 package mstparser
 
+import scala.collection.mutable.Buffer
 import scala.collection.mutable.PriorityQueue
 
 class KBestParseForest(private val end: Int, private val k: Int, private val compC: Int) {
   def this(end: Int, k: Int) = this(end, k, 2)
-  private val chart = Array.ofDim[ParseForestItem](this.end + 1, this.end + 1, 2, compC, this.k)
+  private val chart = IndexedSeq.fill(this.end + 1, this.end + 1, 2, compC)(Buffer.empty[ParseForestItem])
 
-  def getItems(s: Int, t: Int, d: Int, c: Int) =
-    if (this.chart(s)(t)(d)(c)(0) != null) this.chart(s)(t)(d)(c) else null
+  def getItems(s: Int, t: Int, d: Int, c: Int): Seq[ParseForestItem] = this.chart(s)(t)(d)(c)
 
-  def getBestParses: Array[(FeatureVector, String)] =
+  def getBestParses: Seq[(FeatureVector, String)] =
     this.chart(0)(this.end)(0)(0).map { item =>
       if (item.prob > Double.NegativeInfinity)
         (item.featureVector, item.depString)
       else (null, null)
     }
 
-  def getKBestPairs(is: Array[ParseForestItem], js: Array[ParseForestItem]) = {
-    val result = Array.fill(this.k)(-1, -1)
+  def getKBestPairs(is: Seq[ParseForestItem], js: Seq[ParseForestItem]): Seq[(Int, Int)] = {
+    val result = Buffer.fill(this.k)(-1, -1)
 
     if (is(0) != null && js(0) != null) {
       val heap = PriorityQueue((is(0).prob + js(0).prob, (0, 0)))
-      val beenPushed = Array.ofDim[Boolean](this.k, this.k)
-      beenPushed(0)(0) = true
+      val beenPushed = scala.collection.mutable.Set((0, 0))
 
       var n = 0
 
       while (n < this.k && heap.head._1 > Double.NegativeInfinity) {
-        val (v, (i, j)) = heap.dequeue
+        val (_, (i, j)) = heap.dequeue
 
         result(n) = (i, j)
         n += 1
 
         if (n < this.k) {
-          if (!beenPushed(i + 1)(j)) {
+          if (!beenPushed(i + 1, j)) {
             heap += ((is(i + 1).prob + js(j).prob, (i + 1, j)))
-            beenPushed(i + 1)(j) = true
+            beenPushed += ((i + 1, j))
           }
 
-          if (!beenPushed(i)(j + 1)) {
+          if (!beenPushed(i, j + 1)) {
             heap += ((is(i).prob + js(j + 1).prob, (i, j + 1)))
-            beenPushed(i)(j + 1) = true
+            beenPushed += ((i, j + 1))
           }
         }
       }
@@ -50,8 +49,8 @@ class KBestParseForest(private val end: Int, private val k: Int, private val com
   }
 
   def add(s: Int, label: Int, d: Int, score: Double, fv: FeatureVector) = {
-    if (this.chart(s)(s)(d)(0)(0) == null) {
-      this.chart(s)(s)(d)(0) = Array.fill(k)(new ParseForestItem(s, label, d))
+    if (this.chart(s)(s)(d)(0).isEmpty) {
+      this.chart(s)(s)(d)(0) ++= Seq.fill(k)(new ParseForestItem(s, label, d))
     }
 
     if (this.chart(s)(s)(d)(0)(k - 1).prob > score) false
@@ -82,8 +81,8 @@ class KBestParseForest(private val end: Int, private val k: Int, private val com
 
   def add(s: Int, r: Int, t: Int, label: Int, d: Int, c: Int,
     score: Double, fv: FeatureVector, p: ParseForestItem, q: ParseForestItem) = {
-    if (this.chart(s)(t)(d)(c)(0) == null) {
-      this.chart(s)(t)(d)(c) = Array.fill(k)(new ParseForestItem(s, t, label, d, c))
+    if (this.chart(s)(t)(d)(c).isEmpty) {
+      this.chart(s)(t)(d)(c) ++= Seq.fill(k)(new ParseForestItem(s, t, label, d, c))
     }
 
     if (this.chart(s)(t)(d)(c)(k - 1).prob > score) false
@@ -111,10 +110,5 @@ class KBestParseForest(private val end: Int, private val k: Int, private val com
       added
     }
   }
-
-  def getKBestPairsJ(is: Array[ParseForestItem], js: Array[ParseForestItem]) =
-    this.getKBestPairs(is, js).map {
-      case (i, j) => (i.asInstanceOf[java.lang.Integer], j.asInstanceOf[java.lang.Integer])
-    }
 }
 

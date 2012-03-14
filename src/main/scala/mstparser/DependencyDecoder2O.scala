@@ -1,9 +1,5 @@
 package mstparser
 
-import gnu.trove.map.TIntIntMap
-import gnu.trove.map.hash.TIntIntHashMap
-import gnu.trove.procedure.TIntIntProcedure
-
 class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) {
   def decodeNonProjective(
     instance: DependencyInstance,
@@ -26,14 +22,13 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
     val (nParse, nLabels) = this.rearrange(probs, probsTr, probsSi, probsNt, parse, labels)
 
     instance.heads = nParse
-    instance.deprels = nLabels.map(this.pipe.getType(_))
+    instance.deprels = nLabels.map(this.pipe.typeAlphabet.values(_))
 
     val parseString = nParse.zip(nLabels).zipWithIndex.drop(1).map {
       case ((p, l), i) => "%d|%d:%d".format(p, i, l)
     }.mkString(" ")
 
-    orig(0) = (this.pipe.createFeatureVector(instance), parseString)
-    orig
+    (this.pipe.createFeatureVector(instance), parseString) +: orig.tail
   }
 
   private def getSibs(ch: Int, par: Seq[Int]): (Int, Int) = ((

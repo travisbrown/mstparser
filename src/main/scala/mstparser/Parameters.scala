@@ -6,7 +6,7 @@ class Parameters(size: Int) {
 
   private val lossType = "punc"
 
-  def updateParamsMIRA(instance: DependencyInstance, d: Array[(FeatureVector, String)], update: Double) {
+  def updateParamsMIRA(instance: DependencyInstance, d: Seq[(FeatureVector, String)], update: Double) {
     val score = this.getScore(instance.featureVector)
 
     val (b, dist) = d.takeWhile(_._1 != null).map { case (f, p) => (
@@ -44,14 +44,14 @@ class Parameters(size: Int) {
     ((items.size - hs.filter(x => x).size) + (items.size - ls.filter(x => x).size)).toDouble
   }
 
-  private def hildreth(a: IndexedSeq[FeatureVector], b: IndexedSeq[Double]) = {
+  private def hildreth(a: Seq[FeatureVector], b: Seq[Double]) = {
     val maxIter = 10000
     val eps = 0.00000001
     val zero = 0.000000000001
 
-    val alpha = Array.ofDim[Double](b.size)
-    val ff = b.toArray
-    val kkt = b.toArray
+    val alpha = scala.collection.mutable.Buffer.fill(b.size)(0.0)
+    val ff = b.toBuffer
+    val kkt = b.toBuffer
 
     var (kktMaxV, kktMaxI) = kkt.zipWithIndex.maxBy(_._1)
 

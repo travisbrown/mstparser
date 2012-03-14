@@ -7,8 +7,6 @@ import java.io.FileOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
-import mstparser.io._
-
 class DependencyParser(
   private var pipe: DependencyPipe,
   private val options: ParserOptions
@@ -37,9 +35,7 @@ class DependencyParser(
 
       val (fvs, probs, nt_fvs, nt_probs, fvs_trips, probs_trips, fvs_sibs, probs_sibs) = this.createArrays(instance.length)
 
-      if (options.secondOrder) this.pipe.asInstanceOf[DependencyPipe2O].readInstance(
-        in, instance.length, fvs, probs, fvs_trips, probs_trips, fvs_sibs, probs_sibs, nt_fvs, nt_probs, params
-      ) else this.pipe.readInstance(in, instance.length, fvs, probs, nt_fvs, nt_probs, params)
+      this.pipe.readInstance(in, instance.length, fvs, probs, fvs_trips, probs_trips, fvs_sibs, probs_sibs, nt_fvs, nt_probs, params)
 
       val upd = (options.numIters * instances.size - (instances.size * (iter - 1) + (i + 1)) + 1).toDouble
 
@@ -73,8 +69,8 @@ class DependencyParser(
   private def createArrays(length: Int) = (
     Array.ofDim[FeatureVector](length, length, 2),
     Array.ofDim[Double](length, length, 2),
-    Array.ofDim[FeatureVector](length, pipe.getTypes.size, 2, 2),
-    Array.ofDim[Double](length, pipe.getTypes.size, 2, 2),
+    Array.ofDim[FeatureVector](length, pipe.typeAlphabet.size, 2, 2),
+    Array.ofDim[Double](length, pipe.typeAlphabet.size, 2, 2),
 
     Array.ofDim[FeatureVector](length, length, length),
     Array.ofDim[Double](length, length, length),
@@ -95,20 +91,10 @@ class DependencyParser(
     val in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file)))
     this.params.parameters = in.readObject().asInstanceOf[Array[Double]]
     //this.pipe = new DependencyPipe(this.options, in.readObject().asInstanceOf[Alphabet], in.readObject().asInstanceOf[Alphabet])
-    this.pipe.setDataAlphabet(in.readObject().asInstanceOf[Alphabet])
-    this.pipe.setTypeAlphabet(in.readObject().asInstanceOf[Alphabet])
+    this.pipe.dataAlphabet = in.readObject().asInstanceOf[Alphabet[String]]
+    this.pipe.typeAlphabet = in.readObject().asInstanceOf[Alphabet[String]]
     in.close()
-    this.pipe.closeAlphabets()
-  }
-
-  private implicit def pipeToIterator(pipe: DependencyPipe) = new Iterator[DependencyInstance] {
-    var nextInstance = pipe.nextInstance
-    def hasNext = this.nextInstance != null
-    def next = {
-      val current = this.nextInstance
-      this.nextInstance = pipe.nextInstance
-      current
-    }
+    //this.pipe.closeAlphabets()
   }
 
   def outputParses() = {
@@ -116,18 +102,16 @@ class DependencyParser(
 
     this.pipe.initInputFile(options.testFile.get)
     this.pipe.initOutputFile(options.outFile)
+    val instances = pipe.createInstances(options.testFile.get, null, false)
 
     print("Processing Sentence: ")
 
-    pipe.zipWithIndex.foreach { case (instance, cnt) =>
+    instances.zipWithIndex.foreach { case (instance, cnt) =>
       print("%d ".format(cnt + 1))
       val forms = instance.forms
 
       val (fvs, probs, nt_fvs, nt_probs, fvs_trips, probs_trips, fvs_sibs, probs_sibs) = this.createArrays(instance.forms.length)
-
-      if (options.secondOrder) this.pipe.asInstanceOf[DependencyPipe2O].fillFeatureVectors(
-        instance, fvs, probs, fvs_trips, probs_trips, fvs_sibs, probs_sibs, nt_fvs, nt_probs, params
-      ) else this.pipe.fillFeatureVectors(instance, fvs, probs, nt_fvs, nt_probs, params)
+      this.pipe.fillFeatureVectors(instance, fvs, probs, fvs_trips, probs_trips, fvs_sibs, probs_sibs, nt_fvs, nt_probs, params)
 
       val d = options.decodeType match {
         case "non-proj" =>
@@ -161,7 +145,7 @@ class DependencyParser(
         posNoRoot(j) = instance.cpostags(j + 1)
 
         val trip = res(j).split("[\\|:]")
-        labels(j) = this.pipe.getTypes(trip(2).toInt)
+        labels(j) = this.pipe.typeAlphabet.values(trip(2).toInt)
         heads(j) = trip(0).toInt
       }
 
@@ -186,8 +170,9 @@ object DependencyParser {
         if (options.secondOrder) new DependencyPipe2O(options)
         else new DependencyPipe(options)
 
-      val instances = pipe.createInstances(options.trainFile.get, options.trainForest.get)
-	  	pipe.closeAlphabets()
+      pipe.createAlphabets(options.trainFile.get)
+      val instances = pipe.createInstances(options.trainFile.get, options.trainForest.get, options.createForest)
+	  	//pipe.closeAlphabets()
 
       val dp = new DependencyParser(pipe, options)
 
@@ -211,7 +196,7 @@ object DependencyParser {
       print("\tLoading model...")
       dp.loadModel(options.modelName)
       println("done.")
-      pipe.closeAlphabets()
+      //pipe.closeAlphabets()
       dp.outputParses()
     }
 

@@ -7,23 +7,22 @@ import java.io.IOException
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
-import mstparser.io._
+import mstparser.io.DependencyReader
+import mstparser.io.DependencyWriter
 
 class DependencyPipe(
   protected val options: ParserOptions,
-  var dataAlphabet: Alphabet,
-  var typeAlphabet: Alphabet
+  var dataAlphabet: Alphabet[String],
+  var typeAlphabet: Alphabet[String]
 ) {
   def this(options: ParserOptions) = this(options, new Alphabet, new Alphabet)
 
   private val depReader = DependencyReader.createDependencyReader(this.options.format, this.options.discourseMode)
   private var depWriter: DependencyWriter = _
-  protected var types: IndexedSeq[String] = _
   protected var labeled: Boolean = _
-  private var instances: IndexedSeq[DependencyInstance] = _
+  var instances: IndexedSeq[DependencyInstance] = _
 
   def getLabeled = this.labeled
-  def getTypes = this.types
 
   def initInputFile(file: String) {
     this.labeled = this.depReader.startReading(file)
@@ -43,27 +42,6 @@ class DependencyPipe(
       this.depWriter.finishWriting()
   }
 
-  def closeAlphabets() {
-    this.dataAlphabet.setGrowing(false)
-    this.typeAlphabet.setGrowing(false)
-    this.types = this.typeAlphabet.toArray.map(
-      k => (k, this.typeAlphabet.lookupIndex(k))
-    ).sortBy(_._2).map(_._1).toIndexedSeq
-  }
-
-  def getType(typeIndex: Int) = this.types(typeIndex)
-
-  def nextInstance = if (!this.depReader.hasNext) null else {
-    val instance = this.depReader.next
-    instance.featureVector = this.createFeatureVector(instance)
-    instance.parseTree =
-      instance.heads.tail.zip(instance.deprels.tail).zipWithIndex.map {
-        case ((h, l), j) => "%d|%d:%d".format(h, j + 1, this.typeAlphabet.lookupIndex(l))
-      }.mkString(" ")
-
-    instance
-  }
-
   def add(f: String, fv: FeatureVector) {
     this.add(f, 1.0, fv)
   }
@@ -73,7 +51,7 @@ class DependencyPipe(
     if (i >= 0) fv.add(i, v)
   }
 
-  private def createAlphabet(file: String) {
+  def createAlphabets(file: String) {
     print("Creating Alphabet ... ")
 
     this.labeled = this.depReader.startReading(file)
@@ -83,7 +61,8 @@ class DependencyPipe(
       this.createFeatureVector(instance)
     }
 
-    this.closeAlphabets()
+    this.dataAlphabet.setGrowing(false)
+    this.typeAlphabet.setGrowing(false)
     println("Done.")
   }
 
@@ -109,14 +88,14 @@ class DependencyPipe(
   
   protected def addExtendedFeatures(instance: DependencyInstance, fv: FeatureVector) {}
 
-  def createInstances(file: String, featFile: File) = {
-    this.createAlphabet(file)
+  def createInstances(file: String, featFile: File, createForest: Boolean) = {
+    //this.createAlphabet(file)
 
-    println("Num Features: " + dataAlphabet.size)
+    //println("Num Features: " + dataAlphabet.size)
 
     this.labeled = this.depReader.startReading(file)
 
-    val out = if (this.options.createForest)
+    val out = if (createForest)
       new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(featFile), 65536))
     else null
 
@@ -130,15 +109,15 @@ class DependencyPipe(
           case ((h, l), j) => "%d|%d:%d".format(h, j + 1, this.typeAlphabet.lookupIndex(l))
         }.mkString(" ")
 
-      if (this.options.createForest) this.writeInstance(instance, out)
+      if (createForest) this.writeInstance(instance, out)
       instance
     }.toIndexedSeq
 
     println()
 
-    this.closeAlphabets()
+    //this.closeAlphabets()
 
-    if (this.options.createForest) out.close()
+    if (createForest) out.close()
     this.instances
   }
 
@@ -160,7 +139,7 @@ class DependencyPipe(
 
     if (this.labeled) {
       (0 until instance.length).foreach { w1 =>
-        this.types.foreach { t =>
+        this.typeAlphabet.values.foreach { t =>
           val prodFV1 = new FeatureVector
           this.addLabeledFeatures(instance, w1, t, true, true, prodFV1)
           out.writeObject(prodFV1.keys)
@@ -188,9 +167,14 @@ class DependencyPipe(
 
   protected def writeExtendedFeatures(instance: DependencyInstance, out: ObjectOutputStream) {}
 
-  def fillFeatureVectors(instance: DependencyInstance,
+  def fillFeatureVectors(
+    instance: DependencyInstance,
     fvs: Array[Array[Array[FeatureVector]]],
     probs: Array[Array[Array[Double]]],
+    fvsTr: Array[Array[Array[FeatureVector]]],
+    probsTr: Array[Array[Array[Double]]],
+    fvsSi: Array[Array[Array[FeatureVector]]],
+    probsSi: Array[Array[Array[Double]]],
     fvsNt: Array[Array[Array[Array[FeatureVector]]]],
     probsNt: Array[Array[Array[Array[Double]]]],
     params: Parameters
@@ -211,7 +195,7 @@ class DependencyPipe(
 
     if (this.labeled) {
       (0 until instance.length).foreach { w1 =>
-        this.types.zipWithIndex.foreach { case (t, i) =>
+        this.typeAlphabet.values.zipWithIndex.foreach { case (t, i) =>
           val prodFV1 = new FeatureVector
           this.addLabeledFeatures(instance, w1, t, true, true, prodFV1)
           fvsNt(w1)(i)(0)(0) = prodFV1
@@ -236,16 +220,21 @@ class DependencyPipe(
     }
   }
 
-  def readInstance(in: ObjectInputStream, length: Int,
+  def readInstance(
+    in: ObjectInputStream, len: Int,
     fvs: Array[Array[Array[FeatureVector]]],
     probs: Array[Array[Array[Double]]],
+    fvsTr: Array[Array[Array[FeatureVector]]],
+    probsTr: Array[Array[Array[Double]]],
+    fvsSi: Array[Array[Array[FeatureVector]]],
+    probsSi: Array[Array[Array[Double]]],
     fvsNt: Array[Array[Array[Array[FeatureVector]]]],
     probsNt: Array[Array[Array[Array[Double]]]],
     params: Parameters
   ) {
     try {
-      (0 until length).foreach { w1 =>
-        ((w1 + 1) until length).foreach { w2 =>
+      (0 until len).foreach { w1 =>
+        ((w1 + 1) until len).foreach { w2 =>
           val prodFV1 = FeatureVector.fromKeys(in.readObject().asInstanceOf[Array[Int]])
           fvs(w1)(w2)(0) = prodFV1
           probs(w1)(w2)(0) = params.getScore(prodFV1)
@@ -259,8 +248,8 @@ class DependencyPipe(
       if (in.readInt() != -3) { println("Error reading file."); sys.exit(0) }
 
       if (this.labeled) {
-        (0 until length).foreach { w1 =>
-          this.types.zipWithIndex.foreach { case (t, i) =>
+        (0 until len).foreach { w1 =>
+          this.typeAlphabet.values.zipWithIndex.foreach { case (t, i) =>
             val prodFV1 = FeatureVector.fromKeys(in.readObject().asInstanceOf[Array[Int]])
             fvsNt(w1)(i)(0)(0) = prodFV1
             probsNt(w1)(i)(0)(0) = params.getScore(prodFV1)

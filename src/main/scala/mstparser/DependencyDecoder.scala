@@ -1,13 +1,9 @@
 package mstparser
 
-import gnu.trove.map.TIntIntMap
-import gnu.trove.map.hash.TIntIntHashMap
-import gnu.trove.procedure.TIntIntProcedure
-
 import scala.collection.mutable.Buffer
 import com.google.common.collect.MinMaxPriorityQueue
 
-class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.DependencyDecoder {
+class DependencyDecoder(protected val pipe: DependencyPipe) {
   protected def getTypes(probsNt: Array[Array[Array[Array[Double]]]], len: Int) =
     Array.tabulate(len, len) {
       case (i, j) if i == j => 0
@@ -16,7 +12,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
       }._2
     }
 
-  protected def calcChilds(parse: Seq[Int]) = {
+  protected def calcChilds(parse: Seq[Int]): Seq[Seq[Boolean]] = {
     val isChild = IndexedSeq.fill(parse.size)(Buffer.fill(parse.size)(false))
 
     parse.zipWithIndex.drop(1).foreach { case (v, i) =>
@@ -26,7 +22,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
         l = parse(l)
       }
     }
-    isChild.map(_.toIndexedSeq)
+    isChild
   }
 
   // static type for each edge: run time O(n^3 + Tn^2) T is number of types
@@ -152,7 +148,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
     fvsNt: Array[Array[Array[Array[FeatureVector]]]],
     probsNt: Array[Array[Array[Array[Double]]]],
     kBest: Int
-  ) = {
+  ): Seq[(FeatureVector, String)] = {
     val staticTypes = if (this.pipe.getLabeled) Some(this.getTypes(probsNt, len)) else None
 
     val scores = Array.tabulate(len, len) {
@@ -175,7 +171,6 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
     ).zipWithIndex.filter(_._1 > -1).map {
       case (p, i) => parse.updated(i, p)
     }
-    val newK = parFin.size
 
     val fvFin = parFin.map { p =>
       p.zipWithIndex.map {
@@ -189,8 +184,8 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
       }
     }
 
-    val fin = Array.fill(newK)(new FeatureVector)
-    val result = Array.fill(newK)("")
+    val fin = Array.fill(parFin.size)(new FeatureVector)
+    val result = Array.fill(parFin.size)("")
     fvFin.zip(parFin).zipWithIndex.foreach { case ((fvs, parses), i) =>
       fvs.zip(parses).zipWithIndex.drop(1).foreach { case ((fv, parse), j) =>
         fin(i) = fv.cat(fin(i))
@@ -222,7 +217,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
         case i => as.filter(_ != i).maxBy(scores(_)(i))
       }
 
-      val cycles = Buffer.empty[Set[Int]] //Map[Int, Int]]
+      val cycles = Buffer.empty[Set[Int]]
       val added = collection.mutable.Set.empty[Int]
 
       var i = 0
@@ -276,8 +271,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) { // extends old.Dep
       }
       else {
         val biggest = cycles.maxBy(_.size)
-        val cNodes = biggest.toIndexedSeq.sorted.reverse
-
+        val cNodes = biggest.toSeq.sorted.reverse
         val weight = cNodes.map(i => scores(parse(i))(i)).sum
 
         as.filterNot(biggest.contains).foreach { i =>

@@ -113,7 +113,7 @@ class DependencyPipe2O(options: ParserOptions) extends DependencyPipe(options) {
       out.writeInt(-3)
   }
 
-  def readInstance(
+  override def readInstance(
     in: ObjectInputStream, len: Int,
     fvs: Array[Array[Array[FeatureVector]]],
     probs: Array[Array[Array[Double]]],
@@ -126,7 +126,7 @@ class DependencyPipe2O(options: ParserOptions) extends DependencyPipe(options) {
     params: Parameters
   ) {
     try {
-      super.readInstance(in, len, fvs, probs, fvsNt, probsNt, params)
+      super.readInstance(in, len, fvs, probs, null, null, null, null, fvsNt, probsNt, params)
 
       (0 until len).foreach { w1 =>
         for {
@@ -161,7 +161,7 @@ class DependencyPipe2O(options: ParserOptions) extends DependencyPipe(options) {
     } catch { case e: IOException => println("Error reading file."); sys.exit(0) } 
   }
 
-  def fillFeatureVectors(
+  override def fillFeatureVectors(
     instance: DependencyInstance,
     fvs: Array[Array[Array[FeatureVector]]],
     probs: Array[Array[Array[Double]]],
@@ -173,7 +173,7 @@ class DependencyPipe2O(options: ParserOptions) extends DependencyPipe(options) {
     probsNt: Array[Array[Array[Array[Double]]]],
     params: Parameters
   ) {
-    this.fillFeatureVectors(instance, fvs, probs, fvsNt, probsNt, params)
+    this.fillFeatureVectors(instance, fvs, probs, null, null, null, null, fvsNt, probsNt, params)
     val len = instance.length
 
     (0 until len).foreach { w1 =>
