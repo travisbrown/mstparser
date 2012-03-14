@@ -1,13 +1,13 @@
 package mstparser
 
 class ParseForestItem(
-  private val s: Int,
-  private val t: Int,
-  private val label: Int,
-  private val dir: Int,
-  private val comp: Int,
+  private[this] val s: Int,
+  private[this] val t: Int,
+  private[this] val label: Int,
+  private[this] val dir: Int,
+  private[this] val comp: Int,
   val prob: Double,
-  private val fv: FeatureVector,
+  private[this] val fv: FeatureVector,
   val children: Option[(ParseForestItem, ParseForestItem)]
 ) {
   def this(s: Int, t: Int, label: Int, dir: Int, comp: Int) =

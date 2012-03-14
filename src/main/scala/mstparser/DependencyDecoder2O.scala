@@ -17,7 +17,7 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
 
     val os = orig(0)._2.split(" ")
     val parse = -1 +: os.map(_.split("\\|")(0).toInt)
-    var labels = 0 +: (if (this.pipe.getLabeled) os.map(_.split(":")(1).toInt) else Array.fill(os.length)(0))
+    var labels = 0 +: (if (this.pipe.labeled) os.map(_.split(":")(1).toInt) else Array.fill(os.length)(0))
 
     val (nParse, nLabels) = this.rearrange(probs, probsTr, probsSi, probsNt, parse, labels)
 
@@ -48,7 +48,7 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
     labels: IndexedSeq[Int]
   ) = {
     val len = parse.size
-    val staticTypes = if (this.pipe.getLabeled) Some(this.getTypes(probsNt, len)) else None
+    val staticTypes = if (this.pipe.labeled) Some(this.getTypes(probsNt, len)) else None
 
     var isChild = this.calcChilds(parse)
 
@@ -87,7 +87,7 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
             probsSi(a)(b)(if (a == p) 0 else 1)
             else 0.0
           ) +
-          ( if (this.pipe.getLabeled)
+          ( if (this.pipe.labeled)
             probsNt(i)(nLabels(i))(if (lDir) 1 else 0)(0) +
             probsNt(p)(nLabels(i))(if (lDir) 1 else 0)(1)
             else 0.0
@@ -145,7 +145,7 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
     probsNt: Array[Array[Array[Array[Double]]]],
     kBest: Int
   ) = {
-    val staticTypes = if (this.pipe.getLabeled) Some(this.getTypes(probsNt, len)) else None
+    val staticTypes = if (this.pipe.labeled) Some(this.getTypes(probsNt, len)) else None
     val pf = new KBestParseForest(len - 1, kBest, 3)
 
     (0 until len).foreach { i =>
@@ -174,7 +174,7 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
               var finProb = bc + probs(s)(t)(0) + sstProb
               var finFv = fvs(s)(t)(0).cat(sstFv)
 
-              if (this.pipe.getLabeled) {
+              if (this.pipe.labeled) {
                 finFv = fvsNt(s)(type1)(0)(1).cat(fvsNt(t)(type1)(0)(0).cat(finFv))
                 finProb += probsNt(s)(type1)(0)(1) + probsNt(t)(type1)(0)(0)
               }
@@ -198,7 +198,7 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
               var finProb = bc + probs(s)(t)(1) + sttProb
               var finFv = fvs(s)(t)(1).cat(sttFv)
 
-              if (this.pipe.getLabeled) {
+              if (this.pipe.labeled) {
                 finFv = fvsNt(t)(type2)(1)(1).cat(fvsNt(s)(type2)(1)(0).cat(finFv))
                 finProb += probsNt(t)(type2)(1)(1) + probsNt(s)(type2)(1)(0)
               }
@@ -238,7 +238,7 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
                 var finProb = bc + probs(s)(t)(0) + probsTr(s)(r)(t) + probsSi(r)(t)(1)
                 var finFv = fvs(s)(t)(0).cat(fvsTr(s)(r)(t).cat(fvsSi(r)(t)(1)))
 
-                if (this.pipe.getLabeled) {
+                if (this.pipe.labeled) {
                   finFv = fvsNt(s)(type1)(0)(1).cat(fvsNt(t)(type1)(0)(0).cat(finFv))
                   finProb += probsNt(s)(type1)(0)(1) + probsNt(t)(type1)(0)(0)
                 }
@@ -260,7 +260,7 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
                 var finProb = bc + probs(s)(t)(1) + probsTr(t)(r)(s) + probsSi(r)(s)(1)
                 var finFv = fvs(s)(t)(1).cat(fvsTr(t)(r)(s).cat(fvsSi(r)(s)(1)))
 
-                if (this.pipe.getLabeled) {
+                if (this.pipe.labeled) {
                   finFv = fvsNt(t)(type2)(1)(1).cat(fvsNt(s)(type2)(1)(0).cat(finFv))
                   finProb += probsNt(t)(type2)(1)(1) + probsNt(s)(type2)(1)(0)
                 }

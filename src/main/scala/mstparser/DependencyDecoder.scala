@@ -34,7 +34,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
     probsNt: Array[Array[Array[Array[Double]]]],
     kBest: Int
   ) = {
-	  val staticTypes = if (this.pipe.getLabeled) Some(this.getTypes(probsNt, len)) else None
+	  val staticTypes = if (this.pipe.labeled) Some(this.getTypes(probsNt, len)) else None
     val pf = new KBestParseForest(len - 1, kBest)
 
     (0 until len).foreach { i =>
@@ -61,7 +61,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
 
                   var finProb = bc + probs(s)(t)(0)
                   var finFv = fvs(s)(t)(0)
-                  if (this.pipe.getLabeled) {
+                  if (this.pipe.labeled) {
                     finFv = fvsNt(s)(type1)(0)(1).cat(fvsNt(t)(type1)(0)(0).cat(finFv))
                     finProb += probsNt(s)(type1)(0)(1) + probsNt(t)(type1)(0)(0)
                   }
@@ -69,7 +69,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
 
                   finProb = bc + probs(s)(t)(1)
                   finFv = fvs(s)(t)(1)
-                  if (this.pipe.getLabeled) {
+                  if (this.pipe.labeled) {
                     finFv = fvsNt(t)(type2)(1)(1).cat(fvsNt(s)(type2)(1)(0).cat(finFv))
                     finProb += probsNt(t)(type2)(1)(1) + probsNt(s)(type2)(1)(0)
                   }
@@ -149,7 +149,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
     probsNt: Array[Array[Array[Array[Double]]]],
     kBest: Int
   ): Seq[(FeatureVector, String)] = {
-    val staticTypes = if (this.pipe.getLabeled) Some(this.getTypes(probsNt, len)) else None
+    val staticTypes = if (this.pipe.labeled) Some(this.getTypes(probsNt, len)) else None
 
     val scores = Array.tabulate(len, len) {
       case (i, j) if i < j =>

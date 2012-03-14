@@ -1,11 +1,15 @@
 package mstparser
 
-import scala.collection.mutable.Buffer
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.PriorityQueue
 
-class KBestParseForest(private val end: Int, private val k: Int, private val compC: Int) {
+class KBestParseForest(
+  private[this] val end: Int,
+  private[this] val k: Int,
+  private[this] val compC: Int
+) {
   def this(end: Int, k: Int) = this(end, k, 2)
-  private val chart = IndexedSeq.fill(this.end + 1, this.end + 1, 2, compC)(Buffer.empty[ParseForestItem])
+  private[this] val chart = IndexedSeq.fill(this.end + 1, this.end + 1, 2, compC)(ArrayBuffer.empty[ParseForestItem])
 
   def getItems(s: Int, t: Int, d: Int, c: Int): Seq[ParseForestItem] = this.chart(s)(t)(d)(c)
 
@@ -16,8 +20,8 @@ class KBestParseForest(private val end: Int, private val k: Int, private val com
       else (null, null)
     }
 
-  def getKBestPairs(is: Seq[ParseForestItem], js: Seq[ParseForestItem]): Seq[(Int, Int)] = {
-    val result = Buffer.fill(this.k)(-1, -1)
+  def getKBestPairs(is: Seq[ParseForestItem], js: Seq[ParseForestItem]): IndexedSeq[(Int, Int)] = {
+    val result = ArrayBuffer.fill(this.k)(-1, -1)
 
     if (is(0) != null && js(0) != null) {
       val heap = PriorityQueue((is(0).prob + js(0).prob, (0, 0)))

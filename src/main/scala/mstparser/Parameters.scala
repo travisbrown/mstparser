@@ -49,7 +49,7 @@ class Parameters(size: Int) {
     val eps = 0.00000001
     val zero = 0.000000000001
 
-    val alpha = scala.collection.mutable.Buffer.fill(b.size)(0.0)
+    val alpha = scala.collection.mutable.ArrayBuffer.fill(b.size)(0.0)
     val ff = b.toBuffer
     val kkt = b.toBuffer
 

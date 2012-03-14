@@ -12,17 +12,15 @@ import mstparser.io.DependencyWriter
 
 class DependencyPipe(
   protected val options: ParserOptions,
-  var dataAlphabet: Alphabet[String],
-  var typeAlphabet: Alphabet[String]
+  val dataAlphabet: Alphabet[String],
+  val typeAlphabet: Alphabet[String],
+  var labeled: Boolean
 ) {
-  def this(options: ParserOptions) = this(options, new Alphabet, new Alphabet)
+  def this(options: ParserOptions) = this(options, new Alphabet, new Alphabet, false)
 
   private val depReader = DependencyReader.createDependencyReader(this.options.format, this.options.discourseMode)
   private var depWriter: DependencyWriter = _
-  protected var labeled: Boolean = _
-  var instances: IndexedSeq[DependencyInstance] = _
-
-  def getLabeled = this.labeled
+  private var instances: IndexedSeq[DependencyInstance] = _
 
   def initInputFile(file: String) {
     this.labeled = this.depReader.startReading(file)

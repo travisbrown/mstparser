@@ -12,7 +12,6 @@ class DependencyParser(
   private val options: ParserOptions
 ) {
 	val params = new Parameters(this.pipe.dataAlphabet.size)
-  val decoder = if (options.secondOrder) new DependencyDecoder2O(this.pipe) else new DependencyDecoder(this.pipe)
 
   def train(instances: Seq[DependencyInstance], trainForest: File) {
     (0 until options.numIters).map { i =>
@@ -29,6 +28,7 @@ class DependencyParser(
 
   private def trainingIter(instances: Seq[DependencyInstance], trainForest: File, iter: Int) {
     val in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(trainForest), 65536))
+    val decoder = if (options.secondOrder) new DependencyDecoder2O(this.pipe) else new DependencyDecoder(this.pipe)
 
     instances.zipWithIndex.foreach { case (instance, i) =>
       if ((i + 1) % 500 == 0) print("%d,".format(i + 1))
@@ -46,7 +46,7 @@ class DependencyParser(
               instance, fvs, probs,
               fvs_trips, probs_trips,
               fvs_sibs, probs_sibs,
-              nt_fvs,nt_probs, options.trainK
+              nt_fvs, nt_probs, options.trainK
             )
           else decoder.decodeNonProjective(instance.length, fvs, probs, nt_fvs, nt_probs, options.trainK)
         case _ =>
@@ -55,7 +55,7 @@ class DependencyParser(
               instance.length, fvs, probs,
               fvs_trips, probs_trips,
               fvs_sibs, probs_sibs,
-              nt_fvs,nt_probs, options.trainK
+              nt_fvs, nt_probs, options.trainK
             )
           else decoder.decodeProjective(instance.length, fvs, probs, nt_fvs, nt_probs, options.trainK)
       }
@@ -84,17 +84,19 @@ class DependencyParser(
     out.writeObject(this.params.parameters)
     out.writeObject(this.pipe.dataAlphabet)
     out.writeObject(this.pipe.typeAlphabet)
+    out.writeBoolean(this.pipe.labeled)
     out.close()
   }
 
   def loadModel(file: String) {
     val in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file)))
     this.params.parameters = in.readObject().asInstanceOf[Array[Double]]
-    //this.pipe = new DependencyPipe(this.options, in.readObject().asInstanceOf[Alphabet], in.readObject().asInstanceOf[Alphabet])
-    this.pipe.dataAlphabet = in.readObject().asInstanceOf[Alphabet[String]]
-    this.pipe.typeAlphabet = in.readObject().asInstanceOf[Alphabet[String]]
+    this.pipe = new DependencyPipe(this.options,
+      in.readObject().asInstanceOf[Alphabet[String]],
+      in.readObject().asInstanceOf[Alphabet[String]],
+      in.readBoolean()
+    )
     in.close()
-    //this.pipe.closeAlphabets()
   }
 
   def outputParses() = {
@@ -103,6 +105,7 @@ class DependencyParser(
     this.pipe.initInputFile(options.testFile.get)
     this.pipe.initOutputFile(options.outFile)
     val instances = pipe.createInstances(options.testFile.get, null, false)
+    val decoder = if (options.secondOrder) new DependencyDecoder2O(this.pipe) else new DependencyDecoder(this.pipe)
 
     print("Processing Sentence: ")
 
@@ -172,7 +175,6 @@ object DependencyParser {
 
       pipe.createAlphabets(options.trainFile.get)
       val instances = pipe.createInstances(options.trainFile.get, options.trainForest.get, options.createForest)
-	  	//pipe.closeAlphabets()
 
       val dp = new DependencyParser(pipe, options)
 
@@ -196,7 +198,6 @@ object DependencyParser {
       print("\tLoading model...")
       dp.loadModel(options.modelName)
       println("done.")
-      //pipe.closeAlphabets()
       dp.outputParses()
     }
 
