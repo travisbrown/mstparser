@@ -445,7 +445,7 @@ class DependencyPipe(
     val prefix2 = "A" + prefix
 
     feat = prefix2 + "1=" + one + " " + rightOf1 + " " + leftOf2
-    this.add(feat, fv)
+    this.addWithAtt(feat, att, fv)
     feat += " " + two
     this.addWithAtt(feat, att, fv)
 
