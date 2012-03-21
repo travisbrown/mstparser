@@ -4,19 +4,19 @@ class ParseForestItem(
   private[this] val s: Int,
   private[this] val t: Int,
   private[this] val label: Int,
-  private[this] val dir: Int,
+  private[this] val dir: Boolean,
   private[this] val comp: Int,
   val prob: Double,
   private[this] val fv: FeatureVector,
   val children: Option[(ParseForestItem, ParseForestItem)]
 ) {
-  def this(s: Int, t: Int, label: Int, dir: Int, comp: Int) =
+  def this(s: Int, t: Int, label: Int, dir: Boolean, comp: Int) =
     this(s, t, label, dir, comp, Double.NegativeInfinity, null, None)
 
-  def this(s: Int, label: Int, dir: Int, prob: Double, fv: FeatureVector) =
+  def this(s: Int, label: Int, dir: Boolean, prob: Double, fv: FeatureVector) =
     this(s, 0, label, dir, 0, prob, fv, None)
 
-  def this(s: Int, label: Int, dir: Int) =
+  def this(s: Int, label: Int, dir: Boolean) =
     this(s, label, dir, Double.NegativeInfinity, null)
 
   def featureVector: FeatureVector = this.children.map { case (left, right) =>
@@ -29,7 +29,7 @@ class ParseForestItem(
     val cs = (ld + " " + rd).trim
 
     if (this.comp != 1) cs
-    else if (this.dir == 0) "%s %d|%d:%d".format(cs, this.s, this.t, this.label).trim
+    else if (!this.dir) "%s %d|%d:%d".format(cs, this.s, this.t, this.label).trim
     else "%d|%d:%d %s".format(this.t, this.s, this.label, cs).trim
   }.getOrElse("")
 }
