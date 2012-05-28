@@ -14,16 +14,8 @@
   <version>0.5</version>
 
   <properties>
-    <scala.version>2.9.1</scala.version>
+    <scala.version>2.9.2</scala.version>
   </properties>
-
-  <repositories>
-    <repository>
-      <id>scala-tools.releases</id>
-      <name>Scala-Tools Dependencies Repository for Releases</name>
-      <url>http://scala-tools.org/repo-releases</url>
-    </repository>
-  </repositories>
 
   <dependencies>
     <dependency>
@@ -42,9 +34,14 @@
       <version>3.0.2</version>
     </dependency>
     <dependency>
+      <groupId>org.scalaz</groupId>
+      <artifactId>scalaz-core_${scala.version}</artifactId>
+      <version>6.0.4</version>
+    </dependency>
+    <dependency>
       <groupId>org.specs2</groupId>
       <artifactId>specs2_${scala.version}</artifactId>
-      <version>1.6.1</version>
+      <version>1.10</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
