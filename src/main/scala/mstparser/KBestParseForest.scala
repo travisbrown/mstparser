@@ -65,7 +65,7 @@ class KBestParseForest(
       while (!added && i < this.k) {
         if (this.chart(s)(s)(d)(0)(i).prob < score) {
           var tmp = this.chart(s)(s)(d)(0)(i)
-          this.chart(s)(s)(d)(0)(i) = PartialItem(score, fv) //EmptyItem //new ParseForestItem(s, label, d != 0, score, fv)
+          this.chart(s)(s)(d)(0)(i) = PartialItem(score, fv)
 
           var j = i + 1
           while (j < this.k && tmp.prob > Double.NegativeInfinity) {
@@ -99,10 +99,8 @@ class KBestParseForest(
           var tmp = this.chart(s)(t)(d)(c)(i)
           this.chart(s)(t)(d)(c)(i) = if (c != 1)
             IncompleteItem(score, fv, p, q)
-          else if (d != 0) 
-            RightItem(s, t, label, score, fv, p, q)
-          else
-            LeftItem(s, t, label, score, fv, p, q)
+          else if (d != 0) RightItem(s, t, label, score, fv, p, q)
+          else LeftItem(s, t, label, score, fv, p, q)
 
           var j = i + 1
           while (j < this.k && tmp.prob > Double.NegativeInfinity) {
