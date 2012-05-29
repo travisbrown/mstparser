@@ -44,7 +44,8 @@ class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) 
       Option(this.fv2).map(_.getScore(parameters, negate != this.negSecond)).getOrElse(0.0)
 
     val mult = if (negate) -1.0 else 1.0
-    score + this.features.map(f => mult * parameters(f.index) * f.value).sum
+    this.features.foreach { f => score += mult * parameters(f.index) * f.value }
+    score
   }
 
   def update(parameters: Array[Double], total: Array[Double], alpha: Double, update: Double) {
