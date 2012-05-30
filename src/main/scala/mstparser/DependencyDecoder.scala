@@ -37,11 +37,6 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
     val staticTypes = if (this.pipe.labeled) Some(this.getTypes(probsNt, len)) else None
     val pf = new KBestParseForest(len - 1, kBest)
 
-    (0 until len).foreach { i =>
-      pf.add(i, -1, 0, 0.0, new FeatureVector)
-      pf.add(i, -1, 1, 0.0, new FeatureVector)
-    }
-
     (1 until len).foreach { j =>
       (0 until len - j).foreach { s =>
         val t = s + j
@@ -53,9 +48,9 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
             val c1 = pf.getItems(r + 1, t, 1, 0)
 
             if (b1 != null && c1 != null) {
-              pf.getKBestPairs(b1, c1).takeWhile {
+              pf.getKBestPairs(b1, c1)/*.takeWhile {
                 case (comp1, comp2) => comp1 > -1 && comp2 > -1
-              }.foreach {
+              }*/.foreach {
                 case (comp1, comp2) =>
                   val bc = b1(comp1).prob + c1(comp2).prob
 
@@ -85,9 +80,9 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
             val c1 = pf.getItems(r, t, 0, 0)
 
             if (b1 != null && c1 != null) {
-              pf.getKBestPairs(b1, c1).takeWhile {
+              pf.getKBestPairs(b1, c1)/*.takeWhile {
                 case (comp1, comp2) => comp1 > -1 && comp2 > -1
-              }.takeWhile {
+              }*/.takeWhile {
                 case (comp1, comp2) =>
                   val bc = b1(comp1).prob + c1(comp2).prob
                   pf.add(s, r, t, -1, 0, 0, bc, new FeatureVector, b1(comp1), c1(comp2))
@@ -100,9 +95,9 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
             val c1 = pf.getItems(r, t, 1, 1)
 
             if (b1 != null && c1 != null) {
-              pf.getKBestPairs(b1, c1).takeWhile {
+              pf.getKBestPairs(b1, c1)/*.takeWhile {
                 case (comp1, comp2) => comp1 > -1 && comp2 > -1
-              }.takeWhile {
+              }*/.takeWhile {
                 case (comp1, comp2) =>
                   val bc = b1(comp1).prob + c1(comp2).prob
                   pf.add(s, r, t, -1, 1, 0, bc, new FeatureVector, b1(comp1), c1(comp2))

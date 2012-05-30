@@ -18,14 +18,9 @@ trait ChildHavingItem extends ParseForestItem {
 } 
 
 case object EmptyItem extends ParseForestItem {
-  val prob = Double.NegativeInfinity
-  val featureVector: FeatureVector = null
+  val prob = 0.0
+  val featureVector = new FeatureVector
 }
-
-case class PartialItem(
-  prob: Double,
-  featureVector: FeatureVector
-) extends ParseForestItem
 
 case class IncompleteItem(
   prob: Double,
