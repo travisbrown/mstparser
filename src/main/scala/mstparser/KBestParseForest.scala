@@ -13,11 +13,14 @@ class KBestParseForest(
 
   def getItems(s: Int, t: Int, d: Int, c: Int): Seq[ParseForestItem] = this.chart(s)(t)(d)(c)
 
-  def getBestParses: Seq[(FeatureVector, String)] =
+  def getBestParses: Seq[(FeatureVector, (IndexedSeq[Int], IndexedSeq[Int]))] =
     this.chart(0)(this.end)(0)(0).map { item =>
-      if (item.prob > Double.NegativeInfinity)
-        (item.featureVector, item.depString)
-      else (null, null)
+      if (item.prob > Double.NegativeInfinity) {
+        val parse = Array.fill(this.end + 1)(-1) 
+        val labels = Array.fill(this.end + 1)(-1) 
+        item.depString(parse, labels)
+        (item.featureVector, (wrapIntArray(parse), wrapIntArray(labels)))
+      } else (null, null)
     }
 
   def getKBestPairs(is: Seq[ParseForestItem], js: Seq[ParseForestItem]): IndexedSeq[(Int, Int)] = {
@@ -97,10 +100,9 @@ class KBestParseForest(
       while (!added && i < this.k) {
         if (this.chart(s)(t)(d)(c)(i).prob < score) {
           var tmp = this.chart(s)(t)(d)(c)(i)
-          this.chart(s)(t)(d)(c)(i) = if (c != 1)
-            IncompleteItem(score, fv, p, q)
-          else if (d != 0) RightItem(s, t, label, score, fv, p, q)
-          else LeftItem(s, t, label, score, fv, p, q)
+          this.chart(s)(t)(d)(c)(i) = if (c != 1) IncompleteItem(score, fv, p, q)
+          else if (d != 0) ArcItem(s, t, label, score, fv, p, q)
+          else ArcItem(t, s, label, score, fv, p, q)
 
           var j = i + 1
           while (j < this.k && tmp.prob > Double.NegativeInfinity) {

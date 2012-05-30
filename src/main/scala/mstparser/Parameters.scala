@@ -6,11 +6,11 @@ class Parameters(size: Int) {
 
   private val lossType = "punc"
 
-  def updateParamsMIRA(instance: DependencyInstance, d: Seq[(FeatureVector, String)], update: Double) {
+  def updateParamsMIRA(pipe: DependencyPipe, instance: DependencyInstance, d: Seq[(FeatureVector, (IndexedSeq[Int], IndexedSeq[Int]))], update: Double) {
     val score = this.getScore(instance.featureVector)
 
     val (b, dist) = d.takeWhile(_._1 != null).map { case (f, p) => (
-      this.numErrors(instance, p, instance.parseTree) - (score - this.getScore(f)),
+      this.numErrors(pipe, instance, p) - (score - this.getScore(f)),
       instance.featureVector.getDistVector(f)
     )}.unzip
 
@@ -26,22 +26,35 @@ class Parameters(size: Int) {
     this.parameters = this.total
   }
 
-  def numErrors(instance: DependencyInstance, pred: String, gold: String) =
+  def numErrors(pipe: DependencyPipe, instance: DependencyInstance, pred: (IndexedSeq[Int], IndexedSeq[Int])) =
     this.lossType match {
-      case "nopunc" => this.errors(instance, pred, gold)(!_.matches("[,:.'`]+"))
-      case _ => this.errors(instance, pred, gold)(_ => true)
+      case "nopunc" => this.errors(pipe, instance, pred)(!_.matches("[,:.'`]+"))
+      case _ => this.errors(pipe, instance, pred)(_ => true)
     }
 
-  private def errors(instance: DependencyInstance, pred: String, gold: String)(p: String => Boolean) = {
-    val items = instance.postags.tail.zip(pred.split(" ").zip(gold.split(" "))).filter(x => p(x._1))
-    val (hs, ls) = items.map {
-      case (_, (p, g)) =>
-        val Array(ph, pl) = p.split(":")
-        val Array(gh, gl) = g.split(":")
-        (ph == gh, pl == gl)
-    }.unzip
+  private def errors(pipe: DependencyPipe, instance: DependencyInstance, pred: (IndexedSeq[Int], IndexedSeq[Int]))(p: String => Boolean) = {
+    var he = 0
+    var le = 0
+    var i = 1
 
-    ((items.size - hs.filter(x => x).size) + (items.size - ls.filter(x => x).size)).toDouble
+    while (i < instance.length) {
+      if (p(instance.postags(i))) {
+        if (instance.heads(i) != pred._1(i)) he += 1
+        //println(pred._1.zip(pred._2).mkString(" "))
+        if (instance.deprels(i) != pipe.typeAlphabet.values(pred._2(i))) le += 1 
+      }
+
+      i += 1
+    }
+
+    (he + le).toDouble
+
+    //val items = instance.postags.zip(instance.heads zip instance.deprels).zip(pred._1 zip pred._2).tail.filter(x => p(x._1))
+    //val (hs, ls) = items.map {
+    //  case (_, (h, l)) => (h == , pl == gl)
+    //}.unzip
+
+    //((items.size - hs.filter(x => x).size) + (items.size - ls.filter(x => x).size)).toDouble
   }
 
   private def hildreth(a: Seq[FeatureVector], b: Seq[Double]) = {

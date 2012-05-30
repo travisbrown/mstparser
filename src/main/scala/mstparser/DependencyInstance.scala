@@ -11,7 +11,6 @@ class DependencyInstance(
   val relFeats: IndexedSeq[RelationalFeature]
 ) {
   @transient var featureVector: FeatureVector = _
-  var parseTree: String = _
   def length = this.forms.length
   def size = this.forms.length - 1
   override def toString = "[%s]\n".format(this.forms.mkString(", "))

@@ -33,7 +33,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
     fvsNt: Array[Array[Array[Array[FeatureVector]]]],
     probsNt: Array[Array[Array[Array[Double]]]],
     kBest: Int
-  ) = {
+  ): Seq[(FeatureVector, (IndexedSeq[Int], IndexedSeq[Int]))] = {
     val staticTypes = if (this.pipe.labeled) Some(this.getTypes(probsNt, len)) else None
     val pf = new KBestParseForest(len - 1, kBest)
 
@@ -148,7 +148,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
     fvsNt: Array[Array[Array[Array[FeatureVector]]]],
     probsNt: Array[Array[Array[Array[Double]]]],
     kBest: Int
-  ): Seq[(FeatureVector, String)] = {
+  ): Seq[(FeatureVector, (IndexedSeq[Int], IndexedSeq[Int]))] = {
     val staticTypes = if (this.pipe.labeled) Some(this.getTypes(probsNt, len)) else None
 
     val scores = Array.tabulate(len, len) {
@@ -184,16 +184,24 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
       }
     }
 
-    val fin = Array.fill(parFin.size)(new FeatureVector)
-    val result = Array.fill(parFin.size)("")
-    fvFin.zip(parFin).zipWithIndex.foreach { case ((fvs, parses), i) =>
-      fvs.zip(parses).zipWithIndex.drop(1).foreach { case ((fv, parse), j) =>
-        fin(i) = fv.cat(fin(i))
-        result(i) += "%d|%d:%d ".format(parse, j, staticTypes.map(_(parse)(j)).getOrElse(0))
+    //val fin = Array.fill(parFin.size)(new FeatureVector)
+    //val result = Array.fill(parFin.size)("")
+
+    fvFin.zip(parFin).map { case (fvs, hs) =>
+      val (f, (p, l)) = fvs.zip(hs).zipWithIndex.drop(1).foldLeft(
+        new FeatureVector, (Array.fill(-1)(hs.size), Array.fill(-1)(hs.size)) 
+      ) { case ((f, (parse, labels)), ((fv, h), i)) => {
+          parse(i) = h
+          labels(i) = staticTypes.map(_(h)(i)).getOrElse(0) 
+          (fv.cat(f), (parse, labels))
+        //fin(i) = fv.cat(fin(i))
+        //result(i) += "%d|%d:%d ".format(parse, j, staticTypes.map(_(parse)(j)).getOrElse(0))
+        }
       }
+      (f, (wrapIntArray(p), wrapIntArray(l)))
     }
 
-    fin.zip(result.map(_.trim))
+    //fin.zip(result.map(_.trim))
   }
 
   def chuLiuEdmonds(scores: Array[Array[Double]]) = {

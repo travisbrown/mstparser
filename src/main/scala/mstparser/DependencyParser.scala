@@ -60,7 +60,7 @@ class DependencyParser(
           else decoder.decodeProjective(instance.length, fvs, probs, nt_fvs, nt_probs, options.trainK)
       }
 
-      this.params.updateParamsMIRA(instance, d, upd)
+      this.params.updateParamsMIRA(this.pipe, instance, d, upd)
     }
     System.out.print(instances.size)
     in.close()
@@ -148,22 +148,8 @@ class DependencyParser(
           else decoder.decodeProjective(instance.length, fvs, probs, nt_fvs, nt_probs, options.testK)
       }
 
-      val res = d(0)._2.split(" ")
-      val formsNoRoot = Array.ofDim[String](instance.forms.length - 1)
-      val posNoRoot = Array.ofDim[String](instance.forms.length - 1)
-      val labels = Array.ofDim[String](instance.forms.length - 1)
-      val heads = Array.ofDim[Int](instance.forms.length - 1)
-
-      (0 until instance.forms.length - 1).foreach { j =>
-        formsNoRoot(j) = instance.forms(j + 1)
-        posNoRoot(j) = instance.cpostags(j + 1)
-
-        val trip = res(j).split("[\\|:]")
-        labels(j) = this.pipe.typeAlphabet.values(trip(2).toInt)
-        heads(j) = trip(0).toInt
-      }
-
-      pipe.outputInstance(new DependencyInstance(formsNoRoot, null, null, posNoRoot, null, labels, heads, null))
+      val (parse, labels) = d.head._2
+      pipe.outputInstance(new DependencyInstance(instance.forms.tail, null, null, instance.cpostags.tail, null, labels.tail.map(this.pipe.typeAlphabet.values), parse.tail, null))
     }
     pipe.close()
 

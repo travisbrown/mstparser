@@ -97,10 +97,10 @@ class DependencyPipe(
       print(i + " ")
 
       instance.featureVector = this.createFeatureVector(instance)
-      instance.parseTree =
-        instance.heads.tail.zip(instance.deprels.tail).zipWithIndex.map {
-          case ((h, l), j) => "%d|%d:%d".format(h, j + 1, this.typeAlphabet.lookupIndex(l))
-        }.mkString(" ")
+      //instance.parseTree = (instance.heads, instance.deprels.map(this.typeAlphabet.lookupIndex))
+      //  instance.heads.tail.zip(instance.deprels.tail).zipWithIndex.map {
+      //    case ((h, l), j) => "%d|%d:%d".format(h, j + 1, this.typeAlphabet.lookupIndex(l))
+      //  }.mkString(" ")
 
       if (createForest) this.writeInstance(instance, out)
       instance

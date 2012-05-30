@@ -12,23 +12,25 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
     fvsNt: Array[Array[Array[Array[FeatureVector]]]],
     probsNt: Array[Array[Array[Array[Double]]]],
     k: Int
-  ) = {
+  ): Seq[(FeatureVector, (IndexedSeq[Int], IndexedSeq[Int]))] = {
     val orig = this.decodeProjective(instance.length, fvs, probs, fvsTr, probsTr, fvsSi, probsSi, fvsNt, probsNt, 1)
+    val (parse, labels) = orig.head._2
 
-    val os = orig(0)._2.split(" ")
-    val parse = -1 +: os.map(_.split("\\|")(0).toInt)
-    var labels = 0 +: (if (this.pipe.labeled) os.map(_.split(":")(1).toInt) else Array.fill(os.length)(0))
+    //val os = orig(0)._2.split(" ")
+    //val parse = -1 +: os.map(_.split("\\|")(0).toInt)
+    //var labels = 0 +: (if (this.pipe.labeled) os.map(_.split(":")(1).toInt) else Array.fill(os.length)(0))
+    //val parse =  
 
     val (nParse, nLabels) = this.rearrange(probs, probsTr, probsSi, probsNt, parse, labels)
 
     instance.heads = nParse
     instance.deprels = nLabels.map(this.pipe.typeAlphabet.values(_))
 
-    val parseString = nParse.zip(nLabels).zipWithIndex.drop(1).map {
+    /*val parseString = nParse.zip(nLabels).zipWithIndex.drop(1).map {
       case ((p, l), i) => "%d|%d:%d".format(p, i, l)
-    }.mkString(" ")
+    }.mkString(" ")*/
 
-    (this.pipe.createFeatureVector(instance), parseString) +: orig.tail
+    (this.pipe.createFeatureVector(instance), (nParse, nLabels)) +: orig.tail
   }
 
   private def getSibs(ch: Int, par: Seq[Int]): (Int, Int) = ((
@@ -144,7 +146,7 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
     fvsNt: Array[Array[Array[Array[FeatureVector]]]],
     probsNt: Array[Array[Array[Array[Double]]]],
     kBest: Int
-  ) = {
+  ): Seq[(FeatureVector, (IndexedSeq[Int], IndexedSeq[Int]))] = {
     val staticTypes = if (this.pipe.labeled) Some(this.getTypes(probsNt, len)) else None
     val pf = new KBestParseForest(len - 1, kBest, 3)
 
