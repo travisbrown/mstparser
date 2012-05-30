@@ -36,57 +36,55 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
   ): Seq[(FeatureVector, (IndexedSeq[Int], IndexedSeq[Int]))] = {
     val staticTypes = if (this.pipe.labeled) Some(this.getTypes(probsNt, len)) else None
     val pf = new KBestParseForest(len - 1, kBest)
+    val qb = MinMaxPriorityQueue.orderedBy(Ordering.by[ParseForestItem, Double](_.prob).reverse).maximumSize(kBest)
+    val q0 = qb.create[ParseForestItem]
+    val q1 = qb.create[ParseForestItem]
 
     (1 until len).foreach { j =>
       (0 until len - j).foreach { s =>
         val t = s + j
         val (type1, type2) = staticTypes.map(ts => (ts(s)(t), ts(t)(s))).getOrElse((0, 0))
 
+        q0.clear()
+        q1.clear()
         (s to t).foreach { r =>
           if (r != t) {
             val b1 = pf.getItems(s, r, 0, 0)
             val c1 = pf.getItems(r + 1, t, 1, 0)
 
-            if (b1 != null && c1 != null) {
-              pf.getKBestPairs(b1, c1)/*.takeWhile {
-                case (comp1, comp2) => comp1 > -1 && comp2 > -1
-              }*/.foreach {
-                case (comp1, comp2) =>
-                  val bc = b1(comp1).prob + c1(comp2).prob
+            pf.getKBestPairs(b1, c1).takeWhile { case (comp1, comp2) =>
+              val bc = b1(comp1).prob + c1(comp2).prob
 
-                  var finProb = bc + probs(s)(t)(0)
-                  var finFv = fvs(s)(t)(0)
-                  if (this.pipe.labeled) {
-                    finFv = fvsNt(s)(type1)(0)(1).cat(fvsNt(t)(type1)(0)(0).cat(finFv))
-                    finProb += probsNt(s)(type1)(0)(1) + probsNt(t)(type1)(0)(0)
-                  }
-                  pf.add(s, r, t, type1, 0, 1, finProb, finFv, b1(comp1), c1(comp2))
-
-                  finProb = bc + probs(s)(t)(1)
-                  finFv = fvs(s)(t)(1)
-                  if (this.pipe.labeled) {
-                    finFv = fvsNt(t)(type2)(1)(1).cat(fvsNt(s)(type2)(1)(0).cat(finFv))
-                    finProb += probsNt(t)(type2)(1)(1) + probsNt(s)(type2)(1)(0)
-                  }
-                  pf.add(s, r, t, type2, 1, 1, finProb, finFv, b1(comp1), c1(comp2))
+              var finProb = bc + probs(s)(t)(0)
+              var finFv = fvs(s)(t)(0)
+              if (this.pipe.labeled) {
+                finFv = fvsNt(s)(type1)(0)(1).cat(fvsNt(t)(type1)(0)(0).cat(finFv))
+                finProb += probsNt(s)(type1)(0)(1) + probsNt(t)(type1)(0)(0)
               }
+              q0.add(ArcItem(t, s, type1, finProb, finFv, b1(comp1), c1(comp2))) 
+
+              finProb = bc + probs(s)(t)(1)
+              finFv = fvs(s)(t)(1)
+              if (this.pipe.labeled) {
+                finFv = fvsNt(t)(type2)(1)(1).cat(fvsNt(s)(type2)(1)(0).cat(finFv))
+                finProb += probsNt(t)(type2)(1)(1) + probsNt(s)(type2)(1)(0)
+              }
+              q1.add(ArcItem(s, t, type2, finProb, finFv, b1(comp1), c1(comp2))) 
             }
           }
         }
+        pf.add(s, t, 0, 1, IndexedSeq.fill(q0.size)(q0.pollFirst))
+        pf.add(s, t, 1, 1, IndexedSeq.fill(q1.size)(q1.pollFirst))
 
+        q0.clear()
+        q1.clear()
         (s to t).foreach { r =>
           if (r != s) {
             val b1 = pf.getItems(s, r, 0, 1)
             val c1 = pf.getItems(r, t, 0, 0)
 
-            if (b1 != null && c1 != null) {
-              pf.getKBestPairs(b1, c1)/*.takeWhile {
-                case (comp1, comp2) => comp1 > -1 && comp2 > -1
-              }*/.takeWhile {
-                case (comp1, comp2) =>
-                  val bc = b1(comp1).prob + c1(comp2).prob
-                  pf.add(s, r, t, -1, 0, 0, bc, new FeatureVector, b1(comp1), c1(comp2))
-              }
+            pf.getKBestPairs(b1, c1).takeWhile { case (comp1, comp2) =>
+              q0.add(IncompleteItem(b1(comp1), c1(comp2)))
             }
           }
 
@@ -94,17 +92,13 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
             val b1 = pf.getItems(s, r, 1, 0)
             val c1 = pf.getItems(r, t, 1, 1)
 
-            if (b1 != null && c1 != null) {
-              pf.getKBestPairs(b1, c1)/*.takeWhile {
-                case (comp1, comp2) => comp1 > -1 && comp2 > -1
-              }*/.takeWhile {
-                case (comp1, comp2) =>
-                  val bc = b1(comp1).prob + c1(comp2).prob
-                  pf.add(s, r, t, -1, 1, 0, bc, new FeatureVector, b1(comp1), c1(comp2))
-              }
+            pf.getKBestPairs(b1, c1).takeWhile { case (comp1, comp2) =>
+              q1.add(IncompleteItem(b1(comp1), c1(comp2)))
             }
           }
         }
+        pf.add(s, t, 0, 0, IndexedSeq.fill(q0.size)(q0.pollFirst))
+        pf.add(s, t, 1, 0, IndexedSeq.fill(q1.size)(q1.pollFirst))
       }
     }
     pf.getBestParses

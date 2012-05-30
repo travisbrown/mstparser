@@ -9,11 +9,9 @@ trait ParseForestItem {
 trait ChildHavingItem extends ParseForestItem {
   def l: ParseForestItem
   def r: ParseForestItem
-  def fv: FeatureVector
-  val featureVector = this.fv.cat(this.l.featureVector.cat(this.r.featureVector))
   override def depString(parse: Array[Int], labels: Array[Int]) {
-    l.depString(parse, labels)
-    r.depString(parse, labels)
+    this.l.depString(parse, labels)
+    this.r.depString(parse, labels)
   }
 } 
 
@@ -23,11 +21,12 @@ case object EmptyItem extends ParseForestItem {
 }
 
 case class IncompleteItem(
-  prob: Double,
-  fv: FeatureVector,
   l: ParseForestItem,
   r: ParseForestItem
-) extends ChildHavingItem
+) extends ChildHavingItem {
+  val prob = this.l.prob + this.r.prob
+  val featureVector = this.l.featureVector.cat(this.r.featureVector)
+}
 
 case class ArcItem(
   s: Int,
@@ -38,6 +37,7 @@ case class ArcItem(
   l: ParseForestItem,
   r: ParseForestItem
 ) extends ChildHavingItem {
+  val featureVector = this.fv.cat(this.l.featureVector.cat(this.r.featureVector))
   override def depString(parse: Array[Int], labels: Array[Int]) {
     super.depString(parse, labels)
     parse(s) = this.t

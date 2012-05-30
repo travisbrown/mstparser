@@ -9,29 +9,28 @@ class KBestParseForest(
   private[this] val compC: Int
 ) {
   def this(end: Int, k: Int) = this(end, k, 2)
-  private[this] val chart = Array.ofDim[ParseForestItem](this.end + 1, this.end + 1, 6, k)
+  private[this] val chart = Array.ofDim[IndexedSeq[ParseForestItem]](this.end + 1, this.end + 1, 6)
+  private[this] val empty = IndexedSeq(EmptyItem)
 
   (0 to this.end).foreach { i =>
-    this.chart(i)(i)(0)(0) = EmptyItem
-    this.chart(i)(i)(3)(0) = EmptyItem
+    this.chart(i)(i)(0) = this.empty
+    this.chart(i)(i)(3) = this.empty
   }
 
   def getItems(s: Int, t: Int, d: Int, c: Int): IndexedSeq[ParseForestItem] = this.chart(s)(t)(d * 3 + c)
 
   def getBestParses: Seq[(FeatureVector, (IndexedSeq[Int], IndexedSeq[Int]))] =
     this.chart(0)(this.end)(0).map { item =>
-      if (item != null) {
-        val parse = Array.fill(this.end + 1)(-1) 
-        val labels = Array.fill(this.end + 1)(-1) 
-        item.depString(parse, labels)
-        (item.featureVector, (wrapIntArray(parse), wrapIntArray(labels)))
-      } else (null, null)
+      val parse = Array.fill(this.end + 1)(-1) 
+      val labels = Array.fill(this.end + 1)(-1) 
+      item.depString(parse, labels)
+      (item.featureVector, (wrapIntArray(parse), wrapIntArray(labels)))
     }
 
-  def getKBestPairs(is: Seq[ParseForestItem], js: Seq[ParseForestItem]): IndexedSeq[(Int, Int)] = {
+  def getKBestPairs(is: IndexedSeq[ParseForestItem], js: IndexedSeq[ParseForestItem]): IndexedSeq[(Int, Int)] = {
     val result = ArrayBuffer.empty[(Int, Int)] //fill(this.k)(-1, -1)
 
-    if (is(0) != null && js(0) != null) {
+    if (is.size > 0 && js.size > 0) {
       val heap = PriorityQueue((is(0).prob + js(0).prob, (0, 0)))
       val beenPushed = scala.collection.mutable.Set(0)
 
@@ -62,8 +61,12 @@ class KBestParseForest(
     result
   }
 
+  def add(s: Int, t: Int, d: Int, c: Int, is: IndexedSeq[ParseForestItem]) {
+    this.chart(s)(t)(d * 3 + c) = is
+  }
+
   def add(s: Int, r: Int, t: Int, label: Int, d: Int, c: Int,
-    score: Double, fv: FeatureVector, p: ParseForestItem, q: ParseForestItem) = {
+    score: Double, fv: FeatureVector, p: ParseForestItem, q: ParseForestItem) = true /*{
 
     if (this.chart(s)(t)(d * 3 + c)(k - 1) != null && this.chart(s)(t)(d * 3 + c)(k - 1).prob > score) false
     else {
@@ -91,6 +94,6 @@ class KBestParseForest(
 
       added
     }
-  }
+  }*/
 }
 
