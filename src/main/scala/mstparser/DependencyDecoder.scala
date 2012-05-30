@@ -73,8 +73,8 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
             }
           }
         }
-        pf.add(s, t, 0, 1, IndexedSeq.fill(q0.size)(q0.pollFirst))
-        pf.add(s, t, 1, 1, IndexedSeq.fill(q1.size)(q1.pollFirst))
+        pf.add(s, t, 1, IndexedSeq.fill(q0.size)(q0.pollFirst))
+        pf.add(t, s, 1, IndexedSeq.fill(q1.size)(q1.pollFirst))
 
         q0.clear()
         q1.clear()
@@ -97,8 +97,8 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
             }
           }
         }
-        pf.add(s, t, 0, 0, IndexedSeq.fill(q0.size)(q0.pollFirst))
-        pf.add(s, t, 1, 0, IndexedSeq.fill(q1.size)(q1.pollFirst))
+        pf.add(s, t, 0, IndexedSeq.fill(q0.size)(q0.pollFirst))
+        pf.add(t, s, 0, IndexedSeq.fill(q1.size)(q1.pollFirst))
       }
     }
     pf.getBestParses
