@@ -145,6 +145,7 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
     val qb = MinMaxPriorityQueue.orderedBy(Ordering.by[ParseForestItem, Double](_.prob).reverse).maximumSize(kBest)
     val q0 = qb.create[ParseForestItem]
     val q1 = qb.create[ParseForestItem]
+    val q2 = qb.create[ParseForestItem]
 
     (1 until len).foreach { j =>
       (0 until len - j).foreach { s =>
@@ -201,13 +202,14 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
                 finProb += probsNt(t)(type2)(1)(1) + probsNt(s)(type2)(1)(0)
               }
               //pf.add(s, t, t, type2, 1, 1, finProb, finFv, b2(comp1), c2(comp2))
-              q1.add(ArcItem(s, t, type2, finProb, finFv, b1(comp1), c1(comp2))) 
+              q1.add(ArcItem(s, t, type2, finProb, finFv, b2(comp1), c2(comp2))) 
           }
         //}
-        pf.incomplete(s)(t) = IndexedSeq.fill(q0.size)(q0.pollFirst)
-        pf.incomplete(t)(s) = IndexedSeq.fill(q1.size)(q1.pollFirst)
+        //println("Adding incomplete: %d %d %d %d".format(s, t, q0.size, q1.size))
+        //pf.incomplete(s)(t) = IndexedSeq.fill(q0.size)(q0.pollFirst)
+        //pf.incomplete(t)(s) = IndexedSeq.fill(q1.size)(q1.pollFirst)
 
-        q0.clear()
+        //q0.clear()
         //q1.clear()
 
         (s until t).foreach { r =>
@@ -223,16 +225,16 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
                 val bc = b1(comp1).prob + c1(comp2).prob
                 //pf.add(s, r, t, -1, 0, 2, bc, new FeatureVector, b1(comp1), c1(comp2))
                 //pf.add(s, r, t, -1, 1, 2, bc, new FeatureVector, b1(comp1), c1(comp2))
-                q0.add(CompleteItem(b1(comp1), c1(comp2)))
+                q2.add(CompleteItem(b1(comp1), c1(comp2)))
             }
           //}
         }
-        val stuff = IndexedSeq.fill(q0.size)(q0.pollFirst)
+        val stuff = IndexedSeq.fill(q2.size)(q2.pollFirst)
         pf.other(s)(t) = stuff
         pf.other(t)(s) = stuff
 
-        q0.clear()
-        q1.clear()
+        //q0.clear()
+        //q1.clear()
 
         (s + 1 until t).foreach { r =>
           // s -> (r,t)
@@ -277,23 +279,24 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
                   finProb += probsNt(t)(type2)(1)(1) + probsNt(s)(type2)(1)(0)
                 }
                 //pf.add(s, r, t, type2, 1, 1, finProb, finFv, b2(comp1), c2(comp2))
-                q1.add(ArcItem(s, t, type2, finProb, finFv, b1(comp1), c1(comp2))) 
+                q1.add(ArcItem(s, t, type2, finProb, finFv, b2(comp1), c2(comp2))) 
             }
           //}
         }
 
+        //println("Adding incomplete: %d %d %d %d".format(s, t, q0.size, q1.size))
         pf.incomplete(s)(t) = IndexedSeq.fill(q0.size)(q0.pollFirst)
         pf.incomplete(t)(s) = IndexedSeq.fill(q1.size)(q1.pollFirst)
 
-        q0.clear()
-        q1.clear()
+        //q0.clear()
+        //q1.clear()
 
         (s to t).foreach { r =>
           if (r != s) {
             val b1 = pf.incomplete(s)(r) //.getItems(s, r, 0, 1)
             val c1 = pf.complete(r)(t) //.getItems(r, t, 0, 0)
-            if (b1.isEmpty) println("b1 " + s + " " + r + " " + t)
-            if (c1.isEmpty) println("c1 " + s + " " + r + " " + t)
+            //if (b1.isEmpty) println("b1 " + s + " " + r + " " + t)
+            //if (c1.isEmpty) println("c1 " + s + " " + r + " " + t)
 
             //if (b1 != null && c1 != null) {
               pf.getKBestPairs(b1, c1).foreach { //.takeWhile {
