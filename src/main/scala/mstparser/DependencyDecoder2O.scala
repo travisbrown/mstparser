@@ -139,7 +139,7 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
     kBest: Int
   ): Seq[(FeatureVector, (IndexedSeq[Int], IndexedSeq[Int]))] = {
     val staticTypes = if (this.pipe.labeled) Some(this.getTypes(probsNt, len)) else None
-    val pf = new KBestParseForest(len - 1, kBest, 3)
+    val pf = new KBestParseForest(len - 1, kBest, true)
 
     (1 until len).foreach { j =>
       (0 until len - j).foreach { s =>

@@ -49,8 +49,8 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
         q1.clear()
         (s to t).foreach { r =>
           if (r != t) {
-            val b1 = pf.getItems(s, r, 0, 0)
-            val c1 = pf.getItems(r + 1, t, 1, 0)
+            val b1 = pf.complete(s)(r)
+            val c1 = pf.complete(t)(r + 1)
 
             pf.getKBestPairs(b1, c1).takeWhile { case (comp1, comp2) =>
               val bc = b1(comp1).prob + c1(comp2).prob
@@ -73,15 +73,15 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
             }
           }
         }
-        pf.add(s, t, 1, IndexedSeq.fill(q0.size)(q0.pollFirst))
-        pf.add(t, s, 1, IndexedSeq.fill(q1.size)(q1.pollFirst))
+        pf.incomplete(s)(t) = IndexedSeq.fill(q0.size)(q0.pollFirst)
+        pf.incomplete(t)(s) = IndexedSeq.fill(q1.size)(q1.pollFirst)
 
         q0.clear()
         q1.clear()
         (s to t).foreach { r =>
           if (r != s) {
-            val b1 = pf.getItems(s, r, 0, 1)
-            val c1 = pf.getItems(r, t, 0, 0)
+            val b1 = pf.incomplete(s)(r)
+            val c1 = pf.complete(r)(t)
 
             pf.getKBestPairs(b1, c1).takeWhile { case (comp1, comp2) =>
               q0.add(IncompleteItem(b1(comp1), c1(comp2)))
@@ -89,16 +89,16 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
           }
 
           if (r != t) {
-            val b1 = pf.getItems(s, r, 1, 0)
-            val c1 = pf.getItems(r, t, 1, 1)
+            val b1 = pf.complete(r)(s)
+            val c1 = pf.incomplete(t)(r)
 
             pf.getKBestPairs(b1, c1).takeWhile { case (comp1, comp2) =>
               q1.add(IncompleteItem(b1(comp1), c1(comp2)))
             }
           }
         }
-        pf.add(s, t, 0, IndexedSeq.fill(q0.size)(q0.pollFirst))
-        pf.add(t, s, 0, IndexedSeq.fill(q1.size)(q1.pollFirst))
+        pf.complete(s)(t) = IndexedSeq.fill(q0.size)(q0.pollFirst)
+        pf.complete(t)(s) = IndexedSeq.fill(q1.size)(q1.pollFirst)
       }
     }
     pf.getBestParses
