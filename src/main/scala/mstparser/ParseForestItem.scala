@@ -20,7 +20,7 @@ case object EmptyItem extends ParseForestItem {
   val featureVector = new FeatureVector
 }
 
-case class IncompleteItem(
+case class CompleteItem(
   l: ParseForestItem,
   r: ParseForestItem
 ) extends ChildHavingItem {

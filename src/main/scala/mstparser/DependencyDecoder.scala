@@ -84,7 +84,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
             val c1 = pf.complete(r)(t)
 
             pf.getKBestPairs(b1, c1).takeWhile { case (comp1, comp2) =>
-              q0.add(IncompleteItem(b1(comp1), c1(comp2)))
+              q0.add(CompleteItem(b1(comp1), c1(comp2)))
             }
           }
 
@@ -93,7 +93,7 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
             val c1 = pf.incomplete(t)(r)
 
             pf.getKBestPairs(b1, c1).takeWhile { case (comp1, comp2) =>
-              q1.add(IncompleteItem(b1(comp1), c1(comp2)))
+              q1.add(CompleteItem(b1(comp1), c1(comp2)))
             }
           }
         }

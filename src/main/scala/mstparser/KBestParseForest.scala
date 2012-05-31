@@ -11,12 +11,10 @@ class KBestParseForest(
   def this(end: Int, k: Int) = this(end, k, false)
   val complete = Array.ofDim[IndexedSeq[ParseForestItem]](this.end + 1, this.end + 1)
   val incomplete = Array.ofDim[IndexedSeq[ParseForestItem]](this.end + 1, this.end + 1)
-  val other = if (extra) Array.ofDim[IndexedSeq[ParseForestItem]](this.end + 1, this.end + 1) else null
+  val other = if (this.extra) Array.ofDim[IndexedSeq[ParseForestItem]](this.end + 1, this.end + 1) else null
   private[this] val empty = IndexedSeq(EmptyItem)
 
   (0 to this.end).foreach { i => this.complete(i)(i) = this.empty }
-
-  def getItems(s: Int, t: Int, d: Int, c: Int): IndexedSeq[ParseForestItem] = null // if (d == 0) this.chart(s)(t)(c) else this.chart(t)(s)(c)
 
   def getBestParses: Seq[(FeatureVector, (IndexedSeq[Int], IndexedSeq[Int]))] =
     this.complete(0)(this.end).map { item =>
@@ -25,8 +23,6 @@ class KBestParseForest(
       item.depString(parse, labels)
       (item.featureVector, (wrapIntArray(parse), wrapIntArray(labels)))
     }
-
-  //def bestPairs[A](is: IndexedSeq[A], js: IndexedSeq[A], o: Ordering[(A, A)], k: Int) = 
 
   def getKBestPairs(is: IndexedSeq[ParseForestItem], js: IndexedSeq[ParseForestItem]): IndexedSeq[(Int, Int)] = {
     val result = ArrayBuffer.empty[(Int, Int)]
@@ -60,11 +56,7 @@ class KBestParseForest(
     result
   }
 
-  /*def add(s: Int, t: Int, c: Int, is: IndexedSeq[ParseForestItem]) {
-    this.chart(s)(t)(c) = is
-  }*/
-
-  def add(s: Int, r: Int, t: Int, label: Int, d: Int, c: Int,
-    score: Double, fv: FeatureVector, p: ParseForestItem, q: ParseForestItem) = true
+  //def add(s: Int, r: Int, t: Int, label: Int, d: Int, c: Int,
+  //  score: Double, fv: FeatureVector, p: ParseForestItem, q: ParseForestItem) = true
 }
 
