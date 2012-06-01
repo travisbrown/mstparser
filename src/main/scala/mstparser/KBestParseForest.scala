@@ -24,6 +24,18 @@ class KBestParseForest(
       (item.featureVector, (wrapIntArray(parse), wrapIntArray(labels)))
     }
 
+  def bestPairs[A](is: IndexedSeq[A], js: IndexedSeq[A])(s: A => Double) = {
+    val result = scala.collection.mutable.ArrayBuffer.empty[(Int, Int)]
+
+    val heap = scala.collection.mutable.PriorityQueue((0, 0))(
+      Ordering.by[(Int, Int), Double]((i, j) => s(is(i)) + s(js(j)))
+    )
+
+    
+
+    
+  }
+
   def getKBestPairs(is: IndexedSeq[ParseForestItem], js: IndexedSeq[ParseForestItem]): IndexedSeq[(Int, Int)] = {
     val result = ArrayBuffer.empty[(Int, Int)]
 
@@ -55,8 +67,5 @@ class KBestParseForest(
 
     result
   }
-
-  //def add(s: Int, r: Int, t: Int, label: Int, d: Int, c: Int,
-  //  score: Double, fv: FeatureVector, p: ParseForestItem, q: ParseForestItem) = true
 }
 
