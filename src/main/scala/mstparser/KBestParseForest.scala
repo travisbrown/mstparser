@@ -17,55 +17,33 @@ class KBestParseForest(
   (0 to this.end).foreach { i => this.complete(i)(i) = this.empty }
 
   def getBestParses: Seq[(FeatureVector, (IndexedSeq[Int], IndexedSeq[Int]))] =
-    this.complete(0)(this.end).map { item =>
-      val parse = Array.fill(this.end + 1)(-1) 
-      val labels = Array.fill(this.end + 1)(-1) 
-      item.depString(parse, labels)
-      (item.featureVector, (wrapIntArray(parse), wrapIntArray(labels)))
-    }
+    this.complete(0)(this.end).map(item => (item.featureVector, item.parse(this.end + 1)))
 
   def bestPairs[A](is: IndexedSeq[A], js: IndexedSeq[A])(s: A => Double) = {
-    val result = scala.collection.mutable.ArrayBuffer.empty[(Int, Int)]
+    val heap = scala.collection.mutable.PriorityQueue(
+      (0, 0) -> (s(is(0)) + s(js(0)))
+    )(Ordering.Double.on[((Int, Int), Double)](_._2))
 
-    val heap = scala.collection.mutable.PriorityQueue((0, 0))(
-      Ordering.by[(Int, Int), Double]((i, j) => s(is(i)) + s(js(j)))
-    )
+    val added = scala.collection.mutable.Set(0 -> 0)
 
-    
+    new Iterator[((A, A), Double)] {
+      def hasNext = heap.nonEmpty
+      def next = {
+        val ((i, j), v) = heap.dequeue
 
-    
-  }
-
-  def getKBestPairs(is: IndexedSeq[ParseForestItem], js: IndexedSeq[ParseForestItem]): IndexedSeq[(Int, Int)] = {
-    val result = ArrayBuffer.empty[(Int, Int)]
-
-    val heap = PriorityQueue((is(0).prob + js(0).prob, (0, 0)))
-    val beenPushed = scala.collection.mutable.BitSet(0)
-
-    var n = 0
-
-    while (n < this.k) {
-      val (_, (i, j)) = heap.dequeue
-
-      result += i -> j
-      n += 1
-
-      if (n < this.k) {
-        val x = (i + 1) * this.end + j
-        if (!beenPushed(x)) {
-          heap += ((is(i + 1).prob + js(j).prob, (i + 1, j)))
-          beenPushed += x
+        if (i + 1 < is.size && !added((i + 1,  j))) {
+          heap += (i + 1, j) -> (s(is(i + 1)) + s(js(j)))
+          added += ((i + 1, j))
         }
 
-        val y = i * this.end + j + 1 
-        if (!beenPushed(y)) {
-          heap += ((is(i).prob + js(j + 1).prob, (i, j + 1)))
-          beenPushed += y
+        if (j + 1 < js.size && !added((i, j + 1))) {
+          heap += (i, j + 1) -> (s(is(i)) + s(js(j + 1)))
+          added += ((i, j + 1))
         }
+
+        ((is(i), js(j)), v)
       }
     }
-
-    result
   }
 }
 

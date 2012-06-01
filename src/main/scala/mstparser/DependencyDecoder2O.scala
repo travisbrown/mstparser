@@ -159,44 +159,42 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
         val sstFv = fvsTr(s)(s)(t).cat(fvsSi(s)(t)(0))
         val sstProb = probsTr(s)(s)(t) + probsSi(s)(t)(0)
 
-        pf.getKBestPairs(b1, c1).foreach { case (comp1, comp2) =>
-          val bc = b1(comp1).prob + c1(comp2).prob
-          var finProb = bc + probs(s)(t)(0) + sstProb
+        pf.bestPairs(b1, c1)(_.prob).take(kBest).foreach { case ((b, c), v) =>
+          var finProb = v + probs(s)(t)(0) + sstProb
           var finFv = fvs(s)(t)(0).cat(sstFv)
 
           if (this.pipe.labeled) {
             finFv = fvsNt(s)(type1)(0)(1).cat(fvsNt(t)(type1)(0)(0).cat(finFv))
             finProb += probsNt(s)(type1)(0)(1) + probsNt(t)(type1)(0)(0)
           }
-          q0.add(ArcItem(t, s, type1, finProb, finFv, b1(comp1), c1(comp2))) 
+          q0.add(ArcItem(s, t, type1, finProb, finFv, b, c))
         }
 
         // case when r == t
-        val b2 = pf.complete(s)(t - 1) //(s, t - 1, 0, 0)
-        val c2 = pf.complete(t)(t) //(t, t, 1, 0)
+        val b2 = pf.complete(s)(t - 1)
+        val c2 = pf.complete(t)(t) 
 
         val sttFv = fvsTr(t)(t)(s).cat(fvsSi(t)(s)(0))
         val sttProb = probsTr(t)(t)(s) + probsSi(t)(s)(0)
 
-        pf.getKBestPairs(b2, c2).foreach { case (comp1, comp2) =>
-          val bc = b2(comp1).prob + c2(comp2).prob
-          var finProb = bc + probs(s)(t)(1) + sttProb
+        pf.bestPairs(b2, c2)(_.prob).take(kBest).foreach { case ((b, c), v) =>
+          var finProb = v + probs(s)(t)(1) + sttProb
           var finFv = fvs(s)(t)(1).cat(sttFv)
 
           if (this.pipe.labeled) {
             finFv = fvsNt(t)(type2)(1)(1).cat(fvsNt(s)(type2)(1)(0).cat(finFv))
             finProb += probsNt(t)(type2)(1)(1) + probsNt(s)(type2)(1)(0)
           }
-          q1.add(ArcItem(s, t, type2, finProb, finFv, b2(comp1), c2(comp2))) 
+          q1.add(ArcItem(t, s, type2, finProb, finFv, b, c))
         }
 
         (s until t).foreach { r =>
           // First case - create sibling.
-          val b1 = pf.complete(s)(r) //.getItems(s, r, 0, 0)
-          val c1 = pf.complete(t)(r + 1) //.getItems(r + 1, t, 1, 0)
+          val bs = pf.complete(s)(r)
+          val cs = pf.complete(t)(r + 1)
 
-          pf.getKBestPairs(b1, c1).foreach { case (comp1, comp2) =>
-            q2.add(CompleteItem(b1(comp1), c1(comp2)))
+          pf.bestPairs(bs, cs)(_.prob).take(kBest).foreach { case ((b, c), _) =>
+            q2.add(CompleteItem(b, c))
           }
         }
 
@@ -206,37 +204,33 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
 
         (s + 1 until t).foreach { r =>
           // s -> (r,t)
-          val b1 = pf.incomplete(s)(r) //.getItems(s, r, 0, 1)
-          val c1 = pf.other(r)(t) //.getItems(r, t, 0, 2)
+          val b1 = pf.incomplete(s)(r)
+          val c1 = pf.other(r)(t)
  
-          pf.getKBestPairs(b1, c1).foreach { case (comp1, comp2) =>
-            var bc = b1(comp1).prob + c1(comp2).prob
-
-            var finProb = bc + probs(s)(t)(0) + probsTr(s)(r)(t) + probsSi(r)(t)(1)
+          pf.bestPairs(b1, c1)(_.prob).take(kBest).foreach { case ((b, c), v) =>
+            var finProb = v + probs(s)(t)(0) + probsTr(s)(r)(t) + probsSi(r)(t)(1)
             var finFv = fvs(s)(t)(0).cat(fvsTr(s)(r)(t).cat(fvsSi(r)(t)(1)))
 
             if (this.pipe.labeled) {
               finFv = fvsNt(s)(type1)(0)(1).cat(fvsNt(t)(type1)(0)(0).cat(finFv))
               finProb += probsNt(s)(type1)(0)(1) + probsNt(t)(type1)(0)(0)
             }
-            q0.add(ArcItem(t, s, type1, finProb, finFv, b1(comp1), c1(comp2))) 
+            q0.add(ArcItem(s, t, type1, finProb, finFv, b, c)) 
           }
 
           // s -> (r,t)
-          val b2 = pf.other(r)(s) //.getItems(s, r, 1, 2)
-          val c2 = pf.incomplete(t)(r) //.getItems(r, t, 1, 1)
+          val b2 = pf.other(r)(s)
+          val c2 = pf.incomplete(t)(r)
 
-          pf.getKBestPairs(b2, c2).foreach { case (comp1, comp2) =>
-            var bc = b2(comp1).prob + c2(comp2).prob
-
-            var finProb = bc + probs(s)(t)(1) + probsTr(t)(r)(s) + probsSi(r)(s)(1)
+          pf.bestPairs(b2, c2)(_.prob).take(kBest).foreach { case ((b, c), v) =>
+            var finProb = v + probs(s)(t)(1) + probsTr(t)(r)(s) + probsSi(r)(s)(1)
             var finFv = fvs(s)(t)(1).cat(fvsTr(t)(r)(s).cat(fvsSi(r)(s)(1)))
 
             if (this.pipe.labeled) {
               finFv = fvsNt(t)(type2)(1)(1).cat(fvsNt(s)(type2)(1)(0).cat(finFv))
               finProb += probsNt(t)(type2)(1)(1) + probsNt(s)(type2)(1)(0)
             }
-            q1.add(ArcItem(s, t, type2, finProb, finFv, b2(comp1), c2(comp2))) 
+            q1.add(ArcItem(t, s, type2, finProb, finFv, b, c)) 
           }
         }
 
@@ -245,24 +239,23 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
 
         (s to t).foreach { r =>
           if (r != s) {
-            val b1 = pf.incomplete(s)(r) //.getItems(s, r, 0, 1)
-            val c1 = pf.complete(r)(t) //.getItems(r, t, 0, 0)
+            val bs = pf.incomplete(s)(r)
+            val cs = pf.complete(r)(t)
 
-            pf.getKBestPairs(b1, c1).foreach { case (comp1, comp2) =>
-              q0.add(CompleteItem(b1(comp1), c1(comp2)))
+            pf.bestPairs(bs, cs)(_.prob).take(kBest).foreach { case ((b, c), _) =>
+              q0.add(CompleteItem(b, c))
             }
           }
 
           if (r != t) {
-            val b1 = pf.complete(r)(s) //.getItems(s, r, 1, 0)
-            val c1 = pf.incomplete(t)(r) //.getItems(r, t, 1, 1)
-            
-            pf.getKBestPairs(b1, c1).foreach { case (comp1, comp2) =>
-              q1.add(CompleteItem(b1(comp1), c1(comp2)))
+            val bs = pf.complete(r)(s)
+            val cs = pf.incomplete(t)(r)
+
+            pf.bestPairs(bs, cs)(_.prob).take(kBest).foreach { case ((b, c), _) =>
+              q1.add(CompleteItem(b, c))
             }
           }
         }
-
         pf.complete(s)(t) = IndexedSeq.fill(q0.size)(q0.pollFirst)
         pf.complete(t)(s) = IndexedSeq.fill(q1.size)(q1.pollFirst)
       }

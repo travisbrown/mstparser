@@ -3,15 +3,21 @@ package mstparser
 trait ParseForestItem {
   def prob: Double
   def featureVector: FeatureVector
-  def depString(parse: Array[Int], labels: Array[Int]): Unit = ()
+  def parse(size: Int): (IndexedSeq[Int], IndexedSeq[Int]) = {
+    val parse = Array.fill(size)(-1) 
+    val labels = Array.fill(size)(-1) 
+    this.fill(parse, labels)
+    (wrapIntArray(parse), wrapIntArray(labels))
+  }
+  def fill(parse: Array[Int], labels: Array[Int]): Unit = ()
 }
 
 trait ChildHavingItem extends ParseForestItem {
   def l: ParseForestItem
   def r: ParseForestItem
-  override def depString(parse: Array[Int], labels: Array[Int]) {
-    this.l.depString(parse, labels)
-    this.r.depString(parse, labels)
+  override def fill(parse: Array[Int], labels: Array[Int]) {
+    this.l.fill(parse, labels)
+    this.r.fill(parse, labels)
   }
 } 
 
@@ -38,10 +44,10 @@ case class ArcItem(
   r: ParseForestItem
 ) extends ChildHavingItem {
   val featureVector = this.fv.cat(this.l.featureVector.cat(this.r.featureVector))
-  override def depString(parse: Array[Int], labels: Array[Int]) {
-    super.depString(parse, labels)
-    parse(s) = this.t
-    labels(s) = this.label
+  override def fill(parse: Array[Int], labels: Array[Int]) {
+    super.fill(parse, labels)
+    parse(t) = this.s
+    labels(t) = this.label
   }
 }
 

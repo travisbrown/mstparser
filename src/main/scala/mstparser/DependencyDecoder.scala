@@ -47,27 +47,26 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
 
         (s to t).foreach { r =>
           if (r != t) {
-            val b1 = pf.complete(s)(r)
-            val c1 = pf.complete(t)(r + 1)
+            val bs = pf.complete(s)(r)
+            val cs = pf.complete(t)(r + 1)
 
-            pf.getKBestPairs(b1, c1).takeWhile { case (comp1, comp2) =>
-              val bc = b1(comp1).prob + c1(comp2).prob
+            pf.bestPairs(bs, cs)(_.prob).take(kBest).foreach { case ((b, c), v) =>
 
-              var finProb = bc + probs(s)(t)(0)
+              var finProb = v + probs(s)(t)(0)
               var finFv = fvs(s)(t)(0)
               if (this.pipe.labeled) {
                 finFv = fvsNt(s)(type1)(0)(1).cat(fvsNt(t)(type1)(0)(0).cat(finFv))
                 finProb += probsNt(s)(type1)(0)(1) + probsNt(t)(type1)(0)(0)
               }
-              q0.add(ArcItem(t, s, type1, finProb, finFv, b1(comp1), c1(comp2))) 
+              q0.add(ArcItem(s, t, type1, finProb, finFv, b, c)) 
 
-              finProb = bc + probs(s)(t)(1)
+              finProb = v + probs(s)(t)(1)
               finFv = fvs(s)(t)(1)
               if (this.pipe.labeled) {
                 finFv = fvsNt(t)(type2)(1)(1).cat(fvsNt(s)(type2)(1)(0).cat(finFv))
                 finProb += probsNt(t)(type2)(1)(1) + probsNt(s)(type2)(1)(0)
               }
-              q1.add(ArcItem(s, t, type2, finProb, finFv, b1(comp1), c1(comp2))) 
+              q1.add(ArcItem(t, s, type2, finProb, finFv, b, c)) 
             }
           }
         }
@@ -76,20 +75,20 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
 
         (s to t).foreach { r =>
           if (r != s) {
-            val b1 = pf.incomplete(s)(r)
-            val c1 = pf.complete(r)(t)
+            val bs = pf.incomplete(s)(r)
+            val cs = pf.complete(r)(t)
 
-            pf.getKBestPairs(b1, c1).takeWhile { case (comp1, comp2) =>
-              q0.add(CompleteItem(b1(comp1), c1(comp2)))
+            pf.bestPairs(bs, cs)(_.prob).take(kBest).foreach { case ((b, c), _) =>
+              q0.add(CompleteItem(b, c))
             }
           }
 
           if (r != t) {
-            val b1 = pf.complete(r)(s)
-            val c1 = pf.incomplete(t)(r)
+            val bs = pf.complete(r)(s)
+            val cs = pf.incomplete(t)(r)
 
-            pf.getKBestPairs(b1, c1).takeWhile { case (comp1, comp2) =>
-              q1.add(CompleteItem(b1(comp1), c1(comp2)))
+            pf.bestPairs(bs, cs)(_.prob).take(kBest).foreach { case ((b, c), _) =>
+              q1.add(CompleteItem(b, c))
             }
           }
         }
