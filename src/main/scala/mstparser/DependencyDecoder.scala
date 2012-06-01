@@ -45,8 +45,6 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
         val t = s + j
         val (type1, type2) = staticTypes.map(ts => (ts(s)(t), ts(t)(s))).getOrElse((0, 0))
 
-        q0.clear()
-        q1.clear()
         (s to t).foreach { r =>
           if (r != t) {
             val b1 = pf.complete(s)(r)
@@ -76,8 +74,6 @@ class DependencyDecoder(protected val pipe: DependencyPipe) {
         pf.incomplete(s)(t) = IndexedSeq.fill(q0.size)(q0.pollFirst)
         pf.incomplete(t)(s) = IndexedSeq.fill(q1.size)(q1.pollFirst)
 
-        q0.clear()
-        q1.clear()
         (s to t).foreach { r =>
           if (r != s) {
             val b1 = pf.incomplete(s)(r)

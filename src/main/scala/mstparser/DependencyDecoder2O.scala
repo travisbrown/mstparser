@@ -149,9 +149,6 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
 
     (1 until len).foreach { j =>
       (0 until len - j).foreach { s =>
-        q0.clear()
-        q1.clear()
-
         val t = s + j
         val (type1, type2) = staticTypes.map(ts => (ts(s)(t), ts(t)(s))).getOrElse((0, 0))
 
@@ -159,176 +156,110 @@ class DependencyDecoder2O(pipe: DependencyPipe) extends DependencyDecoder(pipe) 
         val b1 = pf.complete(s)(s)
         val c1 = pf.complete(t)(s + 1)
 
-        //if (b1 != null && c1 != null) {
-          val sstFv = fvsTr(s)(s)(t).cat(fvsSi(s)(t)(0))
-          val sstProb = probsTr(s)(s)(t) + probsSi(s)(t)(0)
+        val sstFv = fvsTr(s)(s)(t).cat(fvsSi(s)(t)(0))
+        val sstProb = probsTr(s)(s)(t) + probsSi(s)(t)(0)
 
-          pf.getKBestPairs(b1, c1).foreach { //.takeWhile {
-          //  case (comp1, comp2) => comp1 > -1 && comp2 > -1
-          //}.foreach {
-            case (comp1, comp2) =>
-              val bc = b1(comp1).prob + c1(comp2).prob
-              var finProb = bc + probs(s)(t)(0) + sstProb
-              var finFv = fvs(s)(t)(0).cat(sstFv)
+        pf.getKBestPairs(b1, c1).foreach { case (comp1, comp2) =>
+          val bc = b1(comp1).prob + c1(comp2).prob
+          var finProb = bc + probs(s)(t)(0) + sstProb
+          var finFv = fvs(s)(t)(0).cat(sstFv)
 
-              if (this.pipe.labeled) {
-                finFv = fvsNt(s)(type1)(0)(1).cat(fvsNt(t)(type1)(0)(0).cat(finFv))
-                finProb += probsNt(s)(type1)(0)(1) + probsNt(t)(type1)(0)(0)
-              }
-              //pf.add(s, s, t, type1, 0, 1, finProb, finFv, b1(comp1), c1(comp2))
-              q0.add(ArcItem(t, s, type1, finProb, finFv, b1(comp1), c1(comp2))) 
-              
+          if (this.pipe.labeled) {
+            finFv = fvsNt(s)(type1)(0)(1).cat(fvsNt(t)(type1)(0)(0).cat(finFv))
+            finProb += probsNt(s)(type1)(0)(1) + probsNt(t)(type1)(0)(0)
           }
-        //}
+          q0.add(ArcItem(t, s, type1, finProb, finFv, b1(comp1), c1(comp2))) 
+        }
 
         // case when r == t
         val b2 = pf.complete(s)(t - 1) //(s, t - 1, 0, 0)
         val c2 = pf.complete(t)(t) //(t, t, 1, 0)
 
-        //if (b2 != null && c2 != null) {
-          val sttFv = fvsTr(t)(t)(s).cat(fvsSi(t)(s)(0))
-          val sttProb = probsTr(t)(t)(s) + probsSi(t)(s)(0)
+        val sttFv = fvsTr(t)(t)(s).cat(fvsSi(t)(s)(0))
+        val sttProb = probsTr(t)(t)(s) + probsSi(t)(s)(0)
 
-          pf.getKBestPairs(b2, c2).foreach {//.takeWhile {
-            //case (comp1, comp2) => comp1 > -1 && comp2 > -1
-          //}.foreach {
-            case (comp1, comp2) =>
-              val bc = b2(comp1).prob + c2(comp2).prob
-              var finProb = bc + probs(s)(t)(1) + sttProb
-              var finFv = fvs(s)(t)(1).cat(sttFv)
+        pf.getKBestPairs(b2, c2).foreach { case (comp1, comp2) =>
+          val bc = b2(comp1).prob + c2(comp2).prob
+          var finProb = bc + probs(s)(t)(1) + sttProb
+          var finFv = fvs(s)(t)(1).cat(sttFv)
 
-              if (this.pipe.labeled) {
-                finFv = fvsNt(t)(type2)(1)(1).cat(fvsNt(s)(type2)(1)(0).cat(finFv))
-                finProb += probsNt(t)(type2)(1)(1) + probsNt(s)(type2)(1)(0)
-              }
-              //pf.add(s, t, t, type2, 1, 1, finProb, finFv, b2(comp1), c2(comp2))
-              q1.add(ArcItem(s, t, type2, finProb, finFv, b2(comp1), c2(comp2))) 
+          if (this.pipe.labeled) {
+            finFv = fvsNt(t)(type2)(1)(1).cat(fvsNt(s)(type2)(1)(0).cat(finFv))
+            finProb += probsNt(t)(type2)(1)(1) + probsNt(s)(type2)(1)(0)
           }
-        //}
-        //println("Adding incomplete: %d %d %d %d".format(s, t, q0.size, q1.size))
-        //pf.incomplete(s)(t) = IndexedSeq.fill(q0.size)(q0.pollFirst)
-        //pf.incomplete(t)(s) = IndexedSeq.fill(q1.size)(q1.pollFirst)
-
-        //q0.clear()
-        //q1.clear()
+          q1.add(ArcItem(s, t, type2, finProb, finFv, b2(comp1), c2(comp2))) 
+        }
 
         (s until t).foreach { r =>
           // First case - create sibling.
           val b1 = pf.complete(s)(r) //.getItems(s, r, 0, 0)
           val c1 = pf.complete(t)(r + 1) //.getItems(r + 1, t, 1, 0)
 
-          //if (b1 != null && c1 != null) {
-            pf.getKBestPairs(b1, c1).foreach { //.takeWhile {
-            //  case (comp1, comp2) => comp1 > -1 && comp2 > -1
-            //}.foreach {
-              case (comp1, comp2) =>
-                val bc = b1(comp1).prob + c1(comp2).prob
-                //pf.add(s, r, t, -1, 0, 2, bc, new FeatureVector, b1(comp1), c1(comp2))
-                //pf.add(s, r, t, -1, 1, 2, bc, new FeatureVector, b1(comp1), c1(comp2))
-                q2.add(CompleteItem(b1(comp1), c1(comp2)))
-            }
-          //}
+          pf.getKBestPairs(b1, c1).foreach { case (comp1, comp2) =>
+            q2.add(CompleteItem(b1(comp1), c1(comp2)))
+          }
         }
+
         val stuff = IndexedSeq.fill(q2.size)(q2.pollFirst)
         pf.other(s)(t) = stuff
         pf.other(t)(s) = stuff
-
-        //q0.clear()
-        //q1.clear()
 
         (s + 1 until t).foreach { r =>
           // s -> (r,t)
           val b1 = pf.incomplete(s)(r) //.getItems(s, r, 0, 1)
           val c1 = pf.other(r)(t) //.getItems(r, t, 0, 2)
+ 
+          pf.getKBestPairs(b1, c1).foreach { case (comp1, comp2) =>
+            var bc = b1(comp1).prob + c1(comp2).prob
 
-          //if (b1 != null && c1 != null) {
-            pf.getKBestPairs(b1, c1).foreach { //.takeWhile {
-            //  case (comp1, comp2) => comp1 > -1 && comp2 > -1
-            //}.foreach {
-              case (comp1, comp2) =>
-                var bc = b1(comp1).prob + c1(comp2).prob
+            var finProb = bc + probs(s)(t)(0) + probsTr(s)(r)(t) + probsSi(r)(t)(1)
+            var finFv = fvs(s)(t)(0).cat(fvsTr(s)(r)(t).cat(fvsSi(r)(t)(1)))
 
-                var finProb = bc + probs(s)(t)(0) + probsTr(s)(r)(t) + probsSi(r)(t)(1)
-                var finFv = fvs(s)(t)(0).cat(fvsTr(s)(r)(t).cat(fvsSi(r)(t)(1)))
-
-                if (this.pipe.labeled) {
-                  finFv = fvsNt(s)(type1)(0)(1).cat(fvsNt(t)(type1)(0)(0).cat(finFv))
-                  finProb += probsNt(s)(type1)(0)(1) + probsNt(t)(type1)(0)(0)
-                }
-                //pf.add(s, r, t, type1, 0, 1, finProb, finFv, b1(comp1), c1(comp2))
-                q0.add(ArcItem(t, s, type1, finProb, finFv, b1(comp1), c1(comp2))) 
+            if (this.pipe.labeled) {
+              finFv = fvsNt(s)(type1)(0)(1).cat(fvsNt(t)(type1)(0)(0).cat(finFv))
+              finProb += probsNt(s)(type1)(0)(1) + probsNt(t)(type1)(0)(0)
             }
-          //}
+            q0.add(ArcItem(t, s, type1, finProb, finFv, b1(comp1), c1(comp2))) 
+          }
 
           // s -> (r,t)
           val b2 = pf.other(r)(s) //.getItems(s, r, 1, 2)
           val c2 = pf.incomplete(t)(r) //.getItems(r, t, 1, 1)
 
-          //if (b2 != null && c2 != null) {
-            pf.getKBestPairs(b2, c2).foreach { //.takeWhile {
-            //  case (comp1, comp2) => comp1 > -1 && comp2 > -1
-            //}.foreach {
-              case (comp1, comp2) =>
-                var bc = b2(comp1).prob + c2(comp2).prob
+          pf.getKBestPairs(b2, c2).foreach { case (comp1, comp2) =>
+            var bc = b2(comp1).prob + c2(comp2).prob
 
-                var finProb = bc + probs(s)(t)(1) + probsTr(t)(r)(s) + probsSi(r)(s)(1)
-                var finFv = fvs(s)(t)(1).cat(fvsTr(t)(r)(s).cat(fvsSi(r)(s)(1)))
+            var finProb = bc + probs(s)(t)(1) + probsTr(t)(r)(s) + probsSi(r)(s)(1)
+            var finFv = fvs(s)(t)(1).cat(fvsTr(t)(r)(s).cat(fvsSi(r)(s)(1)))
 
-                if (this.pipe.labeled) {
-                  finFv = fvsNt(t)(type2)(1)(1).cat(fvsNt(s)(type2)(1)(0).cat(finFv))
-                  finProb += probsNt(t)(type2)(1)(1) + probsNt(s)(type2)(1)(0)
-                }
-                //pf.add(s, r, t, type2, 1, 1, finProb, finFv, b2(comp1), c2(comp2))
-                q1.add(ArcItem(s, t, type2, finProb, finFv, b2(comp1), c2(comp2))) 
+            if (this.pipe.labeled) {
+              finFv = fvsNt(t)(type2)(1)(1).cat(fvsNt(s)(type2)(1)(0).cat(finFv))
+              finProb += probsNt(t)(type2)(1)(1) + probsNt(s)(type2)(1)(0)
             }
-          //}
+            q1.add(ArcItem(s, t, type2, finProb, finFv, b2(comp1), c2(comp2))) 
+          }
         }
 
-        //println("Adding incomplete: %d %d %d %d".format(s, t, q0.size, q1.size))
         pf.incomplete(s)(t) = IndexedSeq.fill(q0.size)(q0.pollFirst)
         pf.incomplete(t)(s) = IndexedSeq.fill(q1.size)(q1.pollFirst)
-
-        //q0.clear()
-        //q1.clear()
 
         (s to t).foreach { r =>
           if (r != s) {
             val b1 = pf.incomplete(s)(r) //.getItems(s, r, 0, 1)
             val c1 = pf.complete(r)(t) //.getItems(r, t, 0, 0)
-            //if (b1.isEmpty) println("b1 " + s + " " + r + " " + t)
-            //if (c1.isEmpty) println("c1 " + s + " " + r + " " + t)
 
-            //if (b1 != null && c1 != null) {
-              pf.getKBestPairs(b1, c1).foreach { //.takeWhile {
-                //case (comp1, comp2) => comp1 > -1 && comp2 > -1
-              //}.takeWhile {
-                case (comp1, comp2) =>
-                  val bc = b1(comp1).prob + c1(comp2).prob
-                  //pf.add(s, r, t, -1, 0, 0, bc, new FeatureVector, b1(comp1), c1(comp2))
-                  q0.add(CompleteItem(b1(comp1), c1(comp2)))
-              }
-            //}
+            pf.getKBestPairs(b1, c1).foreach { case (comp1, comp2) =>
+              q0.add(CompleteItem(b1(comp1), c1(comp2)))
+            }
           }
-        //}
 
-
-        //(s to t).foreach { r =>
           if (r != t) {
             val b1 = pf.complete(r)(s) //.getItems(s, r, 1, 0)
             val c1 = pf.incomplete(t)(r) //.getItems(r, t, 1, 1)
-            if (b1.isEmpty) println("b1 " + s + " " + r + " " + t)
-            if (c1.isEmpty) println("c1 " + s + " " + r + " " + t)
             
-            //if (b1 != null && c1 != null) {
-              pf.getKBestPairs(b1, c1).foreach {//.takeWhile {
-              //  case (comp1, comp2) => comp1 > -1 && comp2 > -1
-              //}.takeWhile {
-                case (comp1, comp2) =>
-                  val bc = b1(comp1).prob + c1(comp2).prob
-                  //pf.add(s, r, t, -1, 1, 0, bc, new FeatureVector, b1(comp1), c1(comp2))
-                  q1.add(CompleteItem(b1(comp1), c1(comp2)))
-              }
-            //}
+            pf.getKBestPairs(b1, c1).foreach { case (comp1, comp2) =>
+              q1.add(CompleteItem(b1(comp1), c1(comp2)))
+            }
           }
         }
 
