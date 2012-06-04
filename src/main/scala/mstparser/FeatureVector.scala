@@ -11,7 +11,12 @@ object FeatureVector {
   }
 }
 
+trait FVector[A <: FVector] extends Iterable[(Int, Double)] {
+   
+}
+
 class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) {
+  case class Feature(index: Int, value: Double)
   private val features = scala.collection.mutable.Buffer.empty[Feature]
   def this(fv1: FeatureVector, fv2: FeatureVector) = this(fv1, fv2, false)
   def this(fv1: FeatureVector) = this(fv1, null)
@@ -86,19 +91,6 @@ class FeatureVector(fv1: FeatureVector, fv2: FeatureVector, negSecond: Boolean) 
       if (!map.adjustValue(f.index, mult * f.value))
         map.put(f.index, mult * f.value)
     }
-  }
-
-  override def toString = {
-    val builder = new StringBuilder
-    this.toString(builder)
-    builder.toString
-  }
-
-  private def toString(builder: StringBuilder) {
-    Option(this.fv1).foreach(_.toString(builder))
-    Option(this.fv2).foreach(_.toString(builder))
-
-    this.features.foreach(f => builder.append(f.toString).append(' '))
   }
 }
 

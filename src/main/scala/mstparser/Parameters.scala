@@ -40,21 +40,12 @@ class Parameters(size: Int) {
     while (i < instance.length) {
       if (p(instance.postags(i))) {
         if (instance.heads(i) != pred._1(i)) he += 1
-        //println(pred._1.zip(pred._2).mkString(" "))
         if (instance.deprels(i) != pipe.typeAlphabet.values(pred._2(i))) le += 1 
       }
-
       i += 1
     }
 
     (he + le).toDouble
-
-    //val items = instance.postags.zip(instance.heads zip instance.deprels).zip(pred._1 zip pred._2).tail.filter(x => p(x._1))
-    //val (hs, ls) = items.map {
-    //  case (_, (h, l)) => (h == , pl == gl)
-    //}.unzip
-
-    //((items.size - hs.filter(x => x).size) + (items.size - ls.filter(x => x).size)).toDouble
   }
 
   private def hildreth(a: Seq[FeatureVector], b: Seq[Double]) = {

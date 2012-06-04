@@ -1,6 +1,5 @@
 package mstparser
 
-case class Feature(index: Int, value: Double)
 
 class RelationalFeature(size: Int, declaration: String, lines: Array[String]) {
   require(lines.length == size)

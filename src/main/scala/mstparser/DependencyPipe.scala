@@ -93,14 +93,10 @@ class DependencyPipe(
     else null
 
     println("Creating Feature Vector Instances: ")
-    this.instances = depReader.zipWithIndex.map { case (instance, i) =>
+    this.instances = this.depReader.zipWithIndex.map { case (instance, i) =>
       print(i + " ")
 
       instance.featureVector = this.createFeatureVector(instance)
-      //instance.parseTree = (instance.heads, instance.deprels.map(this.typeAlphabet.lookupIndex))
-      //  instance.heads.tail.zip(instance.deprels.tail).zipWithIndex.map {
-      //    case ((h, l), j) => "%d|%d:%d".format(h, j + 1, this.typeAlphabet.lookupIndex(l))
-      //  }.mkString(" ")
 
       if (createForest) this.writeInstance(instance, out)
       instance
